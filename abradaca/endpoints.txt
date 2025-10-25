@@ -1,0 +1,34 @@
+for creating the houseproject /api/houseproject
+
+request body
+-------------------------------------------------------------------------------
+{
+  "title": "Modern Luxury Villa",
+  "description": "A sleek, modern villa with open floor plan, infinity pool, and smart home features.",
+  "thumbnail": "https://example.com/images/villa-thumbnail.jpg",
+  "additionalImages": [
+    "https://example.com/images/villa-1.jpg",
+    "https://example.com/images/villa-2.jpg"
+  ],
+  "status": "planned",
+  "rooms": 8,
+  "height": 12.5,
+  "width": 20.3,
+  "areaSqFt": 4500,
+  "location": "Kigali, Rwanda",
+  "bedrooms": 5,
+  "bathrooms": 4,
+  "floors": 2,
+  "categoty": "Villa",
+  "style": "Modern",
+  "price": 1200000,
+  "views": 0,
+  "likes": 0,
+  "createdAt": "2025-10-25T12:00:00Z",
+  "updatedAt": "2025-10-25T12:00:00Z"
+}
+
+
+Response is the same body
+
+-----------------------------------------------------------------------
