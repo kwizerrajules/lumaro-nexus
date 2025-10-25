@@ -31,4 +31,22 @@ request body
 
 Response is the same body
 
+to get all projects you use get on the same endoitn GET /api/houseproject
+
+
+THEN FOR FILTERING U USE THIS SAME FOR GET 
+
+http://localhost:3000/api/houseprojects?limit=5&offset=0&status=planned&categoty=Villa&search=pool
+
+here also the response be the same as for grt all projects but by includiin only reqused fields.
+
+
+TO CRUD A SINGLE PROJECT U USE THIS
+
+GET /api/houseprojects/[id]
+this will return the info of the selected project
+
+PATCH /api/houseprojects/[id]
+the you send JSON containg fields that you want to update 
+it repsonds with the new updated Project
 -----------------------------------------------------------------------
