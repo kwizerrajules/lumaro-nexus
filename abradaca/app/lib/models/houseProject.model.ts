@@ -17,7 +17,7 @@ export const HouseProjectModel = {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     await pool.query(query, [
-      id,
+      parsed.id,
       parsed.title,
       parsed.description,
       parsed.thumbnail,
