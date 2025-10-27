@@ -4,7 +4,8 @@ import { HouseProjectModel } from "@/app/lib/models/houseProject.model";
 import { HouseProjectImagesModel } from "@/app/lib/models/houseProjectImages.models";
 import { HouseProject } from "@/app/schemas/house.projects.schema";
 import { v4 as uuidv4 } from "uuid";
-import { da } from "zod/locales";
+import { sanitizeEverything } from "@/app/security/sanitizeEverything";
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -33,7 +34,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const rawBody = await req.json();
+    const body = sanitizeEverything(rawBody);
 
     const thumbnailBase64 = body.thumbnailBase64 as string | undefined;
     const additionalImagesBase64 = body.additionalImagesBase64 as string[] | undefined;

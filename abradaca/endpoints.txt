@@ -28,6 +28,7 @@ request body
   "updatedAt": "2025-10-25T12:00:00Z"
 }
 
+Here images must be of 5 MBS at least.
 
 Response is the same body
 
