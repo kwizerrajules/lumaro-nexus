@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { handleSecureFile } from "@/app/security/fileSecurity";
-import { HouseProjectModel } from "@/app/lib/models/houseProject.model";
-import { HouseProjectImagesModel } from "@/app/lib/models/houseProjectImages.models";
-import { HouseProject } from "@/app/schemas/house.projects.schema";
+import { handleSecureFile } from "@/src/security/fileSecurity";
+import { HouseProjectModel } from "@/src/lib/models/houseProject.model";
+import { HouseProjectImagesModel } from "@/src/lib/models/houseProjectImages.models";
+import { HouseProject } from "@/src/schemas/house.projects.schema";
 import { v4 as uuidv4 } from "uuid";
 import { sanitizeEverything } from "@/app/security/sanitizeEverything";
 
