@@ -5,3 +5,10 @@ export interface StaffPayload {
     role: string;
     permissions?: string[];
 }
+
+export interface UserPayload {
+    id: string;
+    email: string;
+    role: string;
+    permissions?: string[];
+}
