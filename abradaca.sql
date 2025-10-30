@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Oct 28, 2025 at 08:00 AM
+-- Generation Time: Oct 30, 2025 at 06:44 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -138,6 +138,8 @@ CREATE TABLE `staff` (
 
 INSERT INTO `staff` (`id`, `names`, `email`, `phone`, `passwordHash`, `role`, `permissions`, `avatarUrl`, `status`, `lastLoginAt`, `createdAt`, `updatedAt`) VALUES
 ('23a1b60d-90a1-43a7-a8ee-138940eb0ad9', 'Mwimule BIenvenu', 'bienvenu1@gmail.com', '0781300739', '$2b$10$vZEzAwGKmz7DdbWSjvOnwOruGAmvNE.v.hnYPvjanLUyvg08bqrSm', 'EXECUTIVE', '[]', NULL, 'ACTIVE', NULL, '2025-10-28 08:34:19', '2025-10-28 08:34:19'),
+('4cefcc5a-08d2-409b-b813-c649337f3fce', 'Mwimule Gashema', 'mwimulegashema@gmail.com', '0781300739', '$2b$10$AQsNBhRCmvYZH0LoVSBx/uuQBjoEZUs66tlcEz6gwHNOylW7AJxU2', 'EXECUTIVE', '[]', NULL, 'ACTIVE', NULL, '2025-10-29 19:29:31', '2025-10-29 19:29:31'),
+('9428a60e-89c2-45d5-8efa-642e92efd591', 'Mwimule Gashema', 'mwimulegashema01@gmail.com', '0781300739', '$2b$10$11HXqfdbbfHPwmMrJ2lVsuEhJjrVozk5eJ2tjx8uwxIF64CsGe7Jq', 'ADMIN', '[]', NULL, 'ACTIVE', NULL, '2025-10-29 21:03:10', '2025-10-29 21:03:10'),
 ('cc59e34b-ab00-486c-acc8-9d12e7d5e950', 'Mwimule BIenvenu', 'bienvenugashema@gmail.com', '0781300739', '$2b$10$sIvAu1yVhT.l1eN0DOmDzu0e9xsaypsunXj/RDg3Z2BJKjYZyQVYq', 'EXECUTIVE', '[]', NULL, 'ACTIVE', NULL, '2025-10-28 08:33:25', '2025-10-28 08:33:25');
 
 --

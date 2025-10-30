@@ -19,7 +19,6 @@ export async function authMiddleware(request: NextRequest) {
         return NextResponse.json({ success: false, message: 'Unauthorized or token has expired' }, { status: 401 });
     }
 
-    // You can attach the payload to the request for further use in the application
 
     request.nextUrl.searchParams.set('userId', payload.id);
     request.nextUrl.searchParams.set('role', payload.role);
