@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Oct 30, 2025 at 06:44 AM
+-- Generation Time: Oct 31, 2025 at 09:22 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -42,6 +42,27 @@ CREATE TABLE `contacts` (
 
 INSERT INTO `contacts` (`id`, `names`, `email`, `phone`, `message`, `created_at`) VALUES
 ('e729d836-13fa-4261-8ce4-e449a2df0d81', 'Mwimule BIenvenu', 'bienvenugashema@gmail.com', NULL, 'Hello this is the testing message', '2025-10-28 05:19:08.339984');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `enquiries`
+--
+
+CREATE TABLE `enquiries` (
+  `id` varchar(255) NOT NULL,
+  `user_id` varchar(255) NOT NULL,
+  `project_id` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `enquiries`
+--
+
+INSERT INTO `enquiries` (`id`, `user_id`, `project_id`, `created_at`) VALUES
+('865a11a7-c0a3-4d39-93a1-4f3975f93850', '29b0f369-93b9-4378-bef1-39b68559f138', 'aab8a1c6-11bf-4c6c-b532-f93d8f8f6cb8', '2025-10-31 07:39:51'),
+('[object Object]', '29b0f369-93b9-4378-bef1-39b68559f138', 'aab8a1c6-11bf-4c6c-b532-f93d8f8f6cb8', '2025-10-31 07:36:35');
 
 -- --------------------------------------------------------
 
@@ -142,6 +163,29 @@ INSERT INTO `staff` (`id`, `names`, `email`, `phone`, `passwordHash`, `role`, `p
 ('9428a60e-89c2-45d5-8efa-642e92efd591', 'Mwimule Gashema', 'mwimulegashema01@gmail.com', '0781300739', '$2b$10$11HXqfdbbfHPwmMrJ2lVsuEhJjrVozk5eJ2tjx8uwxIF64CsGe7Jq', 'ADMIN', '[]', NULL, 'ACTIVE', NULL, '2025-10-29 21:03:10', '2025-10-29 21:03:10'),
 ('cc59e34b-ab00-486c-acc8-9d12e7d5e950', 'Mwimule BIenvenu', 'bienvenugashema@gmail.com', '0781300739', '$2b$10$sIvAu1yVhT.l1eN0DOmDzu0e9xsaypsunXj/RDg3Z2BJKjYZyQVYq', 'EXECUTIVE', '[]', NULL, 'ACTIVE', NULL, '2025-10-28 08:33:25', '2025-10-28 08:33:25');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `id` char(36) NOT NULL,
+  `names` varchar(100) NOT NULL,
+  `email` varchar(150) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `names`, `email`, `phone`, `password`, `created_at`, `updated_at`) VALUES
+('29b0f369-93b9-4378-bef1-39b68559f138', 'Bienvenu gashema itbienvenu', 'itbienvenu123@gmail.com', '0736701735', '$2b$10$bTkq7vgWIP8kpu75aS.5f.RC7a7263Lh/CziiTfxT0ESiaE2PLbjm', '2025-10-30 06:22:37', '2025-10-30 06:22:37');
+
 --
 -- Indexes for dumped tables
 --
@@ -151,6 +195,14 @@ INSERT INTO `staff` (`id`, `names`, `email`, `phone`, `passwordHash`, `role`, `p
 --
 ALTER TABLE `contacts`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `enquiries`
+--
+ALTER TABLE `enquiries`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `project_id` (`project_id`);
 
 --
 -- Indexes for table `houseproject_images`
@@ -177,8 +229,22 @@ ALTER TABLE `staff`
   ADD UNIQUE KEY `email` (`email`);
 
 --
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `enquiries`
+--
+ALTER TABLE `enquiries`
+  ADD CONSTRAINT `enquiries_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `enquiries_ibfk_2` FOREIGN KEY (`project_id`) REFERENCES `house_projects` (`id`);
 
 --
 -- Constraints for table `houseproject_images`

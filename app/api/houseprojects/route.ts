@@ -4,7 +4,7 @@ import { HouseProjectModel } from "@/src/lib/models/houseProject.model";
 import { HouseProjectImagesModel } from "@/src/lib/models/houseProjectImages.models";
 import { HouseProject } from "@/src/schemas/house.projects.schema";
 import { v4 as uuidv4 } from "uuid";
-import { sanitizeEverything } from "@/app/security/sanitizeEverything";
+import { sanitizeEverything } from "@/src/security/sanitizeEverything";
 
 export async function GET(req: NextRequest) {
   try {

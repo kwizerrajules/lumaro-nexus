@@ -6,7 +6,6 @@ export function sanitizeInput(value: any): any {
   if (value === null || value === undefined) return value;
 
   if (typeof value === "string") {
-    // Sanitize HTML + trim spaces
     const clean = DOMPurify.sanitize(value.trim(), { ALLOWED_TAGS: [] });
     return clean;
   }
