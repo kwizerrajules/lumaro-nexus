@@ -1,14 +1,21 @@
-'use client';
-type CardProps = {
-  title: string;
-  value: number | string;
-};
+import React from 'react';
 
-export default function Card({ title, value }: CardProps) {
+interface CardProps {
+  children: React.ReactNode;
+  className?: string;
+  hover?: boolean;
+}
+
+const Card: React.FC<CardProps> = ({ children, className = '', hover = false }) => {
   return (
-    <div className="bg-gray-700 p-6 rounded shadow hover:bg-gray-600 transition">
-      <h2 className="text-lg font-semibold mb-2">{title}</h2>
-      <p className="text-2xl font-bold">{value}</p>
+    <div className={`
+      bg-white rounded-lg border border-green-100 shadow-sm
+      ${hover ? 'hover:shadow-md hover:border-green-300 transition-all duration-300' : ''}
+      ${className}
+    `}>
+      {children}
     </div>
   );
-}
+};
+
+export default Card;
