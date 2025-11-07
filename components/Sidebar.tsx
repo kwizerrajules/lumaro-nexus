@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 interface FilterState {
   bedrooms: number[];
@@ -20,27 +20,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onFilterChange }) => {
     floors: [],
     minPrice: 0,
     maxPrice: 5000,
-    styles: []
+    styles: [],
   });
-
-  const [bedroomCounts, setBedroomCounts] = useState<{count: number, total: number}[]>([]);
-  const [bathroomCounts, setBathroomCounts] = useState<{count: number, total: number}[]>([]);
-
-  // 🤚 GET endpoint to fetch filter counts
-  useEffect(() => {
-    const fetchFilterCounts = async () => {
-      try {
-        // 🤚 Replace with: GET /api/filters/counts
-        const response = await fetch('/api/filters/counts');
-        const data = await response.json();
-        setBedroomCounts(data.bedrooms);
-        setBathroomCounts(data.bathrooms);
-      } catch (error) {
-        console.error('Error fetching filter counts:', error);
-      }
-    };
-    fetchFilterCounts();
-  }, []);
 
   const updateFilter = (key: keyof FilterState, value: any) => {
     const newFilters = { ...filters, [key]: value };
@@ -57,138 +38,119 @@ const Sidebar: React.FC<SidebarProps> = ({ onFilterChange }) => {
   };
 
   return (
-    <div className="w-64 bg-white p-6 border-r border-green-100 h-screen overflow-y-auto">
-      <h2 className="text-xl font-bold text-green-800 mb-6">Filters</h2>
+    <aside className="w-80 bg-white border-r border-gray-200 h-screen overflow-y-auto p-6 space-y-10">
+      {/* 🔹 Filters Header */}
+      <div>
+        <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Filters</h2>
+        <div className="w-10 h-1 bg-sky-600 rounded"></div>
+      </div>
 
-      {/* Product Type */}
-      <div className="mb-6">
-        <h3 className="font-semibold text-green-700 mb-3">Product Type</h3>
-        <div className="space-y-2">
-          {['House', 'Apartment', 'Studio', 'Commercial'].map(type => (
-            <label key={type} className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filters.styles.includes(type)}
-                onChange={() => toggleArrayFilter('styles', type)}
-                className="text-green-500 focus:ring-green-500"
-              />
-              <span className="ml-2 text-green-600">{type}</span>
+      {/* 🔹 Sort Options */}
+      <div>
+        <h3 className="uppercase text-sm font-semibold text-gray-800 mb-3 tracking-wide">
+          Sort by
+        </h3>
+        <select className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-700 focus:ring-2 focus:ring-sky-600 focus:border-sky-600 transition">
+          <option>Alphabetically, A-Z</option>
+          <option>Price: Low to High</option>
+          <option>Price: High to Low</option>
+          <option>Newest First</option>
+          <option>Most Popular</option>
+        </select>
+      </div>
+
+      {/* 🔹 Product Type */}
+      <div>
+        <h3 className="uppercase text-sm font-semibold text-gray-800 mb-3 tracking-wide">
+          Product Type
+        </h3>
+        <div className="space-y-3">
+          {[
+            { label: 'Apartments', count: 20 },
+            { label: 'Houses', count: 15 },
+            { label: 'Studios', count: 8 },
+            { label: 'Commercial', count: 5 },
+          ].map((type) => (
+            <label key={type.label} className="flex items-center justify-between cursor-pointer group">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={filters.styles.includes(type.label)}
+                  onChange={() => toggleArrayFilter('styles', type.label)}
+                  className="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-600 focus:ring-2"
+                />
+                <span className="ml-3 text-gray-700 group-hover:text-sky-600 transition-colors">
+                  {type.label}
+                </span>
+              </div>
+              <span className="text-gray-400 text-sm">({type.count})</span>
             </label>
           ))}
         </div>
       </div>
 
-      {/* Number of Bedrooms */}
-      <div className="mb-6">
-        <h3 className="font-semibold text-green-700 mb-3">Number of Bedrooms</h3>
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map(count => (
-            <label key={count} className="flex items-center justify-between cursor-pointer">
+      {/* 🔹 Bedrooms */}
+      <div>
+        <h3 className="uppercase text-sm font-semibold text-gray-800 mb-3 tracking-wide">
+          Number of Bedrooms
+        </h3>
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((count) => (
+            <label key={count} className="flex items-center justify-between cursor-pointer group">
               <div className="flex items-center">
                 <input
                   type="checkbox"
                   checked={filters.bedrooms.includes(count)}
                   onChange={() => toggleArrayFilter('bedrooms', count)}
-                  className="text-green-500 focus:ring-green-500"
+                  className="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-600 focus:ring-2"
                 />
-                <span className="ml-2 text-green-600">
+                <span className="ml-3 text-gray-700 group-hover:text-sky-600 transition-colors">
                   {count} {count === 5 ? '+ Bedrooms' : 'Bedroom' + (count > 1 ? 's' : '')}
                 </span>
               </div>
-              <span className="text-green-400 text-sm">
-                ({bedroomCounts.find(b => b.count === count)?.total || 0})
-              </span>
+              <span className="text-gray-400 text-sm">(0)</span> {/* 👋 dynamic count from DB */}
             </label>
           ))}
         </div>
       </div>
 
-      {/* Number of Bathrooms */}
-      <div className="mb-6">
-        <h3 className="font-semibold text-green-700 mb-3">Number of Bathrooms</h3>
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map(count => (
-            <label key={count} className="flex items-center justify-between cursor-pointer">
+      {/* 🔹 Bathrooms */}
+      <div>
+        <h3 className="uppercase text-sm font-semibold text-gray-800 mb-3 tracking-wide">
+          Number of Bathrooms
+        </h3>
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((count) => (
+            <label key={count} className="flex items-center justify-between cursor-pointer group">
               <div className="flex items-center">
                 <input
                   type="checkbox"
                   checked={filters.bathrooms.includes(count)}
                   onChange={() => toggleArrayFilter('bathrooms', count)}
-                  className="text-green-500 focus:ring-green-500"
+                  className="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-600 focus:ring-2"
                 />
-                <span className="ml-2 text-green-600">
+                <span className="ml-3 text-gray-700 group-hover:text-sky-600 transition-colors">
                   {count} {count === 5 ? '+ Bathrooms' : 'Bathroom' + (count > 1 ? 's' : '')}
                 </span>
               </div>
-              <span className="text-green-400 text-sm">
-                ({bathroomCounts.find(b => b.count === count)?.total || 0})
-              </span>
+              <span className="text-gray-400 text-sm">(0)</span> {/* 👋 dynamic count from DB */}
             </label>
           ))}
         </div>
       </div>
 
-      {/* Number of Floors */}
-      <div className="mb-6">
-        <h3 className="font-semibold text-green-700 mb-3">Number of Floors</h3>
-        <div className="space-y-2">
-          {[1, 2, 3].map(count => (
-            <label key={count} className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filters.floors.includes(count)}
-                onChange={() => toggleArrayFilter('floors', count)}
-                className="text-green-500 focus:ring-green-500"
-              />
-              <span className="ml-2 text-green-600">
-                {count} {count === 1 ? 'Floor' : 'Floors'}
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Price Range */}
-      <div className="mb-6">
-        <h3 className="font-semibold text-green-700 mb-3">Price Range</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-green-600 mb-2">Min: ${filters.minPrice}</label>
-            <input
-              type="range"
-              min="0"
-              max="5000"
-              step="100"
-              value={filters.minPrice}
-              onChange={(e) => updateFilter('minPrice', Number(e.target.value))}
-              className="w-full accent-green-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-green-600 mb-2">Max: ${filters.maxPrice}</label>
-            <input
-              type="range"
-              min="0"
-              max="5000"
-              step="100"
-              value={filters.maxPrice}
-              onChange={(e) => updateFilter('maxPrice', Number(e.target.value))}
-              className="w-full accent-green-500"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Custom My Plan */}
-      <div className="mb-6">
-        <h3 className="font-semibold text-green-700 mb-3">Custom My Plan</h3>
-        <button className="w-full bg-nude-500 text-white py-2 px-4 rounded-lg hover:bg-nude-600 transition-colors font-medium">
-          Start Custom Design
+      {/* 🔹 Custom Plan CTA */}
+      <div>
+        <h3 className="uppercase text-sm font-semibold text-gray-800 mb-3 tracking-wide">
+          Custom Plan
+        </h3>
+        <button className="w-full bg-sky-600 hover:bg-sky-700 text-white py-4 px-6 rounded-lg font-semibold transition">
+          Customize Your Own House Plan Now!
         </button>
       </div>
 
-      {/* Reset Filters */}
-      <button 
+      {/* 🔹 Reset Filters */}
+      <button
         onClick={() => {
           const resetFilters = {
             bedrooms: [],
@@ -196,16 +158,18 @@ const Sidebar: React.FC<SidebarProps> = ({ onFilterChange }) => {
             floors: [],
             minPrice: 0,
             maxPrice: 5000,
-            styles: []
+            styles: [],
           };
           setFilters(resetFilters);
           onFilterChange(resetFilters);
         }}
-        className="w-full border border-green-500 text-green-500 py-2 px-4 rounded-lg hover:bg-green-50 transition-colors font-medium"
+        className="w-full border-2 border-gray-300 hover:border-sky-500 hover:bg-sky-50 text-gray-800 py-3 px-6 rounded-lg font-semibold transition"
       >
-        Reset Filters
+        Reset All Filters
       </button>
-    </div>
+
+      {/* 👋 Endpoint: connect to /api/houses or /api/projects to apply filters */}
+    </aside>
   );
 };
 

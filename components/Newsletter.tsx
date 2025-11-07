@@ -10,7 +10,6 @@ const Newsletter: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // 🤚 POST endpoint to subscribe to newsletter
       const response = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
         headers: {
@@ -33,33 +32,33 @@ const Newsletter: React.FC = () => {
   };
 
   return (
-    <div className="bg-green-600 text-white py-12">
+    <div className="bg-gray-900 text-white py-20">
       <div className="container mx-auto px-4 text-center">
-        <h2 className="text-3xl font-bold mb-4">Don't Miss Out!</h2>
-        <p className="text-green-100 mb-8 text-lg">
-          Sign up now to get the latest updates and offers
+        <h2 className="text-4xl font-bold mb-4">Don't Miss Out!</h2>
+        <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+          Sign up now to get the latest updates, exclusive offers, and new house plan releases delivered to your inbox.
         </p>
         
-        <form onSubmit={handleSubmit} className="max-w-md mx-auto flex gap-4">
+        <form onSubmit={handleSubmit} className="max-w-md mx-auto flex gap-3">
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
+            placeholder="Enter your email address"
             required
-            className="flex-1 px-4 py-3 rounded-lg text-green-900 placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-300"
+            className="flex-1 px-6 py-4 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900"
           />
           <button
             type="submit"
             disabled={isSubmitting}
-            className="bg-nude-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-nude-600 transition-colors disabled:opacity-50"
+            className="bg-white text-gray-900 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
           >
             {isSubmitting ? 'Signing Up...' : 'Sign Up'}
           </button>
         </form>
 
         {message && (
-          <p className={`mt-4 ${message.includes('Thank you') ? 'text-green-200' : 'text-red-200'}`}>
+          <p className={`mt-6 text-lg ${message.includes('Thank you') ? 'text-green-400' : 'text-red-400'}`}>
             {message}
           </p>
         )}

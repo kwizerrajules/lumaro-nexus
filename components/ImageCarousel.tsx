@@ -8,21 +8,20 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ projectId }) => {
   const [currentImage, setCurrentImage] = useState(0);
   const [images, setImages] = useState<string[]>([]);
 
-  // 🤚 GET endpoint to fetch project images
+  // Fetch project images
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        // 🤚 Replace with: GET /api/projects/:id/images
         const response = await fetch(`/api/projects/${projectId}/images`);
         const data = await response.json();
-        setImages(data.images);
+        setImages(data.images || []);
       } catch (error) {
         console.error('Error fetching images:', error);
         // Fallback images
         setImages([
           '/placeholder-house-1.jpg',
           '/placeholder-house-2.jpg',
-          '/placeholder-house-3.jpg'
+          '/placeholder-house-3.jpg',
         ]);
       }
     };
@@ -39,25 +38,25 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ projectId }) => {
 
   if (images.length === 0) {
     return (
-      <div className="w-full h-64 bg-green-100 rounded-lg flex items-center justify-center">
-        <span className="text-green-500">Loading images...</span>
+      <div className="w-full h-64 md:h-80 bg-gray-100 rounded-lg flex items-center justify-center">
+        <span className="text-gray-500">Loading images...</span>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-64 md:h-80 bg-green-50 rounded-lg overflow-hidden">
+    <div className="relative w-full h-64 md:h-80 lg:h-96 bg-gray-50 rounded-lg overflow-hidden">
       {/* Main Image */}
-      <img 
-        src={images[currentImage]} 
+      <img
+        src={images[currentImage]}
         alt={`Project view ${currentImage + 1}`}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover transition-transform duration-500 ease-in-out"
       />
 
       {/* Navigation Arrows */}
       {images.length > 1 && (
         <>
-          <button 
+          <button
             onClick={prevImage}
             className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 rounded-full p-2 hover:bg-opacity-100 transition-all"
           >
@@ -65,7 +64,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ projectId }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <button 
+          <button
             onClick={nextImage}
             className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 rounded-full p-2 hover:bg-opacity-100 transition-all"
           >
