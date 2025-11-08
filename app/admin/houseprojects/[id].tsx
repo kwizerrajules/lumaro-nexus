@@ -1,8 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import API from '@/utils/api';
-import ModalForm from '@/components/ModalForm';
+import API from '../../../utils/api';
+import ModalForm from '../components/ModalForm';
 
 export default function EditProjectPage() {
   const { id } = useParams();

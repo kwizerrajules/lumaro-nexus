@@ -1,8 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
-import API from '@/utils/api';
-import HouseProjectCard from '@/components/HouseProjectCard';
-import ModalForm from '@/components/ModalForm';
+import API from '../../../utils/api';
+import HouseProjectCard from '../components/HouseProjectCard';
+import ModalForm from '../components/ModalForm';
 
 export default function HouseProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
