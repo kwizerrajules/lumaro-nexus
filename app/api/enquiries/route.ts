@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyAccessToken } from ',./../../src/security/auth';
+import { verifyAccessToken } from '../../../src/security/auth';
 import { EnquiriesModel } from '../../../src/lib/models/enquiry.model';
 
 export async function POST(req: Request) {
