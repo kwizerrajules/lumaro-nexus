@@ -1,4 +1,4 @@
-import {ContactUs} from "@/utils/interfaces";
+import {ContactUs} from "../../../utils/interfaces";
 import db from '../db'
 import crypto from "crypto";
 

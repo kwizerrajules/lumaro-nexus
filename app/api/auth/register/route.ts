@@ -1,10 +1,10 @@
 // endoint to register a staff member
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import { createStaffSchema } from '@/src/schemas/staff.schema';
-import { StaffModel } from '@/src/lib/models/staff.model';
+import { createStaffSchema } from '../../../../src/schemas/staff.schema';
+import { StaffModel } from '../../../../src/lib/models/staff.model';
 import { v4 as uuidv4 } from 'uuid';
-import { roleMiddleware, authMiddleware } from '@/src/middleware/auth';
+import { roleMiddleware, authMiddleware } from '../../../../src/middleware/auth';
 
 
 export async function POST(request: Request) {

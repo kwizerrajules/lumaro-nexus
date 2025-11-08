@@ -1,8 +1,8 @@
 // this is the endpoint to reply to eveyr thing
 import { NextResponse, NextRequest } from 'next/server';
-import { ReplyMethods } from '@/src/utils/reply.methods';
+import { ReplyMethods } from '../../../src/utils/reply.methods';
 // protect this route
-import { permissionMiddleware } from '@/src/middleware/auth';
+import { permissionMiddleware } from '../../../src/middleware/auth';
 
 export async function POST(request: Request) {
     const req: NextRequest = request as NextRequest;

@@ -1,7 +1,7 @@
 // this is the authentication middleware
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAccessToken } from '@/src/security/auth';
-import { StaffPayload } from '@/src/types/jwt.payload';
+import { verifyAccessToken } from '../../src/security/auth';
+import { StaffPayload } from '../../src/types/jwt.payload';
 
 
 // middleware to authenticate requests

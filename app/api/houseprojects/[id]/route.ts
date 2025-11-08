@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { HouseProjectModel } from "@/src/lib/models/houseProject.model";
+import { HouseProjectModel } from "../../../../src/lib/models/houseProject.model";
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;

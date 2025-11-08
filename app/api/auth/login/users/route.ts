@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { loginSchema } from '@/src/schemas/auth.schema';
-import { UsersModel } from '@/src/lib/models/users.model';
-import { UserPayload } from '@/src/types/jwt.payload';
-import { createAccessToken, createRefreshToken } from '@/src/security/auth';
+import { loginSchema } from '../../../../../src/schemas/auth.schema';
+import { UsersModel } from '../../../../../src/lib/models/users.model';
+import { UserPayload } from '../../../../../src/types/jwt.payload';
+import { createAccessToken, createRefreshToken } from '../../../../../src/security/auth';
 
 import bcrypt from 'bcryptjs';
 

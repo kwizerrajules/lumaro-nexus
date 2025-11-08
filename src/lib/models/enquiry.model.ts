@@ -1,5 +1,5 @@
-import { BaseModel } from '@/src/lib/models/base.model';
-import { enquirySchema, Enquiry } from '@/src/schemas/enquiry.schema';
+import { BaseModel } from '../../../src/lib/models/base.model';
+import { enquirySchema, Enquiry } from '../../../src/schemas/enquiry.schema';
 import db from '../db';
 import { v4 as uuidv4 } from "uuid";
 

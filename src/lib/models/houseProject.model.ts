@@ -1,5 +1,5 @@
 import pool from "../db";
-import { HouseProject, HouseProjectSchema } from "@/src/schemas/house.projects.schema";
+import { HouseProject, HouseProjectSchema } from "../../../src/schemas/house.projects.schema";
 import { v4 as uuidv4 } from "uuid";
 
 export const HouseProjectModel = {

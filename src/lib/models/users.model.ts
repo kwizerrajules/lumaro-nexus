@@ -1,4 +1,4 @@
-import { CreateUserInput, LoginUserInput, UpdateUserInput } from '@/src/schemas/users.schema';
+import { CreateUserInput, LoginUserInput, UpdateUserInput } from '../../../src/schemas/users.schema';
 import db from '../db';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';

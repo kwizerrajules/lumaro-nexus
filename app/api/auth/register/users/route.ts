@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import { createUserSchema } from '@/src/schemas/users.schema';
-import { UsersModel } from '@/src/lib/models/users.model';
+import { createUserSchema } from '../../../../../src/schemas/users.schema';
+import { UsersModel } from '../../../../../src/lib/models/users.model';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: Request) {
