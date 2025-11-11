@@ -9,112 +9,10 @@ import Newsletter from '../components/Newsletter';
 import FeaturedProject from '../components/FeaturedProject';
 import SearchModal from '../components/SearchModal';
 
-const mockProjects = [
-  {
-    id: '22303',
-    title: 'Modern 2 Bedroom Apartment Block',
-    price: 511,
-    image: '/placeholder-house-1.jpg',
-    bedrooms: 2,
-    bathrooms: 2,
-    floors: 2,
-    area: 71,
-    description: 'Contemporary apartment design with optimal space utilization'
-  },
-  {
-    id: '28802',
-    title: 'Compact 2 Bedroom Building Plan',
-    price: 366,
-    image: '/placeholder-house-2.jpg',
-    bedrooms: 2,
-    bathrooms: 1,
-    floors: 1,
-    area: 55,
-    description: 'Efficient single-floor design perfect for urban areas'
-  },
-  {
-    id: '49801',
-    title: 'Luxury 2 Bedroom Apartments',
-    price: 985,
-    image: '/placeholder-house-3.jpg',
-    bedrooms: 2,
-    bathrooms: 2,
-    floors: 3,
-    area: 85,
-    description: 'Premium apartment complex with modern amenities'
-  },
-  {
-    id: '12103',
-    title: 'Family 3 Bedroom House',
-    price: 720,
-    image: '/placeholder-house-1.jpg',
-    bedrooms: 3,
-    bathrooms: 2,
-    floors: 2,
-    area: 120,
-    description: 'Spacious family home with garden space'
-  },
-  {
-    id: '11107',
-    title: 'Studio Apartment Design',
-    price: 259,
-    image: '/placeholder-house-2.jpg',
-    bedrooms: 1,
-    bathrooms: 1,
-    floors: 1,
-    area: 45,
-    description: 'Compact and efficient studio apartment'
-  },
-  {
-    id: '15608',
-    title: '4 Bedroom Luxury Villa',
-    price: 1250,
-    image: '/placeholder-house-3.jpg',
-    bedrooms: 4,
-    bathrooms: 3,
-    floors: 2,
-    area: 180,
-    description: 'Premium villa with modern architectural features'
-  },
-  {
-    id: '18912',
-    title: '5 Bedroom Executive Home',
-    price: 1580,
-    image: '/placeholder-house-1.jpg',
-    bedrooms: 5,
-    bathrooms: 4,
-    floors: 2,
-    area: 220,
-    description: 'Luxurious executive home with premium finishes'
-  },
-  {
-    id: '20456',
-    title: 'Modern 3 Bedroom Bungalow',
-    price: 890,
-    image: '/placeholder-house-2.jpg',
-    bedrooms: 3,
-    bathrooms: 2,
-    floors: 1,
-    area: 150,
-    description: 'Single-story modern bungalow design'
-  }
-];
-
-// Convert mockProjects to the format expected by SearchModal
-const searchHouses = mockProjects.map(project => ({
-  id: parseInt(project.id),
-  name: project.title,
-  price: project.price,
-  floors: project.floors,
-  bedrooms: project.bedrooms,
-  bathrooms: project.bathrooms,
-  type: "Residential"
-}));
-
 export default function Home() {
-  const [projects, setProjects] = useState<any[]>(mockProjects);
-  const [filteredProjects, setFilteredProjects] = useState<any[]>(mockProjects);
-  const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({});
   const [showSidebar, setShowSidebar] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -124,31 +22,61 @@ export default function Home() {
   const mainContentRef = useRef<HTMLDivElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
 
+  // Fetch projects from API
   useEffect(() => {
-    // Simulate loading real data from API
     const loadProjects = async () => {
       setLoading(true);
       try {
-        // In a real app, you would fetch from your API
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setProjects(mockProjects);
-        setFilteredProjects(mockProjects);
+        const response = await fetch('/api/houseprojects');
+        const result = await response.json();
+        
+        if (result.data) {
+          const transformedProjects = result.data.map((project: any) => ({
+            id: project.id,
+            title: project.title,
+            price: parseFloat(project.price),
+            image: project.thumbnail,
+            bedrooms: project.bedrooms,
+            bathrooms: project.bathrooms,
+            floors: project.floors,
+            area: project.areaSqFt,
+            description: project.description,
+            location: project.location,
+            style: project.style,
+            rooms: project.rooms,
+            status: project.status
+          }));
+          
+          setProjects(transformedProjects);
+          setFilteredProjects(transformedProjects);
+        }
       } catch (error) {
         console.error('Error loading projects:', error);
-        setProjects(mockProjects);
-        setFilteredProjects(mockProjects);
+        // Keep empty array on error
+        setProjects([]);
+        setFilteredProjects([]);
       } finally {
         setLoading(false);
       }
     };
 
     loadProjects();
-  }, [filters]);
+  }, []);
+
+  // Convert projects to the format expected by SearchModal
+  const searchHouses = projects.map(project => ({
+    id: project.id,
+    name: project.title,
+    price: project.price,
+    floors: project.floors,
+    bedrooms: project.bedrooms,
+    bathrooms: project.bathrooms,
+    type: "Residential"
+  }));
 
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
-    // Apply filters to projects
-    let filtered = [...mockProjects];
+    let filtered = [...projects];
     
     if (newFilters.bedrooms) {
       filtered = filtered.filter(project => project.bedrooms === newFilters.bedrooms);
@@ -204,7 +132,7 @@ export default function Home() {
 
   // Handle house selection from search modal
   const handleHouseSelect = (houseId: number) => {
-    const selectedHouse = mockProjects.find(project => project.id === houseId.toString());
+    const selectedHouse = projects.find(project => project.id === houseId.toString());
     if (selectedHouse) {
       console.log('Selected house:', selectedHouse);
       setShowSearchModal(false);
@@ -227,7 +155,7 @@ export default function Home() {
       <Header 
         onFilterToggle={toggleSidebar}
         onAuthSuccess={handleAuthSuccess}
-        onContactClick={scrollToContact} // Add this prop
+        onContactClick={scrollToContact}
       />
       
       {/* Auth Modal */}

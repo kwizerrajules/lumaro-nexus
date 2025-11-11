@@ -99,18 +99,20 @@ export const HouseProjectModel = {
 
   // UPDATE
   async update(id: string, data: Partial<HouseProject>): Promise<void> {
-    const now = new Date().toISOString().slice(0, 19).replace("T", " ");
-    const [existing]: any = await pool.query("SELECT * FROM house_projects WHERE id = ?", [id]);
-    if (!existing.length) throw new Error("Project not found");
-    const updated = { ...existing[0], ...data, updatedAt: now };
+  const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+  const [existing]: any = await pool.query("SELECT * FROM house_projects WHERE id = ?", [id]);
+  if (!existing.length) throw new Error("Project not found");
 
-    // Convert additionalImages back to JSON if present
-    if (updated.additionalImages && Array.isArray(updated.additionalImages)) {
-      updated.additionalImages = JSON.stringify(updated.additionalImages);
-    }
+  const updated = { ...existing[0], ...data, createdAt: existing[0].createdAt, updatedAt: now };
 
-    await pool.query("UPDATE house_projects SET ? WHERE id = ?", [updated, id]);
-  },
+  delete (updated as any).id;
+
+  if (updated.additionalImages && Array.isArray(updated.additionalImages)) {
+    updated.additionalImages = JSON.stringify(updated.additionalImages);
+  }
+
+  await pool.query("UPDATE house_projects SET ? WHERE id = ?", [updated, id]);
+},
 
   // DELETE
   async delete(id: string): Promise<void> {
