@@ -10,7 +10,7 @@ export default function HouseProjectsPage() {
 
   const fetchProjects = async () => {
     try {
-      const res = await API.get('/houseprojects'); // GET doesn't need token
+      const res = await API.get('/houseprojects');
       setProjects(res.data.data);
     } catch (err) {
       console.error(err);

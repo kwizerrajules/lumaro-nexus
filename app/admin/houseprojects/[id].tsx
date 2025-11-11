@@ -12,14 +12,13 @@ export default function EditProjectPage() {
 
   const fetchProject = async () => {
     try {
-      // Make sure we call the backend API
       const res = await API.get(`/houseprojects/${id}`);
-      // Assuming backend returns { data: project }
       setProject(res.data.data);
     } catch (err) {
       console.error(err);
     }
   };
+
 
   const handleDelete = async () => {
     if (confirm('Are you sure you want to delete this project?')) {
