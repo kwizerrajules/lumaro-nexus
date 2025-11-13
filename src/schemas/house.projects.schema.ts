@@ -25,10 +25,10 @@ export const HouseProjectSchema = z.object({
   likes: z.number().int().nonnegative().default(0),
   createdAt: z.string().refine((date) => !isNaN(Date.parse(date)), {
     message: "Invalid date format",
-  }),
+  }).optional(),
   updatedAt: z.string().refine((date) => !isNaN(Date.parse(date)), {
     message: "Invalid date format",
-  }),
+  }).optional(),
 });
 
 export type HouseProject = z.infer<typeof HouseProjectSchema>;

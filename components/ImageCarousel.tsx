@@ -12,9 +12,12 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ projectId }) => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const response = await fetch(`/api/projects/${projectId}/images`);
+        const response = await fetch(`/api/houseprojects/${projectId}`);
         const data = await response.json();
-        setImages(data.images || []);
+        const allImages = [];
+        allImages.push(data.thumbnail);
+        allImages.push(data.additionalImages);
+        setImages(allImages || []);
       } catch (error) {
         console.error('Error fetching images:', error);
         // Fallback images

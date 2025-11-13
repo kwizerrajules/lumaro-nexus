@@ -1,9 +1,8 @@
-// components/SearchModal.tsx
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 
 interface House {
-  id: number;
+  id: string;
   name: string;
   price: number;
   floors: number;
@@ -16,14 +15,14 @@ interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
   houses: House[];
-  onHouseSelect: (houseId: number) => void; // Add this line
+  onHouseSelect: (houseId: string) => void;
 }
 
 const SearchModal: React.FC<SearchModalProps> = ({ 
   isOpen, 
   onClose, 
   houses, 
-  onHouseSelect // Add this prop
+  onHouseSelect
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredHouses, setFilteredHouses] = useState<House[]>([]);
@@ -56,7 +55,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
     }
   };
 
-  const handleHouseClick = (houseId: number) => {
+  const handleHouseClick = (houseId: string) => {
     // Call the onHouseSelect prop instead of handling navigation here
     onHouseSelect(houseId);
     onClose();

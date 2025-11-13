@@ -11,18 +11,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
-    fullName: '',
+    names: '',
     password: '',
     confirmPassword: '',
-    country: '',
+    phone: '',
     agreeToTerms: false
   });
 
-  const countries = [
-    'Ghana', 'Nigeria', 'Kenya', 'South Africa', 'Egypt', 'Ethiopia',
-    'Tanzania', 'Uganda', 'Algeria', 'Morocco', 'Ivory Coast', 'Senegal',
-    'Cameroon', 'Zimbabwe', 'Zambia', 'Rwanda', 'Botswana', 'Namibia'
-  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -48,25 +43,26 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
     }
 
     try {
-      // 👇 Hand emoji - Replace with your actual API endpoint
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      // Login and registration Endpoints
+      const endpoint = isLogin ? '/api/auth/login/users' : '/api/auth/register/users';
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-
       if (response.ok) {
         const userData = await response.json();
+        localStorage.setItem("userAccessToken",userData.data.accessToken);
+        localStorage.setItem("userRefreshToken", userData.data.refreshToken);
         onAuthSuccess(userData);
         onClose();
         // Reset form
         setFormData({
           email: '',
-          fullName: '',
+          names: '',
           password: '',
           confirmPassword: '',
-          country: '',
+          phone: '',
           agreeToTerms: false
         });
       } else {
@@ -159,8 +155,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
                 </label>
                 <input
                   type="text"
-                  name="fullName"
-                  value={formData.fullName}
+                  name="names"
+                  value={formData.names}
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
@@ -169,24 +165,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
               </div>
             )}
 
-            {/* Country (Registration only) */}
+            {/* Phone For Registration */}
             {!isLogin && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Country *
+                  Phone *
                 </label>
-                <select
-                  name="country"
-                  value={formData.country}
+              <input
+                  type="text"
+                  name="phone"
+                  value={formData.phone}
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
-                >
-                  <option value="">Select your country</option>
-                  {countries.map(country => (
-                    <option key={country} value={country}>{country}</option>
-                  ))}
-                </select>
+                  placeholder="Enter your full name"
+                />
               </div>
             )}
 

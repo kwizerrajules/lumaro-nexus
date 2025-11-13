@@ -3,12 +3,15 @@ import React, { useState, useEffect } from 'react';
 import AuthModal from './AuthModal';
 import SearchModal from './SearchModal';
 import Image from 'next/image';
+import axios from 'axios';
 
 interface HeaderProps {
   onFilterToggle: () => void;
   onAuthSuccess: (userData: any) => void; 
   onContactClick: () => void;
 }
+
+
 
 interface User {
   id: string;
@@ -17,11 +20,8 @@ interface User {
   country: string;
 }
 
-const sampleHouses = [
-  { id: 24512, name: "Flat roof 4 bedroom mansion", price: 403.20, floors: 2, bedrooms: 4, bathrooms: 5, type: "Residential" },
-  { id: 12219, name: "Gatehouse design", price: 117.00, floors: 1, bedrooms: 2, bathrooms: 2, type: "Residential" },
-  { id: 14308, name: "4 bedrooms and 2 car garage", price: 344.70, floors: 2, bedrooms: 4, bathrooms: 3, type: "Residential" }
-];
+
+
 
 const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContactClick }) => {
   const [announcements, setAnnouncements] = useState<string[]>([]);
@@ -31,6 +31,31 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
   const [user, setUser] = useState<User | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [sampleHouses, setSampleHouses] = useState<any[]>([]);
+
+
+  useEffect(() => {
+  const fetchHouses = async () => {
+    try {
+      const res = await axios.get('/api/houseprojects');
+      const houses = res.data.data.map((item: any) => ({
+        id: item.id,
+        name: item.title, 
+        price: Number(item.price),
+        floors: item.floors,
+        bedrooms: item.bedrooms,
+        bathrooms: item.bathrooms,
+        type: item.categoty || 'Residential',
+      }));
+      setSampleHouses(houses);
+    } catch (err) {
+      console.error('Failed to fetch houses:', err);
+    }
+  };
+
+  fetchHouses();
+}, []);
+
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -84,7 +109,7 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
 
   const handleSearchClick = () => setShowSearchModal(true);
 
-  const handleHouseSelect = (houseId: number) => {
+  const handleHouseSelect = (houseId: string) => {
     console.log('House selected from search:', houseId);
     setShowSearchModal(false);
   };

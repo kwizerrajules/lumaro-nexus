@@ -44,9 +44,21 @@ export const HouseProjectModel = {
 
   // READ (Single)
   async getById(id: string): Promise<HouseProject | null> {
-    const [rows]: any = await pool.query("SELECT * FROM house_projects WHERE id = ?", [id]);
-    return rows.length ? rows[0] : null;
-  },
+  const [rows]: any = await pool.query("SELECT * FROM house_projects WHERE id = ?", [id]);
+  if (!rows.length) return null;
+
+  const project = rows[0];
+
+  if (typeof project.additionalImages === "string") {
+    try {
+      project.additionalImages = JSON.parse(project.additionalImages);
+    } catch {
+      project.additionalImages = [];
+    }
+  }
+
+  return project;
+},
 
   // READ (List with Filtering + Pagination + Search)
   async getAll(options?: {

@@ -4,14 +4,14 @@ interface FeaturedProject {
   id: string;
   title: string;
   description: string;
-  image: string;
+  thumbnail: string;
   price: number;
   bedrooms: number;
   bathrooms: number;
-  area: number;
+  areaSqFt: number;
   featuredText: string;
   photoTopic: string; // 👈 Admin-named photo topic
-  category: string; // 👈 Admin-defined category
+  categoty: string; // 👈 Admin-defined category
   tags: string[]; // 👈 Admin-added tags
 }
 
@@ -23,25 +23,25 @@ const FeaturedProject: React.FC = () => {
     const fetchFeaturedProjects = async () => {
       try {
         // 👇 Hand emoji - Replace with your actual API endpoint
-        const response = await fetch('/api/featured-projects');
+        const response = await fetch('/api/houseprojects');
         const data = await response.json();
-        
-        if (data.projects && data.projects.length > 0) {
-          setCurrentProject(data.projects[0]); // Show first featured project
+        console.log("HOuse Project Data is : ", data.data[0]);
+        if (data.data && data.data.length > 0) {
+          setCurrentProject(data.data[0]); // Show first featured project
         } else {
           // Fallback data with admin-named topics
           setCurrentProject({
             id: '49801',
             title: 'Luxury 2 Bedroom Apartments',
             description: 'Premium apartment complex with modern amenities and stunning architectural design. Perfect for urban living with spacious layouts and contemporary finishes.',
-            image: '/featured-house.jpg',
+            thumbnail: 'https://cdn.pixabay.com/photo/2016/11/18/17/46/house-1836070_960_720.jpg',
             price: 985,
             bedrooms: 2,
             bathrooms: 2,
-            area: 85,
+            areaSqFt: 85,
             featuredText: '🏆 Project of the Month',
             photoTopic: 'Modern Urban Living', // 👈 Admin-named topic
-            category: 'Apartment Complex', // 👈 Admin-defined category
+            categoty: 'Apartment Complex', // 👈 Admin-defined category
             tags: ['Modern', 'Luxury', 'Urban', 'Sustainable'] // 👈 Admin-added tags
           });
         }
@@ -52,14 +52,15 @@ const FeaturedProject: React.FC = () => {
           id: '49801',
           title: 'Luxury 2 Bedroom Apartments',
           description: 'Premium apartment complex with modern amenities and stunning architectural design. Perfect for urban living with spacious layouts and contemporary finishes.',
-          image: '/featured-house.jpg',
+          thumbnail: 'https://cdn.pixabay.com/photo/2016/11/18/17/46/house-1836070_960_720.jpg',
+          // image: '/featured-house.jpg',
           price: 985,
           bedrooms: 2,
           bathrooms: 2,
-          area: 85,
+          areaSqFt: 85,
           featuredText: '🏆 Project of the Month',
           photoTopic: 'Modern Urban Living', // 👈 Admin-named topic
-          category: 'Apartment Complex', // 👈 Admin-defined category
+          categoty: 'Apartment Complex', // 👈 Admin-defined category
           tags: ['Modern', 'Luxury', 'Urban', 'Sustainable'] // 👈 Admin-added tags
         });
       } finally {
@@ -97,14 +98,14 @@ const FeaturedProject: React.FC = () => {
           <div className="lg:w-3/4 relative">
             <div 
               className="h-96 lg:h-[500px] bg-cover bg-center relative"
-              style={{ backgroundImage: `url(${currentProject.image})` }}
+              style={{ backgroundImage: `url(${currentProject.thumbnail})` }}
             >
               {/* Overlay gradient */}
               <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
               
               {/* Featured Badge */}
               <div className="absolute top-6 left-6 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-                {currentProject.featuredText}
+                Discover Our Latest Innovations
               </div>
 
               {/* Admin-Named Photo Topic */}
@@ -119,7 +120,7 @@ const FeaturedProject: React.FC = () => {
                 {/* Admin-defined Category */}
                 <div className="mb-3">
                   <span className="bg-blue-500/80 text-white px-3 py-1 rounded-full text-xs font-medium">
-                    🏷️ {currentProject.category}
+                    🏷️ {currentProject.categoty}
                   </span>
                 </div>
                 
@@ -134,7 +135,7 @@ const FeaturedProject: React.FC = () => {
                   </span>
                   <span className="flex items-center space-x-1">
                     <span>📐</span>
-                    <span>{currentProject.area} m²</span>
+                    <span>{currentProject.areaSqFt} m²</span>
                   </span>
                   <span className="flex items-center space-x-1 font-bold text-green-400">
                     <span>💰</span>
@@ -142,17 +143,6 @@ const FeaturedProject: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Admin-added Tags */}
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {currentProject.tags.map((tag, index) => (
-                    <span 
-                      key={index}
-                      className="bg-white/20 text-white px-2 py-1 rounded text-xs backdrop-blur-sm"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
@@ -177,17 +167,17 @@ const FeaturedProject: React.FC = () => {
               
               {/* Quick Stats */}
               <div className="space-y-3 mb-6">
-                <div className="flex justify-between items-center pb-2 border-b border-gray-700">
+                {/* <div className="flex justify-between items-center pb-2 border-b border-gray-700">
                   <span className="text-gray-400">Project ID</span>
                   <span className="font-semibold">{currentProject.id}</span>
-                </div>
+                </div> */}
                 <div className="flex justify-between items-center pb-2 border-b border-gray-700">
                   <span className="text-gray-400">Category</span>
-                  <span className="font-semibold text-blue-400">{currentProject.category}</span>
+                  <span className="font-semibold text-blue-400">{currentProject.categoty}</span>
                 </div>
                 <div className="flex justify-between items-center pb-2 border-b border-gray-700">
                   <span className="text-gray-400">Total Area</span>
-                  <span className="font-semibold">{currentProject.area} m²</span>
+                  <span className="font-semibold">{currentProject.areaSqFt} m²</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Starting Price</span>
@@ -201,16 +191,6 @@ const FeaturedProject: React.FC = () => {
                   <span>🏷️</span>
                   <span>Project Tags</span>
                 </div>
-                <div className="flex flex-wrap gap-1">
-                  {currentProject.tags.map((tag, index) => (
-                    <span 
-                      key={index}
-                      className="bg-gray-600 text-gray-200 px-2 py-1 rounded text-xs"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
               </div>
             </div>
 
@@ -218,19 +198,7 @@ const FeaturedProject: React.FC = () => {
               <button className="w-full bg-green-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-300 text-center">
                 View Project Details
               </button>
-              <a href="/custom-plan" className="block">
-                <button className="w-full border-2 border-green-500 text-green-500 py-3 px-6 rounded-lg font-semibold hover:bg-green-500 hover:text-white transition-colors duration-300 text-center">
-                  Customize Your Plan
-                </button>
-              </a>
-            </div>
-
-            {/* Auto-rotation indicator */}
-            <div className="mt-6 text-center">
-              <div className="flex items-center justify-center space-x-2 text-gray-400 text-sm">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Featured project updates every 30 seconds</span>
-              </div>
+              
             </div>
           </div>
         </div>

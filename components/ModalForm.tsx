@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import ImageCarousel from './ImageCarousel';
-import PriceCalculator from './PriceCalculator';
 
 interface Project {
   id: string;
@@ -22,16 +21,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
   const [selectedFileType, setSelectedFileType] = useState<'cad+pdf' | 'pdf'>('pdf');
   const [selectedDrawings, setSelectedDrawings] = useState<string[]>(['architectural']);
   const [quantity, setQuantity] = useState(1);
-
-  const fileTypes = [
-    { id: 'cad+pdf', label: 'CAD + PDF', price: project.price },
-    { id: 'pdf', label: 'PDF', price: project.price * 0.8 }
-  ];
-
-  const drawingSets = [
-    { id: 'architectural', label: 'Architectural Drawings', included: true },
-    { id: 'boq', label: 'Bills of Quantity (BOQ)', price: 50 }
-  ];
+  
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -41,10 +31,7 @@ const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
   };
 
   const calculateTotal = () => {
-    let total = selectedFileType === 'cad+pdf' ? project.price : project.price * 0.8;
-    selectedDrawings.forEach(d => {
-      if (d === 'boq') total += 50;
-    });
+    let total = project.price;
     return total * quantity;
   };
 
@@ -82,10 +69,6 @@ const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
             {project.description && (
               <p className="mt-4 text-gray-700">{project.description}</p>
             )}
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Construction Cost Calculator</h3>
-              <PriceCalculator />
-            </div>
           </div>
 
           {/* Right - Form & Options */}
@@ -123,47 +106,6 @@ const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
               </div>
             </div>
 
-            {/* File Type Selection */}
-            <div className="mb-6">
-              <h3 className="font-semibold text-gray-800 mb-2">File Type</h3>
-              {fileTypes.map(ft => (
-                <label key={ft.id} className="flex items-center mb-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="fileType"
-                    value={ft.id}
-                    checked={selectedFileType === ft.id}
-                    onChange={() => setSelectedFileType(ft.id as 'cad+pdf' | 'pdf')}
-                    className="text-green-500 focus:ring-green-500"
-                  />
-                  <span className="ml-2 text-gray-700">{ft.label}</span>
-                  <span className="ml-auto text-gray-600 font-semibold">{formatPrice(ft.price)}</span>
-                </label>
-              ))}
-            </div>
-
-            {/* Drawing Sets */}
-            <div className="mb-6">
-              <h3 className="font-semibold text-gray-800 mb-2">Drawing Sets</h3>
-              {drawingSets.map(ds => (
-                <label key={ds.id} className="flex items-center mb-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedDrawings.includes(ds.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedDrawings([...selectedDrawings, ds.id]);
-                      } else {
-                        setSelectedDrawings(selectedDrawings.filter(d => d !== ds.id));
-                      }
-                    }}
-                    className="text-green-500 focus:ring-green-500"
-                  />
-                  <span className="ml-2 text-gray-700">{ds.label}</span>
-                  {ds.price && <span className="ml-auto text-gray-600 font-semibold">+{formatPrice(ds.price)}</span>}
-                </label>
-              ))}
-            </div>
 
             {/* Quantity */}
             <div className="mb-6">
