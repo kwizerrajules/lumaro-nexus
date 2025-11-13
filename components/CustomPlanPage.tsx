@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Header from './Header';
 import Newsletter from './Newsletter';
 import CustomPlanBuilder from './CustomPlanBuilder';
-import ConstructionCalculator from './ConstructionCalculator';
+// import ConstructionCalculator from './ConstructionCalculator';
 
 export default function CustomPlanPage() {
   const [showSidebar, setShowSidebar] = useState(false);
@@ -57,7 +57,7 @@ export default function CustomPlanPage() {
 
           {/* Right - Construction Calculator (1/3 width) */}
           <div className="lg:col-span-1">
-            <ConstructionCalculator />
+            {/* <ConstructionCalculator /> */}
           </div>
         </div>
       </div>
