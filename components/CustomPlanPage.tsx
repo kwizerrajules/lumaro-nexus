@@ -1,5 +1,6 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import Header from './Header';
 import Newsletter from './Newsletter';
 import CustomPlanBuilder from './CustomPlanBuilder';
@@ -7,17 +8,32 @@ import ConstructionCalculator from './ConstructionCalculator';
 
 export default function CustomPlanPage() {
   const [showSidebar, setShowSidebar] = useState(false);
+  const footerRef = useRef<HTMLElement>(null);
+
+  const handleContactClick = () => {
+    if (footerRef.current) {
+      footerRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+
+  const handleAuthSuccess = (userData: any) => {
+    console.log('User authenticated:', userData);
+    // Handle user authentication logic here
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onFilterToggle={() => setShowSidebar(!showSidebar)} onAuthSuccess={function (userData: any): void {
-        throw new Error('Function not implemented.');
-      } } onContactClick={function (): void {
-        throw new Error('Function not implemented.');
-      } } />
+      <Header 
+        onFilterToggle={() => setShowSidebar(!showSidebar)} 
+        onAuthSuccess={handleAuthSuccess} 
+        onContactClick={handleContactClick} 
+      />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-gray-900 to-black text-white py-16">
+      <section className="bg-black text-white py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
@@ -57,10 +73,10 @@ export default function CustomPlanPage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Customer Service</h3>
               <p className="text-gray-600 mb-2">
-                Contact us at <strong>info@maramani.com</strong>
+                Contact us at <strong>info@lumaro_nexus.com</strong>
               </p>
               <p className="text-gray-600 mb-2">
-                Phone: <strong>+1 408 540 0400</strong>
+                Phone: <strong>+250791756343</strong>
               </p>
               <p className="text-gray-600 text-sm">
                 Monday to Friday 9:00 AM to 4:00 PM GMT +3
@@ -95,37 +111,67 @@ export default function CustomPlanPage() {
       {/* Newsletter */}
       <Newsletter />
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      {/* Footer with contact section */}
+      <footer ref={footerRef} className="bg-gray-900 text-white py-16">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Column 1: Logo and Company Info */}
             <div>
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                  <span className="text-gray-900 font-bold text-lg">M</span>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                  <Image
+                    src="/image/logo_images/Unex_log.png"
+                    alt="Lumaro Nexus Logo"
+                    width={48}
+                    height={48}
+                    className="object-contain"
+                    onError={(e) => {
+                      // Fallback if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
                 </div>
-                <span className="text-xl font-bold">Maramani</span>
+                <span className="text-xl font-bold">
+                  <span className="text-orange-500">Lumaro</span>
+                  <span className="text-white"> Nexus</span>
+                </span>
               </div>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                Since 2014, providing affordable, African market-tailored designs with premium 
-                construction documents and custom design options.
+              <p className="text-gray-400 text-sm leading-relaxed mb-4">
+                Since 2014, providing affordable, African market-tailored designs with premium construction documents and custom design options.
               </p>
+              
+              {/* Social Media Links */}
+              <div className="flex space-x-4">
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-green-500 transition-colors">
+                  <span className="text-white">f</span>
+                </a>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-pink-500 transition-colors">
+                  <span className="text-white">📸</span>
+                </a>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors">
+                  <span className="text-white">💬</span>
+                </a>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-400 transition-colors">
+                  <span className="text-white">t</span>
+                </a>
+              </div>
             </div>
             
+            {/* Column 2: Shop Links */}
             <div>
               <h4 className="font-semibold mb-4 text-lg">Shop</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Best Sellers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">By Size</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">By Style</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">By Budget</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Custom Plan</a></li>
+              <ul className="space-y-3 text-sm text-gray-400">
+                <li><a href="#" className="hover:text-white transition-colors">Back to Head</a></li>
+                <li><a href="/catalog" className="hover:text-white transition-colors">Catalog</a></li>
+                <li><a href="/custom-plan" className="hover:text-white transition-colors">Customise Your Design</a></li>
               </ul>
             </div>
             
+            {/* Column 3: Learn Links */}
             <div>
-              <h4 className="font-semibold mb-4 text-lg">Support</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
+              <h4 className="font-semibold mb-4 text-lg">Learn</h4>
+              <ul className="space-y-3 text-sm text-gray-400">
                 <li><a href="#" className="hover:text-white transition-colors">Frequently Asked Questions</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">For Affiliates</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Refer a friend</a></li>
@@ -133,21 +179,36 @@ export default function CustomPlanPage() {
               </ul>
             </div>
             
-            <div>
+            {/* Column 4: Contact Info */}
+            <div id="contact-section">
               <h4 className="font-semibold mb-4 text-lg">Contact</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li>📧 Email: info@maramani.com</li>
-                <li>🌐 Website: www.maramani.com</li>
-                <li>🛟 Support: help@maramani.com</li>
-                <li>📱 WhatsApp: +1234567890</li>
+              <ul className="space-y-3 text-sm text-gray-400">
+                <li className="flex items-center space-x-2">
+                  <span>📧</span>
+                  <span>Email: info@lumaro_nexus.com</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span>🌐</span>
+                  <span>Website: www.lumaro_nexus.com</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span>🛟</span>
+                  <span>Support: help@lumaro_nexus.com</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span>📱</span>
+                  <span>WhatsApp: +250791756343</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span>📍</span>
+                  <span>Location: Kigali Rwanda</span>
+                </li>
               </ul>
             </div>
           </div>
           
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-            <p className="text-gray-400 text-sm">
-              &copy; 2024 Maramani House Plans. All rights reserved. | Privacy Policy | Terms of Service
-            </p>
+          <div className="border-t border-gray-800 mt-12 pt-8 text-center">
+            <p className="text-gray-400 text-sm">&copy; 2025 Lumaro Nexus House Plans. All rights reserved. | Privacy Policy | Terms of Service</p>
           </div>
         </div>
       </footer>

@@ -218,9 +218,11 @@ const FeaturedProject: React.FC = () => {
               <button className="w-full bg-green-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-300 text-center">
                 View Project Details
               </button>
-              <button className="w-full border-2 border-green-500 text-green-500 py-3 px-6 rounded-lg font-semibold hover:bg-green-500 hover:text-white transition-colors duration-300 text-center">
-                Customize This Plan
-              </button>
+              <a href="/custom-plan" className="block">
+                <button className="w-full border-2 border-green-500 text-green-500 py-3 px-6 rounded-lg font-semibold hover:bg-green-500 hover:text-white transition-colors duration-300 text-center">
+                  Customize Your Plan
+                </button>
+              </a>
             </div>
 
             {/* Auto-rotation indicator */}

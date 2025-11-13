@@ -63,7 +63,7 @@ export default function Catalog() {
       />
       
       {/* Catalog Hero Section */}
-      <section className="bg-gradient-to-br from-gray-900 to-black text-white py-20">
+      <section className="bg-black text-white py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -74,7 +74,7 @@ export default function Catalog() {
             </p>
           </div>
         </div>
-      </section>
+     </section>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">

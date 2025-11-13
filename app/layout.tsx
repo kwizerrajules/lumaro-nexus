@@ -14,7 +14,7 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Maramani House Plans - Affordable African Designs",
+  title: "Lumaro Nexus - Affordable African Designs",
   description: "Since 2014, providing affordable, African market-tailored house plans with premium construction documents and custom design options.",
 };
 

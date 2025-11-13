@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import AuthModal from '../components/AuthModal';
 import Header from '../components/Header';
 import HouseProjectCard from '../components/HouseProjectCard';
@@ -294,7 +295,7 @@ export default function Home() {
               {/* Premium Features */}
               <div className="bg-gray-50 rounded-2xl p-8 mb-16">
                 <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Maramani?</h2>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Lumaro Nexus?</h2>
                   <p className="text-gray-600 text-lg max-w-2xl mx-auto">
                     We combine African architectural expertise with international standards to deliver exceptional value.
                   </p>
@@ -350,12 +351,22 @@ export default function Home() {
       <footer ref={footerRef} className="bg-gray-900 text-white py-16">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Column 1: Logo and Company Info */}
             <div>
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                  <span className="text-gray-900 font-bold text-lg">M</span>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                  <Image
+                    src="/image/logo_images/Unex_log.png"
+                    alt="Lumaro Nexus Logo"
+                    width={40}
+                    height={40}
+                    className="object-contain"
+                  />
                 </div>
-                <span className="text-xl font-bold">Maramani</span>
+                <span className="text-xl font-bold">
+                  <span className="text-orange-500">Lumaro</span>
+                  <span className="text-white"> Nexus</span>
+                </span>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed mb-4">
                 Since 2014, providing affordable, African market-tailored designs with premium construction documents and custom design options.
@@ -378,17 +389,17 @@ export default function Home() {
               </div>
             </div>
             
+            {/* Column 2: Shop Links */}
             <div>
               <h4 className="font-semibold mb-4 text-lg">Shop</h4>
               <ul className="space-y-3 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Best Sellers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">By Size</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">By Style</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">By Budget</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Custom Plan</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Back to Head</a></li>
+                <li><a href="/catalog" className="hover:text-white transition-colors">Catalog</a></li>
+                <li><a href="/custom-plan" className="hover:text-white transition-colors">Customise Your Design</a></li>
               </ul>
             </div>
             
+            {/* Column 3: Learn Links */}
             <div>
               <h4 className="font-semibold mb-4 text-lg">Learn</h4>
               <ul className="space-y-3 text-sm text-gray-400">
@@ -399,38 +410,39 @@ export default function Home() {
               </ul>
             </div>
             
+            {/* Column 4: Contact Info */}
             <div>
               <h4 className="font-semibold mb-4 text-lg">Contact</h4>
               <ul className="space-y-3 text-sm text-gray-400">
                 <li className="flex items-center space-x-2">
                   <span>📧</span>
-                  <span>Email: info@maramani.com</span>
+                  <span>Email: info@lumaro_nexus.com</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <span>🌐</span>
-                  <span>Website: www.maramani.com</span>
+                  <span>Website: www.Lumaro_nexus.com</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <span>🛟</span>
-                  <span>Support: help@maramani.com</span>
+                  <span>Support: help@lumaro_nexus.com</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <span>📱</span>
-                  <span>WhatsApp: +1234567890</span>
+                  <span>WhatsApp: +250791756343</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <span>📍</span>
-                  <span>Location: Accra, Ghana</span>
+                  <span>Location: Kigali Rwanda</span>
                 </li>
               </ul>
             </div>
           </div>
           
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center">
-            <p className="text-gray-400 text-sm">&copy; 2024 Maramani House Plans. All rights reserved. | Privacy Policy | Terms of Service</p>
+                <div className="border-t border-gray-800 mt-12 pt-8 text-center">
+                  <p className="text-gray-400 text-sm">&copy; 2025 Lumaro Nexus House Plans. All rights reserved. | Privacy Policy | Terms of Service</p>
+                </div>
+              </div>
+            </footer>
           </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
+        );
+      }
