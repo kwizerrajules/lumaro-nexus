@@ -132,7 +132,7 @@ export default function Home() {
   };
 
   // Handle house selection from search modal
-  const handleHouseSelect = (houseId: number) => {
+  const handleHouseSelect = (houseId: string) => {
     const selectedHouse = projects.find(project => project.id === houseId.toString());
     if (selectedHouse) {
       console.log('Selected house:', selectedHouse);
