@@ -198,7 +198,7 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
                       </div>
                       <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
                       <a href="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Orders</a>
-                      <a href="/favorites" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Favorites</a>
+                      <a href="/my-custom-plans" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Custom Plans</a>
                       <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Sign Out</button>
                     </div>
                   )}
