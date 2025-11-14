@@ -10,6 +10,7 @@ import Newsletter from '../components/Newsletter';
 import FeaturedProject from '../components/FeaturedProject';
 import SearchModal from '../components/SearchModal';
 import axios from 'axios';
+import { Console } from 'console';
 
 export default function Home() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -45,6 +46,8 @@ export default function Home() {
             description: project.description,
             location: project.location,
             style: project.style,
+            type: project.type,
+            categoty: project.categoty,
             rooms: project.rooms,
             status: project.status
           }));
@@ -128,8 +131,9 @@ export default function Home() {
 
 const handleFilterChange = (newFilters: any) => {
   setFilters(newFilters);
-
   let filtered = [...projects];
+  console.log("FIlters: ", newFilters);
+  console.log("Orginals", filtered)
   if (Array.isArray(newFilters.bedrooms) && newFilters.bedrooms.length > 0) {
     filtered = filtered.filter(project =>
       newFilters.bedrooms.includes(project.bedrooms)
@@ -141,8 +145,54 @@ const handleFilterChange = (newFilters: any) => {
       newFilters.bathrooms.includes(project.bathrooms)
     );
   }
+  
+  if (Array.isArray(newFilters.areas) && newFilters.areas.length > 0) {
+    filtered = filtered.filter(project => {
+      return newFilters.areas.some(rangeStr => {
+        const [minStr, maxStr] = rangeStr.split("-");
+
+        const min = Number(minStr);
+        const max = maxStr === "null" ? null : Number(maxStr);
+
+        if (max === null) {
+          return project.area >= min;
+        }
+
+        return project.area >= min && project.area <= max;
+      });
+    });
+  }  
 
   
+  if (Array.isArray(newFilters.priceRanges) && newFilters.priceRanges.length > 0) {
+    filtered = filtered.filter(project => {
+      return newFilters.priceRanges.some(rangeStr => {
+        const [minStr, maxStr] = rangeStr.split("-");
+        const min = Number(minStr);
+        const max = maxStr === "null" ? null : Number(maxStr);
+
+        if (max === null) {
+          return project.price >= min;
+        }
+
+        return project.price >= min && project.price <= max;
+      });
+    });
+  }
+  
+ if (Array.isArray(newFilters.styles) && newFilters.styles.length > 0) {
+  filtered = filtered.filter(
+  project => (project.type || "Unknown") && newFilters.styles.includes(project.type || "Unknown")
+);
+}
+
+if (Array.isArray(newFilters.categories) && newFilters.categories.length > 0) {
+  filtered = filtered.filter(project =>
+    project.categoty && newFilters.categories.includes(project.categoty)
+  );
+}
+  console.log("Filitered types", filtered);
+
 
   setFilteredProjects(filtered);
 };

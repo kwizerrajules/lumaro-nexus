@@ -25,6 +25,7 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
     floors: 0,
     categoty: '',
     style: '',
+    type: '',
     price: '',
   });
 
@@ -273,6 +274,19 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               value={formData.areaSqFt}
               onChange={handleChange}
               placeholder="Total square footage"
+              className="w-full p-2 rounded bg-gray-700 text-white placeholder-gray-400"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Type
+            </label>
+            <input
+              type="text"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              placeholder="Project or House Type"
               className="w-full p-2 rounded bg-gray-700 text-white placeholder-gray-400"
             />
           </div>

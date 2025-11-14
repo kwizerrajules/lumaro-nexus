@@ -11,10 +11,10 @@ export const HouseProjectModel = {
     const query = `
       INSERT INTO house_projects (
         id, title, description, thumbnail, additionalImages, status, rooms, height, width,
-        areaSqFt, location, bedrooms, bathrooms, floors, categoty, style,
+        areaSqFt, location, bedrooms, bathrooms, floors, categoty, style,type,
         price, views, likes, createdAt, updatedAt
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     await pool.query(query, [
       parsed.id,
@@ -33,6 +33,7 @@ export const HouseProjectModel = {
       parsed.floors || 0,
       parsed.categoty || null,
       parsed.style || null,
+      parsed.type || null,
       parsed.price || 0,
       parsed.views,
       parsed.likes,

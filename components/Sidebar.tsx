@@ -1,15 +1,16 @@
+import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 
 interface FilterState {
   bedrooms: number[];
   bathrooms: number[];
   floors: number[];
-  minPrice: number;
-  maxPrice: number;
+  // minPrice: number;
+  priceRanges: string[];
+  // maxPrice: number;
   styles: string[];
   areas: string[];
-  categories: string[];
-  tags: string[];
+  categories: string[]
 }
 
 interface SidebarProps {
@@ -22,15 +23,45 @@ const Sidebar: React.FC<SidebarProps> = ({ onFilterChange, onClose }) => {
     bedrooms: [],
     bathrooms: [],
     floors: [],
-    minPrice: 0,
-    maxPrice: 5000,
+    // minPrice: 0,
+    // maxPrice: 1000000,
+    priceRanges: [],
     styles: [],
     areas: [],
     categories: [],
-    tags: []
   });
 
   const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [productTypes, setProductTypes] = useState<{ label: string, count: number }[]>([]);
+  const [categories, setCategories] = useState<{ label: string, count: number }[]>([]);
+
+useEffect(() => {
+  axios.get("/api/houseprojects")
+    .then((res) => {
+      const projects = res.data?.data || [];
+      const typeMap: Record<string, number> = {};
+
+      projects.forEach(p => {
+        if (p.type) {
+          typeMap[p.type] = (typeMap[p.type] || 0) + 1;
+        }
+      });
+
+      const categoryMap: Record<string, number> = {};
+      projects.forEach(p => {
+        if (p.categoty) { 
+          categoryMap[p.categoty] = (categoryMap[p.categoty] || 0) + 1;
+        }
+      });
+      const categoriesArray = Object.entries(categoryMap).map(([label, count]) => ({ label, count }));
+      const typesArray = Object.entries(typeMap).map(([label, count]) => ({ label, count }));
+      setProductTypes(typesArray);
+      setCategories(categoriesArray)
+    })
+    .catch(err => console.error("Failed to fetch projects:", err));
+}, []);
+
+
 
   const updateFilter = (key: keyof FilterState, value: any) => {
     const newFilters = { ...filters, [key]: value };
@@ -38,7 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onFilterChange, onClose }) => {
     onFilterChange(newFilters);
   };
 
-  const toggleArrayFilter = (key: 'bedrooms' | 'bathrooms' | 'floors' | 'styles' | 'areas' | 'categories' | 'tags', value: number | string) => {
+  const toggleArrayFilter = (key: 'bedrooms' | 'bathrooms' | 'floors' | 'styles' | 'areas' | 'categories' | 'priceRanges' , value: number | string) => {
     const currentArray = filters[key] as (number | string)[];
     const newArray = currentArray.includes(value)
       ? currentArray.filter(item => item !== value)
@@ -118,57 +149,48 @@ const Sidebar: React.FC<SidebarProps> = ({ onFilterChange, onClose }) => {
           <h3 className="font-semibold text-gray-900 mb-4 text-sm uppercase tracking-wide">Filter By</h3>
           <div className="flex flex-wrap gap-3">
             {/* Product Type Tab */}
-            <FilterTab title="Product Type" tabKey="productType">
-              <h4 className="font-semibold text-gray-900 mb-4">Product Type</h4>
-              <div className="space-y-3">
-                {[
-                  { label: 'Apartments', count: 20 },
-                  { label: 'Houses', count: 15 },
-                  { label: 'Studios', count: 8 },
-                  { label: 'Commercial', count: 5 }
-                ].map((type) => (
-                  <label key={type.label} className="flex items-center justify-between cursor-pointer group">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={filters.styles.includes(type.label)}
-                        onChange={() => toggleArrayFilter('styles', type.label)}
-                        className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2"
-                      />
-                      <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors">{type.label}</span>
-                    </div>
-                    <span className="text-gray-400 text-sm">({type.count})</span>
-                  </label>
-                ))}
-              </div>
-            </FilterTab>
+           <FilterTab title="Product Type" tabKey="productType">
+  <h4 className="font-semibold text-gray-900 mb-4">Product Type</h4>
+  <div className="space-y-3">
+    {productTypes.map((type) => (
+      <label key={type.label} className="flex items-center justify-between cursor-pointer group">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            checked={filters.styles.includes(type.label)}
+            onChange={() => toggleArrayFilter('styles', type.label)}
+            className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2"
+          />
+          <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors">{type.label}</span>
+        </div>
+        <span className="text-gray-400 text-sm">({type.count})</span>
+      </label>
+    ))}
+  </div>
+</FilterTab>
+
 
             {/* Categories Tab */}
-            <FilterTab title="Categories" tabKey="categories">
-              <h4 className="font-semibold text-gray-900 mb-4">Project Categories</h4>
-              <div className="space-y-3">
-                {[
-                  { label: 'Modern Urban', count: 12 },
-                  { label: 'Traditional', count: 8 },
-                  { label: 'Luxury Villas', count: 6 },
-                  { label: 'Eco-Friendly', count: 4 },
-                  { label: 'Minimalist', count: 7 }
-                ].map((category) => (
-                  <label key={category.label} className="flex items-center justify-between cursor-pointer group">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={filters.categories.includes(category.label)}
-                        onChange={() => toggleArrayFilter('categories', category.label)}
-                        className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2"
-                      />
-                      <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors">{category.label}</span>
-                    </div>
-                    <span className="text-gray-400 text-sm">({category.count})</span>
-                  </label>
-                ))}
-              </div>
-            </FilterTab>
+            <FilterTab title="Category" tabKey="category">
+  <h4 className="font-semibold text-gray-900 mb-4">Categories</h4>
+  <div className="space-y-3">
+    {categories.map(category => (
+      <label key={category.label} className="flex items-center justify-between cursor-pointer group">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            checked={filters.categories.includes(category.label)}
+            onChange={() => toggleArrayFilter('categories', category.label)}
+            className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2"
+          />
+          <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors">{category.label}</span>
+        </div>
+        <span className="text-gray-400 text-sm">({category.count})</span>
+      </label>
+    ))}
+  </div>
+</FilterTab>
+
 
             {/* Bedrooms Tab */}
             <FilterTab title="Bedrooms" tabKey="bedrooms">
@@ -217,89 +239,63 @@ const Sidebar: React.FC<SidebarProps> = ({ onFilterChange, onClose }) => {
             </FilterTab>
 
             {/* Area Tab */}
-            <FilterTab title="Area" tabKey="area">
-              <h4 className="font-semibold text-gray-900 mb-4">Area Range (m²)</h4>
-              <div className="space-y-3">
-                {[
-                  { label: 'Small (0-50 m²)', value: 'small' },
-                  { label: 'Medium (51-100 m²)', value: 'medium' },
-                  { label: 'Large (101-200 m²)', value: 'large' },
-                  { label: 'Extra Large (200+ m²)', value: 'xlarge' }
-                ].map((area) => (
-                  <label key={area.value} className="flex items-center justify-between cursor-pointer group">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={filters.areas.includes(area.value)}
-                        onChange={() => toggleArrayFilter('areas', area.value)}
-                        className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2"
-                      />
-                      <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors">{area.label}</span>
-                    </div>
-                    <span className="text-gray-400 text-sm">(0)</span>
-                  </label>
-                ))}
-              </div>
-            </FilterTab>
+                <FilterTab title="Area" tabKey="area">
+  <h4 className="font-semibold text-gray-900 mb-4">Area Range (m²)</h4>
+  <div className="space-y-3">
+    {[
+      { label: "Small (0–50 m²)", value: "0-50" },
+      { label: "Medium (51–100 m²)", value: "51-100" },
+      { label: "Large (101–200 m²)", value: "101-200" },
+      { label: "Extra Large (200+ m²)", value: "201-null" }
+    ].map((area) => (
+      <label key={area.value} className="flex items-center justify-between cursor-pointer group">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            checked={filters.areas.includes(area.value)}
+            onChange={() => toggleArrayFilter("areas", area.value)}
+            className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2"
+          />
+          <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors">
+            {area.label}
+          </span>
+        </div>
+        <span className="text-gray-400 text-sm">(0)</span>
+      </label>
+    ))}
+  </div>
+</FilterTab>
+
+
 
             {/* Price Tab */}
-            <FilterTab title="Price" tabKey="price">
-              <h4 className="font-semibold text-gray-900 mb-4">Price Range</h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-600 mb-2">Min Price: ${filters.minPrice}</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="5000"
-                    step="100"
-                    value={filters.minPrice}
-                    onChange={(e) => updateFilter('minPrice', Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-2">Max Price: ${filters.maxPrice}</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="5000"
-                    step="100"
-                    value={filters.maxPrice}
-                    onChange={(e) => updateFilter('maxPrice', Number(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-              </div>
-            </FilterTab>
+<FilterTab title="Price" tabKey="price">
+  <h4 className="font-semibold text-gray-900 mb-4">Price Range</h4>
+  <div className="space-y-3">
+    {[
+      { label: '0 - 50,000', value: '0-50000' },
+      { label: '50,001 - 100,000', value: '50001-100000' },
+      { label: '100,001 - 500,000', value: '100001-500000' },
+      { label: '500,001+', value: '500001-null' }
+    ].map((priceRange) => (
+      <label key={priceRange.value} className="flex items-center justify-between cursor-pointer group">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            checked={filters.priceRanges?.includes(priceRange.value)}
+            onChange={() => toggleArrayFilter('priceRanges', priceRange.value)}
+            className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2"
+          />
+          <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors">{priceRange.label}</span>
+        </div>
+      </label>
+    ))}
+  </div>
+</FilterTab>
 
-            {/* Tags Tab */}
-            <FilterTab title="Tags" tabKey="tags">
-              <h4 className="font-semibold text-gray-900 mb-4">Popular Tags</h4>
-              <div className="space-y-3">
-                {[
-                  { label: 'Modern', count: 15 },
-                  { label: 'Luxury', count: 10 },
-                  { label: 'Eco-Friendly', count: 8 },
-                  { label: 'Minimalist', count: 7 },
-                  { label: 'Traditional', count: 6 },
-                  { label: 'Urban', count: 9 }
-                ].map((tag) => (
-                  <label key={tag.label} className="flex items-center justify-between cursor-pointer group">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={filters.tags.includes(tag.label)}
-                        onChange={() => toggleArrayFilter('tags', tag.label)}
-                        className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2"
-                      />
-                      <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors">#{tag.label}</span>
-                    </div>
-                    <span className="text-gray-400 text-sm">({tag.count})</span>
-                  </label>
-                ))}
-              </div>
-            </FilterTab>
+
+
+
           </div>
         </div>
 
@@ -330,8 +326,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onFilterChange, onClose }) => {
               bedrooms: [],
               bathrooms: [],
               floors: [],
-              minPrice: 0,
-              maxPrice: 5000,
+              priceRanges: [],
               styles: [],
               areas: [],
               categories: [],
