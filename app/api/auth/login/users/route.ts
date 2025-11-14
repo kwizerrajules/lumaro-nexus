@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { loginSchema } from '../../../../../src/schemas/auth.schema';
-import { UsersModel } from '../../../../../src/lib/models/users.model';
-import { UserPayload } from '../../../../../src/types/jwt.payload';
-import { createAccessToken, createRefreshToken } from '../../../../../src/security/auth';
+import { loginSchema } from '@/src/schemas/auth.schema';
+import { UsersModel } from '@/src/lib/models/users.model';
+import { UserPayload } from '@/src/types/jwt.payload';
+import { createAccessToken, createRefreshToken } from '@/src/security/auth';
 
 import bcrypt from 'bcryptjs';
 
@@ -31,10 +31,16 @@ export async function POST(request: Request) {
         };
         const accessToken = createAccessToken(payload);
         const refreshToken = createRefreshToken(payload);
+        const userDefaulData = {
+            id: userData.id,
+            names: userData.names,
+            email: userData.email,
+            phone: userData.phone
+        }
         return NextResponse.json({ success: true, data: {
             accessToken,
             refreshToken,
-            user: userData
+            user: userDefaulData
         } }, { status: 200 });
     }
     catch (error: any) {
