@@ -1,8 +1,9 @@
 import db from "../db";
+import { uuid as uuidv4 } from "zod";
 
 export interface CustomPlan {
-  id?: number;
-  user_id: number;
+  id?: string;
+  user_id: string;
   bedrooms: number;
   bathrooms: number;
   dining_rooms: number;
@@ -19,9 +20,10 @@ export const CustomPlanModel = {
   async create(plan: CustomPlan) {
     const [result] = await db.execute(
       `INSERT INTO custom_plans 
-        (user_id, bedrooms, bathrooms, dining_rooms, kitchen, floors, total_area, category, description, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        (id, user_id, bedrooms, bathrooms, dining_rooms, kitchen, floors, total_area, category, description, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
+        crypto.randomUUID(),
         plan.user_id,
         plan.bedrooms,
         plan.bathrooms,
@@ -36,7 +38,7 @@ export const CustomPlanModel = {
     return result;
   },
 
-  async getAllByUser(user_id: number) {
+  async getAllByUser(user_id: string) {
     const [rows] = await db.execute(
       `SELECT * FROM custom_plans WHERE user_id = ? ORDER BY created_at DESC`,
       [user_id]
@@ -44,7 +46,7 @@ export const CustomPlanModel = {
     return rows;
   },
 
-  async getById(id: number) {
+  async getById(id: string) {
     const [rows] = await db.execute(
       `SELECT * FROM custom_plans WHERE id = ?`,
       [id]
@@ -52,7 +54,7 @@ export const CustomPlanModel = {
     return rows[0];
   },
 
-  async update(id: number, updates: Partial<CustomPlan>) {
+  async update(id: string, updates: Partial<CustomPlan>) {
     const fields = Object.keys(updates)
       .map((key) => `${key} = ?`)
       .join(", ");
@@ -65,7 +67,7 @@ export const CustomPlanModel = {
     return result;
   },
 
-  async delete(id: number) {
+  async delete(id: string) {
     const [result] = await db.execute(`DELETE FROM custom_plans WHERE id = ?`, [id]);
     return result;
   },

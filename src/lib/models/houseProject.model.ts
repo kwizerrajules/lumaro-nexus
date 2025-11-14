@@ -8,6 +8,14 @@ export const HouseProjectModel = {
     const parsed = HouseProjectSchema.parse(data);
     const id = parsed.id || uuidv4();
     const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+    // checking if the type is already in the database
+
+    // const checkType =  await pool.query("SELECT category from house_projects WHERE categort = ?", [parsed.type]);
+    // if (checkType.length > 0) {
+    //   throw new Error("The type")
+    // }
+
     const query = `
       INSERT INTO house_projects (
         id, title, description, thumbnail, additionalImages, status, rooms, height, width,
