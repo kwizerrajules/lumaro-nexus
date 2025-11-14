@@ -9,6 +9,7 @@ import Sidebar from '../components/Sidebar';
 import Newsletter from '../components/Newsletter';
 import FeaturedProject from '../components/FeaturedProject';
 import SearchModal from '../components/SearchModal';
+import axios from 'axios';
 
 export default function Home() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -28,11 +29,11 @@ export default function Home() {
     const loadProjects = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/houseprojects');
-        const result = await response.json();
+        const result = await axios.get('/api/houseprojects');
+        // const result = await response.json();
         
         if (result.data) {
-          const transformedProjects = result.data.map((project: any) => ({
+          const transformedProjects = result.data.data.map((project: any) => ({
             id: project.id,
             title: project.title,
             price: parseFloat(project.price),
@@ -72,31 +73,80 @@ export default function Home() {
     floors: project.floors,
     bedrooms: project.bedrooms,
     bathrooms: project.bathrooms,
-    type: "Residential"
+    type: project.categoty
   }));
 
-  const handleFilterChange = (newFilters: any) => {
-    setFilters(newFilters);
-    let filtered = [...projects];
-    
-    if (newFilters.bedrooms) {
-      filtered = filtered.filter(project => project.bedrooms === newFilters.bedrooms);
-    }
-    
-    if (newFilters.bathrooms) {
-      filtered = filtered.filter(project => project.bathrooms === newFilters.bathrooms);
-    }
-    
-    if (newFilters.minPrice) {
-      filtered = filtered.filter(project => project.price >= newFilters.minPrice);
-    }
-    
-    if (newFilters.maxPrice) {
-      filtered = filtered.filter(project => project.price <= newFilters.maxPrice);
-    }
-    
-    setFilteredProjects(filtered);
-  };
+// const handleFilterChange = (newFilters: any) => {
+//   setFilters(newFilters);
+
+//   let filtered = [...projects];
+
+//   console.log("Before filtering: ", filtered)
+//   // --- Bedrooms (array) ---
+//   if (Array.isArray(newFilters.bedrooms) && newFilters.bedrooms.length > 0) {
+//     filtered = filtered.filter(project =>
+//       newFilters.bedrooms.includes(Number(project.bedrooms))
+//     );
+//   }
+
+
+//   // --- Bathrooms (array) ---
+//   if (Array.isArray(newFilters.bathrooms) && newFilters.bathrooms.length > 0) {
+//     filtered = filtered.filter(project =>
+//       newFilters.bathrooms.includes(Number(project.bathrooms))
+//     );
+//   }
+
+
+//   // --- Floors (array) ---
+//   if (Array.isArray(newFilters.floors) && newFilters.floors.length > 0) {
+//     filtered = filtered.filter(project =>
+//       newFilters.floors.includes(Number(project.floors))
+//     );
+//   }
+
+
+//   // --- Min Price ---
+//   if (typeof newFilters.minPrice === "number") {
+//     filtered = filtered.filter(project =>
+//       Number(project.price) >= newFilters.minPrice
+//     );
+//   }
+
+
+//   // --- Max Price ---
+//   if (typeof newFilters.maxPrice === "number" && newFilters.maxPrice > 0) {
+//     filtered = filtered.filter(project =>
+//       Number(project.price) <= newFilters.maxPrice
+//     );
+//   }
+
+// console.log("After filtering", filtered);
+//   setFilteredProjects(filtered);
+// };
+
+
+const handleFilterChange = (newFilters: any) => {
+  setFilters(newFilters);
+
+  let filtered = [...projects];
+  if (Array.isArray(newFilters.bedrooms) && newFilters.bedrooms.length > 0) {
+    filtered = filtered.filter(project =>
+      newFilters.bedrooms.includes(project.bedrooms)
+    );
+  }
+
+  if (Array.isArray(newFilters.bathrooms) && newFilters.bathrooms.length > 0) {
+    filtered = filtered.filter(project =>
+      newFilters.bathrooms.includes(project.bathrooms)
+    );
+  }
+
+  
+
+  setFilteredProjects(filtered);
+};
+
 
   const toggleSidebar = () => {
     const newShowSidebar = !showSidebar;

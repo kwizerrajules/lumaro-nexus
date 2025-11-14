@@ -25,7 +25,6 @@ const FeaturedProject: React.FC = () => {
         // 👇 Hand emoji - Replace with your actual API endpoint
         const response = await fetch('/api/houseprojects');
         const data = await response.json();
-        console.log("HOuse Project Data is : ", data.data[0]);
         if (data.data && data.data.length > 0) {
           setCurrentProject(data.data[0]); // Show first featured project
         } else {
