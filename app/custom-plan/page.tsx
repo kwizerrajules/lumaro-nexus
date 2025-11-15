@@ -1,3 +1,5 @@
+"use client";
+
 import CustomPlanPage from '../../components/CustomPlanPage';
 
 export default function CustomPlan() {
