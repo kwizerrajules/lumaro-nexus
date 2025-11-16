@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
     const status = searchParams.get("status") || undefined;
-    const categoty = searchParams.get("categoty") || undefined;
+    const category = searchParams.get("category") || undefined;
     const style = searchParams.get("style") || undefined;
     const search = searchParams.get("search") || undefined;
 
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       limit,
       offset,
       status,
-      categoty,
+      category,
       style,
       search,
     });
@@ -52,17 +52,14 @@ export async function POST(req: NextRequest) {
     const rawBody = await req.json();
     const body = sanitizeEverything(rawBody);
 
-    // Expect URLs instead of Base64
-    const thumbnailUrl = body.thumbnailUrl as string | undefined;
-    const additionalImagesUrls = body.additionalImagesUrls as string[] | undefined;
 
     const now = new Date().toISOString();
     const projectData = {
       id: uuidv4(),
       title: body.title,
       description: body.description,
-      thumbnail: thumbnailUrl || "",
-      additionalImages: additionalImagesUrls || [],
+      thumbnail: body.thumbnail || "",
+      additionalImages: body.additionalImages || [],
       status: body.status || "planned",
       rooms: Number(body.rooms) || 0,
       height: Number(body.height) || 0,
@@ -72,7 +69,7 @@ export async function POST(req: NextRequest) {
       bedrooms: Number(body.bedrooms) || 0,
       bathrooms: Number(body.bathrooms) || 0,
       floors: Number(body.floors) || 0,
-      categoty: body.categoty || "",
+      category: body.category || "",
       style: body.style || "",
       type: body.type || "",
       price: Number(body.price) || 0,

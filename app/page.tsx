@@ -47,7 +47,7 @@ export default function Home() {
             location: project.location,
             style: project.style,
             type: project.type,
-            categoty: project.categoty,
+            category: project.category,
             rooms: project.rooms,
             status: project.status
           }));
@@ -76,7 +76,7 @@ export default function Home() {
     floors: project.floors,
     bedrooms: project.bedrooms,
     bathrooms: project.bathrooms,
-    type: project.categoty
+    type: project.category
   }));
 
 
@@ -139,7 +139,7 @@ const handleFilterChange = (newFilters: any) => {
 
 if (Array.isArray(newFilters.categories) && newFilters.categories.length > 0) {
   filtered = filtered.filter(project =>
-    project.categoty && newFilters.categories.includes(project.categoty)
+    project.category && newFilters.categories.includes(project.category)
   );
 }
   console.log("Filitered types", filtered);

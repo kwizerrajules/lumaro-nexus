@@ -11,7 +11,7 @@ interface FeaturedProject {
   areaSqFt: number;
   featuredText: string;
   photoTopic: string; // 👈 Admin-named photo topic
-  categoty: string; // 👈 Admin-defined category
+  category: string; // 👈 Admin-defined category
   tags: string[]; // 👈 Admin-added tags
 }
 
@@ -40,7 +40,7 @@ const FeaturedProject: React.FC = () => {
             areaSqFt: 85,
             featuredText: '🏆 Project of the Month',
             photoTopic: 'Modern Urban Living', // 👈 Admin-named topic
-            categoty: 'Apartment Complex', // 👈 Admin-defined category
+            category: 'Apartment Complex', // 👈 Admin-defined category
             tags: ['Modern', 'Luxury', 'Urban', 'Sustainable'] // 👈 Admin-added tags
           });
         }
@@ -59,7 +59,7 @@ const FeaturedProject: React.FC = () => {
           areaSqFt: 85,
           featuredText: '🏆 Project of the Month',
           photoTopic: 'Modern Urban Living', // 👈 Admin-named topic
-          categoty: 'Apartment Complex', // 👈 Admin-defined category
+          category: 'Apartment Complex', // 👈 Admin-defined category
           tags: ['Modern', 'Luxury', 'Urban', 'Sustainable'] // 👈 Admin-added tags
         });
       } finally {
@@ -119,7 +119,7 @@ const FeaturedProject: React.FC = () => {
                 {/* Admin-defined Category */}
                 <div className="mb-3">
                   <span className="bg-blue-500/80 text-white px-3 py-1 rounded-full text-xs font-medium">
-                    🏷️ {currentProject.categoty}
+                    🏷️ {currentProject.category}
                   </span>
                 </div>
                 
@@ -172,7 +172,7 @@ const FeaturedProject: React.FC = () => {
                 </div> */}
                 <div className="flex justify-between items-center pb-2 border-b border-gray-700">
                   <span className="text-gray-400">Category</span>
-                  <span className="font-semibold text-blue-400">{currentProject.categoty}</span>
+                  <span className="font-semibold text-blue-400">{currentProject.category}</span>
                 </div>
                 <div className="flex justify-between items-center pb-2 border-b border-gray-700">
                   <span className="text-gray-400">Total Area</span>

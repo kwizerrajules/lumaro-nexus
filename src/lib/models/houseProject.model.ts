@@ -19,7 +19,7 @@ export const HouseProjectModel = {
     const query = `
       INSERT INTO house_projects (
         id, title, description, thumbnail, additionalImages, status, rooms, height, width,
-        areaSqFt, location, bedrooms, bathrooms, floors, categoty, style,type,
+        areaSqFt, location, bedrooms, bathrooms, floors, category, style,type,
         price, views, likes, createdAt, updatedAt
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -39,7 +39,7 @@ export const HouseProjectModel = {
       parsed.bedrooms || 0,
       parsed.bathrooms || 0,
       parsed.floors || 0,
-      parsed.categoty || null,
+      parsed.category || null,
       parsed.style || null,
       parsed.type || null,
       parsed.price || 0,
@@ -74,11 +74,11 @@ export const HouseProjectModel = {
     limit?: number;
     offset?: number;
     status?: string;
-    categoty?: string;
+    category?: string;
     style?: string;
     search?: string;
   }): Promise<{ data: HouseProject[]; total: number }> {
-    const { limit = 10, offset = 0, status, categoty, style, search } = options || {};
+    const { limit = 10, offset = 0, status, category, style, search } = options || {};
 
     const conditions: string[] = [];
     const params: any[] = [];
@@ -87,9 +87,9 @@ export const HouseProjectModel = {
       conditions.push("status = ?");
       params.push(status);
     }
-    if (categoty) {
-      conditions.push("categoty = ?");
-      params.push(categoty);
+    if (category) {
+      conditions.push("category = ?");
+      params.push(category);
     }
     if (style) {
       conditions.push("style = ?");
@@ -140,7 +140,7 @@ export const HouseProjectModel = {
   const allowedColumns = [
     "title", "description", "thumbnail", "additionalImages", "status",
     "rooms", "height", "width", "areaSqFt", "location", "bedrooms",
-    "bathrooms", "floors", "categoty", "style", "type", "price",
+    "bathrooms", "floors", "category", "style", "type", "price",
     "views", "likes", "createdAt", "updatedAt"
   ];
 

@@ -19,7 +19,7 @@ request body
   "bedrooms": 5,
   "bathrooms": 4,
   "floors": 2,
-  "categoty": "Villa",
+  "category": "Villa",
   "style": "Modern",
   "price": 1200000,
   "views": 0,
@@ -37,7 +37,7 @@ to get all projects you use get on the same endoitn GET /api/houseproject
 
 THEN FOR FILTERING U USE THIS SAME FOR GET 
 
-http://localhost:3000/api/houseprojects?limit=5&offset=0&status=planned&categoty=Villa&search=pool
+http://localhost:3000/api/houseprojects?limit=5&offset=0&status=planned&category=Villa&search=pool
 
 here also the response be the same as for grt all projects but by includiin only reqused fields.
 

@@ -45,7 +45,7 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
         floors: item.floors,
         bedrooms: item.bedrooms,
         bathrooms: item.bathrooms,
-        type: item.categoty || 'Residential',
+        type: item.category || 'Residential',
       }));
       setSampleHouses(houses);
     } catch (err) {
