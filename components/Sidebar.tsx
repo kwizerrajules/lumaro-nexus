@@ -49,8 +49,8 @@ useEffect(() => {
 
       const categoryMap: Record<string, number> = {};
       projects.forEach(p => {
-        if (p.categoty) { 
-          categoryMap[p.categoty] = (categoryMap[p.categoty] || 0) + 1;
+        if (p.category) { 
+          categoryMap[p.category] = (categoryMap[p.category] || 0) + 1;
         }
       });
       const categoriesArray = Object.entries(categoryMap).map(([label, count]) => ({ label, count }));

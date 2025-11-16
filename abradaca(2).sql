@@ -107,7 +107,7 @@ CREATE TABLE `house_projects` (
   `bedrooms` int(11) DEFAULT NULL,
   `bathrooms` int(11) DEFAULT NULL,
   `floors` int(11) DEFAULT NULL,
-  `categoty` varchar(100) DEFAULT NULL,
+  `category` varchar(100) DEFAULT NULL,
   `style` varchar(100) DEFAULT NULL,
   `price` decimal(15,2) DEFAULT NULL,
   `views` int(11) DEFAULT 0,
@@ -120,7 +120,7 @@ CREATE TABLE `house_projects` (
 -- Dumping data for table `house_projects`
 --
 
-INSERT INTO `house_projects` (`id`, `title`, `description`, `thumbnail`, `additionalImages`, `status`, `rooms`, `height`, `width`, `areaSqFt`, `location`, `bedrooms`, `bathrooms`, `floors`, `categoty`, `style`, `price`, `views`, `likes`, `createdAt`, `updatedAt`) VALUES
+INSERT INTO `house_projects` (`id`, `title`, `description`, `thumbnail`, `additionalImages`, `status`, `rooms`, `height`, `width`, `areaSqFt`, `location`, `bedrooms`, `bathrooms`, `floors`, `category`, `style`, `price`, `views`, `likes`, `createdAt`, `updatedAt`) VALUES
 ('1b3d8333-0ec8-4167-b3a9-810c35db4be3', 'Modern Luxury Villa', 'A sleek villa with infinity pool', '/uploads/0f468996-6732-47ae-a5de-4093b6257ca5.jpeg', '[]', 'planned', 5, 20, 15, 2500, 'Nairobi', 3, 2, 2, 'residential', 'Modern', 1200000.00, 0, 0, '2025-10-25 18:04:44', '2025-10-25 18:04:44'),
 ('335a78f5-8e1f-4abc-9907-49cd1fbe5f14', 'Modern Luxury Villa', 'A sleek villa with infinity pool', '/uploads/450694c5-86e3-444f-ad97-047642a570ee.jpeg', '[]', 'planned', 5, 20, 15, 2500, 'Nairobi', 3, 2, 2, 'residential', 'Modern', 1200000.00, 0, 0, '2025-10-25 18:02:22', '2025-10-25 18:02:22'),
 ('472064bc-8a38-484d-90be-53a886c72060', 'Modern Luxury Villa', 'A sleek villa with infinity pool', '/uploads/1fb0cac2-e3ad-4211-9973-d4d17d3aba78.jpeg', '[]', 'planned', 5, 20, 15, 2500, 'Nairobi', 3, 2, 2, 'residential', 'Modern', 1200000.00, 0, 0, '2025-10-25 18:02:55', '2025-10-25 18:02:55'),
@@ -217,7 +217,7 @@ ALTER TABLE `houseproject_images`
 ALTER TABLE `house_projects`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_category` (`categoty`),
+  ADD KEY `idx_category` (`category`),
   ADD KEY `idx_style` (`style`);
 ALTER TABLE `house_projects` ADD FULLTEXT KEY `idx_fulltext` (`title`,`description`);
 

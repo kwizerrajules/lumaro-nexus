@@ -18,7 +18,7 @@ export const HouseProjectSchema = z.object({
   bedrooms: z.number().int().min(0).optional(),
   bathrooms: z.number().int().min(0).optional(),
   floors: z.number().int().min(0).optional(),
-  categoty: z.string().min(1).max(100).optional(),
+  category: z.string().min(1).max(100).optional(),
   style: z.string().min(1).max(100).optional(),
   type: z.string().min(5).max(200).optional(),
   price: z.number().nonnegative().optional(),

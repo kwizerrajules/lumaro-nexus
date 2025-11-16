@@ -1,23 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import API from '../../../utils/api';
-import { initializeApp, getApps } from "firebase/app";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// --- Initialize Firebase ---
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_TOKEN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGE_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-};
-if (!getApps().length) {
-  initializeApp(firebaseConfig);
-}
-const storage = getStorage();
 
 type Props = {
   mode: 'create' | 'edit';
@@ -32,8 +16,8 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    thumbnail: null as File | null,
-    additionalImages: [] as File[],
+    thumbnail: '',
+    additionalImages: [] as string[],
     status: '',
     rooms: 0,
     height: 0,
@@ -74,54 +58,44 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
     }
   }, [project, mode]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
+const handleChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+) => {
+  const { name, value } = e.target;
 
-    if (e.target instanceof HTMLInputElement && e.target.files) {
-      const { files } = e.target;
-      if (name === 'thumbnail') {
-        setFormData((prev) => ({ ...prev, thumbnail: files[0] || null }));
-      } else if (name === 'additionalImages') {
-        setFormData((prev) => ({ ...prev, additionalImages: Array.from(files) }));
-      }
-    } else {
-      const isNumericField = ['rooms', 'height', 'width', 'areaSqFt', 'bedrooms', 'bathrooms', 'floors'].includes(name);
-      setFormData((prev) => ({
-        ...prev,
-        [name]: isNumericField ? (value === '' ? 0 : parseFloat(value)) : value,
-      }));
-    }
-  };
+  const numericFields = [
+    'rooms', 'height', 'width', 'areaSqFt',
+    'bedrooms', 'bathrooms', 'floors'
+  ];
 
-  const uploadFileToFirebase = async (file: File, folder: string) => {
-    const fileRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
-    await uploadBytes(fileRef, file);
-    return getDownloadURL(fileRef);
-  };
+  // handle multi-line input for additionalImages
+  if (name === 'additionalImages') {
+    const urls = value.split('\n').map((url) => url.trim()).filter(Boolean);
+    setFormData((prev) => ({ ...prev, additionalImages: urls }));
+    return;
+  }
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: numericFields.includes(name)
+      ? (value === '' ? 0 : parseFloat(value))
+      : value,
+  }));
+};
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     try {
-      // Destructure files from formData to avoid including them in the JSON payload
-      const { thumbnail, additionalImages, ...restOfData } = formData;
-      // Upload images to Firebase and get URLs
-      const thumbnailUrl = formData.thumbnail
-        ? await uploadFileToFirebase(formData.thumbnail, 'thumbnails')
-        : project?.thumbnail || '';
-
-      const additionalImagesUrls = await Promise.all(
-        formData.additionalImages.map((file) => uploadFileToFirebase(file, 'additional'))
-      );
+      const { ...restOfData } = formData;
 
       const payload = {
-        ...restOfData,
-        thumbnail: thumbnailUrl,
-        additionalImages: additionalImagesUrls.length > 0 ? additionalImagesUrls : project?.additionalImages || [],
+        ...restOfData
       };
+      console.log("Payload is", payload);
 
       if (mode === 'create') {
         await API.post('/houseprojects', payload);
@@ -241,16 +215,32 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
           </div>
 
           {/* Thumbnail */}
-          <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail</label>
-            <input type="file" name="thumbnail" accept="image/*" onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
-          </div>
+          {/* Thumbnail URL */}
+<div className="md:col-span-2 lg:col-span-3">
+  <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail URL</label>
+  <input
+    type="text"
+    name="thumbnail"
+    value={formData.thumbnail}
+    onChange={handleChange}
+    placeholder="https://example.com/image.jpg"
+    className="w-full p-2 border rounded border-gray-300"
+  />
+</div>
 
-          {/* Additional Images */}
-          <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Additional Images</label>
-            <input type="file" name="additionalImages" multiple accept="image/*" onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
-          </div>
+{/* Additional Image URLs */}
+<div className="md:col-span-2 lg:col-span-3">
+  <label className="block text-sm font-medium text-gray-700 mb-1">Additional Image URLs (one per line)</label>
+  <textarea
+    name="additionalImages"
+    value={formData.additionalImages.join('\n')}
+    onChange={handleChange}
+    rows={4}
+    placeholder={`https://example.com/img1.jpg\nhttps://example.com/img2.jpg`}
+    className="w-full p-2 border rounded border-gray-300"
+  />
+</div>
+
         </div>
 
         <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
