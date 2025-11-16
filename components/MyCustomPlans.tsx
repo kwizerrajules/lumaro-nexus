@@ -27,14 +27,21 @@ export default function MyCustomPlans() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<CustomPlan | null>(null);
   const [error, setError] = useState("");
+  const [token, setToken] = useState("");
+
+  useEffect(()=>{
+    const token = localStorage.getItem("userAccessToken")
+    if(token){
+      setToken(token);
+      fetchPlans(token)
+    }
+  }, [])
 
   // FETCH USER PLANS
-  const fetchPlans = async () => {
+  const fetchPlans = async (accesToken) => {
     try {
-      const token = localStorage.getItem("userAccessToken");
-
       const res = await axios.get("/api/custom-plan", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${accesToken}` },
       });
 
       // Filter invalid entries (you already have some invalid IDs in DB)
@@ -48,9 +55,6 @@ export default function MyCustomPlans() {
     }
   };
 
-  useEffect(() => {
-    fetchPlans();
-  }, []);
 
   // DELETE PLAN
   const deletePlan = async (id: string) => {
