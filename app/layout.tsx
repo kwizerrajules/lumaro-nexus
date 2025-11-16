@@ -1,5 +1,10 @@
-﻿import type { Metadata } from "next";
+﻿// "use client";
+
+import type { Metadata } from "next";
 import { Inter, Roboto_Mono } from "next/font/google";
+import MyCustomPlans from "@/components/MyCustomPlans";
+import Header from "@/components/Header";
+
 import "./globals.css";
 
 // Initialize fonts
@@ -26,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${robotoMono.variable}`}>
       <body className="antialiased">
+      
         {children}
       </body>
     </html>

@@ -1,6 +1,10 @@
 "use client";
+import React, { useState, useRef, useEffect } from 'react';
+import Header from '@/components/Header';
+import HouseProjectCard from '@/components/HouseProjectCard';
+import Sidebar from '@/components/Sidebar'; // Fixed the typo - added 'r'
+import Newsletter from '@/components/Newsletter';
 
-import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 interface CustomPlan {

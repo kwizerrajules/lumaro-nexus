@@ -254,9 +254,9 @@ if (Array.isArray(newFilters.categories) && newFilters.categories.length > 0) {
     <div className="min-h-screen bg-white">
       {/* Updated Header with contact navigation */}
       <Header 
-        onFilterToggle={toggleSidebar}
-        onAuthSuccess={handleAuthSuccess}
-        onContactClick={scrollToContact}
+        // onFilterToggle={toggleSidebar}
+        // onAuthSuccess={handleAuthSuccess}
+        // onContactClick={scrollToContact}
       />
       
       {/* Auth Modal */}
