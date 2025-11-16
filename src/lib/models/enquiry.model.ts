@@ -4,6 +4,47 @@ import db from '../db';
 import { v4 as uuidv4 } from "uuid";
 
 
+interface UserData {
+  id: string;
+  names: string;
+  email: string;
+  phone?: string;
+}
+
+interface ProjectData {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  additionalImages?: string[];
+  status: "planned" | "in-progress" | "completed" | "on-hold";
+  rooms?: number;
+  height?: number;
+  width?: number;
+  areaSqFt?: number;
+  location?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  floors?: number;
+  category?: string;
+  style?: string;
+  type?: string;
+  price?: number;
+  views: number;
+  likes: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface EnquiryWithDetails {
+  id: string;
+  created_at: string;
+  user_data: UserData;
+  project_data: ProjectData;
+}
+
+
+
 export class EnquiryModel extends BaseModel<Enquiry> {
   constructor() {
     super('enquiries', enquirySchema);
@@ -101,6 +142,52 @@ async getUserEnquiries(userId: string): Promise<any[]> {
   );
 
   return rows;
+}
+
+
+
+
+async  getAllEnquiries(limit = 20, offset = 0): Promise<EnquiryWithDetails[]> {
+  const [rows]: any = await db.query(`
+    SELECT 
+      e.id AS enquiry_id,
+      e.created_at,
+
+      u.id AS user_id,
+      u.names AS user_names,
+      u.email AS user_email,
+      u.phone AS user_phone,
+
+      p.id AS project_id,
+      p.title AS project_title,
+      p.thumbnail AS project_thumbnail,
+      p.status AS project_status,
+      p.price AS project_price
+
+    FROM enquiries e
+    JOIN users u ON e.user_id = u.id
+    JOIN house_projects p ON e.project_id = p.id
+    ORDER BY e.created_at DESC
+    LIMIT ? OFFSET ?
+  `, [limit, offset]);
+
+  return rows.map((row: any) => ({
+    id: row.enquiry_id,
+    created_at: row.created_at,
+    user_data: {
+      id: row.user_id,
+      names: row.user_names,
+      email: row.user_email,
+      phone: row.user_phone
+    },
+    project_data: {
+      id: row.project_id,
+      title: row.project_title,
+      thumbnail: row.project_thumbnail,
+      status: row.project_status,
+      price: row.project_price
+    }
+  }));
 }
 
 

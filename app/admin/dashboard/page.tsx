@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import HouseProjectsSection from '../components/HouseProjectsSection';
+import OrdersSection from '../components/OrdersSection';
 
 export default function AdminDashboardPage() {
   const [adminName, setAdminName] = useState('Admin');
@@ -64,12 +65,7 @@ export default function AdminDashboardPage() {
         {/* Section Content */}
           <div>
   {activeSection === 'houseProjects' && <HouseProjectsSection />}
-  {activeSection === 'orders' && (
-    <div className="bg-white p-6 rounded-lg shadow mb-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Orders</h2>
-      <p className="text-gray-600">View and manage all customer orders.</p>
-    </div>
-  )}
+  {activeSection === 'orders' && <OrdersSection />}
   {activeSection === 'customOrders' && (
     <div className="bg-white p-6 rounded-lg shadow mb-6">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Custom Orders</h2>
