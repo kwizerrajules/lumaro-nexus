@@ -52,13 +52,9 @@ export async function POST(req: NextRequest) {
     const rawBody = await req.json();
     const body = sanitizeEverything(rawBody);
 
-    const thumbnailBase64 = body.thumbnailBase64 as string | undefined;
-    const additionalImagesBase64 = body.additionalImagesBase64 as string[] | undefined;
-
-    let thumbnailUrl: string | undefined;
-    if (thumbnailBase64) {
-      thumbnailUrl = await handleSecureFile({ base64: thumbnailBase64 });
-    }
+    // Expect URLs instead of Base64
+    const thumbnailUrl = body.thumbnailUrl as string | undefined;
+    const additionalImagesUrls = body.additionalImagesUrls as string[] | undefined;
 
     const now = new Date().toISOString();
     const projectData = {
@@ -66,7 +62,7 @@ export async function POST(req: NextRequest) {
       title: body.title,
       description: body.description,
       thumbnail: thumbnailUrl || "",
-      additionalImages: additionalImagesBase64 || [],
+      additionalImages: additionalImagesUrls || [],
       status: body.status || "planned",
       rooms: Number(body.rooms) || 0,
       height: Number(body.height) || 0,
@@ -86,40 +82,11 @@ export async function POST(req: NextRequest) {
       updatedAt: now,
     };
 
-    // Use a single connection and transaction for all inserts
+    // Save project in DB
     await conn.beginTransaction();
-
     const project = await HouseProjectModel.create(projectData);
-
-    // Save thumbnail (if exists)
-    if (thumbnailBase64) {
-      const buffer = Buffer.from(thumbnailBase64, "base64");
-      await HouseProjectImagesModel.insertImage({
-        id: uuidv4(),
-        houseproject_id: project.id,
-        type: "thumbnail",
-        image: buffer,
-        filename: project.thumbnail.split("/").pop() || "thumbnail.jpg",
-      });
-    }
-
-    // Save additional images in parallel
-    if (additionalImagesBase64 && additionalImagesBase64.length > 0) {
-      await Promise.all(
-        additionalImagesBase64.map((b64, i) => {
-          const buffer = Buffer.from(b64, "base64");
-          return HouseProjectImagesModel.insertImage({
-            id: uuidv4(),
-            houseproject_id: project.id,
-            type: "additional",
-            image: buffer,
-            filename: `image_${i + 1}.jpg`,
-          });
-        })
-      );
-    }
-
     await conn.commit();
+
     return NextResponse.json(project, { status: 201 });
   } catch (error: any) {
     await conn.rollback();

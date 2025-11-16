@@ -1,0 +1,391 @@
+{
+	"info": {
+		"_postman_id": "0eaf675b-2787-43f8-a3e0-be6d72d4840a",
+		"name": "ABRADACA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39608945",
+		"_collection_link": "https://mfa-project.postman.co/workspace/ABRADACA~32677159-5862-4f66-bce9-82d362dd9423/collection/39608945-0eaf675b-2787-43f8-a3e0-be6d72d4840a?action=share&source=collection_link&creator=39608945"
+	},
+	"item": [
+		{
+			"name": "GET ALL HOUSE PROJECTS",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/houseprojects",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"houseprojects"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TESTING THE REPLY",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "POST CREATE STAFF",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"mwimulegashema@gmail.com\",\n    \"names\": \"Mwimule Gashema\",\n    \"password\": \"Rwanda123@\",\n    \"phone\": \"0781300739\",\n    \"role\": \"EXECUTIVE\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/auth/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"auth",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "REGISTER USERS",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"names\":\"Bienvenu gashema itbienvenu\",\n    \"email\":\"itbienvenu123@gmail.com\",\n    \"password\":\"Rwanda123@\",\n    \"phone\":\"0736701735\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/auth/register/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"auth",
+						"register",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "USERS LOGIN",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\":\"itbienvenu123@gmail.com\",\n    \"password\":\"Rwanda123@\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/auth/login/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"auth",
+						"login",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CREATE ENQUIRY",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI5YjBmMzY5LTkzYjktNDM3OC1iZWYxLTM5YjY4NTU5ZjEzOCIsImVtYWlsIjoiaXRiaWVudmVudTEyM0BnbWFpbC5jb20iLCJpYXQiOjE3NjE4OTYwNjQsImV4cCI6MTc2MTg5NjM2NH0.5hMz4RHRc8a7EvPRLZvtSrrFy8LqpgcOnfiMgfyVgSU",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"projectId\":\"aab8a1c6-11bf-4c6c-b532-f93d8f8f6cb8\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/enquiries",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"enquiries"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET LOGED IN USER ENQUERIES",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI5YjBmMzY5LTkzYjktNDM3OC1iZWYxLTM5YjY4NTU5ZjEzOCIsImVtYWlsIjoiaXRiaWVudmVudTEyM0BnbWFpbC5jb20iLCJpYXQiOjE3NjE4OTcwMTQsImV4cCI6MTc2MTg5NzMxNH0.G4GOkifs10k5QGrnAKUppOKRtCrkomZGozWRXC_m7kE",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/enquiries",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"enquiries"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE USER ENQUIRY",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI5YjBmMzY5LTkzYjktNDM3OC1iZWYxLTM5YjY4NTU5ZjEzOCIsImVtYWlsIjoiaXRiaWVudmVudTEyM0BnbWFpbC5jb20iLCJpYXQiOjE3NjE4OTg2NDEsImV4cCI6MTc2MTg5ODk0MX0.nJJttgiug6tIp8wTtFiVHWqQvXkmDviErCu9iSowssY",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/enquiries/865a11a7-c0a3-4d39-93a1-4f3975f93850",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"enquiries",
+						"865a11a7-c0a3-4d39-93a1-4f3975f93850"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET SINGLE HOUSE PROJECT",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "POST",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "UPDATE HOUSEPRODUCT INFO",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\":\"Hello testing\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/houseprojects/4c747693-c4f7-4fa4-b2f6-511e233b287f",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"houseprojects",
+						"4c747693-c4f7-4fa4-b2f6-511e233b287f"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET SINGLE PROJECT",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\":\"Hello testing\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/houseprojects/4c747693-c4f7-4fa4-b2f6-511e233b287f",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"houseprojects",
+						"4c747693-c4f7-4fa4-b2f6-511e233b287f"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CREATE CUSTOM PLAN",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI5YjBmMzY5LTkzYjktNDM3OC1iZWYxLTM5YjY4NTU5ZjEzOCIsImVtYWlsIjoiaXRiaWVudmVudTEyM0BnbWFpbC5jb20iLCJpYXQiOjE3NjMxMjc4MzQsImV4cCI6MTc2MzEzNTAzNH0.h6c__W1hf0fw3vB-Zulk4wLwNRhTGoupFYsV1Wq-NxM",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/custom-plan",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"custom-plan"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CREATE CUSTOM PLAN",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI5YjBmMzY5LTkzYjktNDM3OC1iZWYxLTM5YjY4NTU5ZjEzOCIsImVtYWlsIjoiaXRiaWVudmVudTEyM0BnbWFpbC5jb20iLCJpYXQiOjE3NjMxMjcyMDMsImV4cCI6MTc2MzEyNzUwM30.DXIM_lhTC8Xr4EuGQJZPZvejc8pyv5NZqcxRG3hE39g",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"bedrooms\": 3,\n  \"bathrooms\": 2,\n  \"dining_rooms\": 1,\n  \"kitchen\": 1,\n  \"floors\": 2,\n  \"total_area\": 180,\n  \"category\": \"modern\",\n  \"description\": \"A modern duplex with open living area.\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/custom-plan",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"custom-plan"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -5,8 +5,8 @@ export default function Header() {
   const router = useRouter();
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userAccessToken');
+    localStorage.removeItem('userRefreshToken');
     router.push('/login');
   };
 

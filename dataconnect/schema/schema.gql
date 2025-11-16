@@ -1,0 +1,46 @@
+type User @table {
+  email: String!
+  displayName: String!
+  createdAt: Timestamp!
+  role: String!
+  photoUrl: String
+  bio: String
+}
+
+type Category @table {
+  name: String!
+  description: String
+}
+
+type Image @table {
+  photographer: User!
+  title: String!
+  imageUrl: String!
+  price: Float!
+  createdAt: Timestamp!
+  resolution: String!
+  description: String
+  categories: [String]
+  keywords: [String]
+}
+
+type CartItem @table(key: ["user", "image"]) {
+  user: User!
+  image: Image!
+  quantity: Int!
+  createdAt: Timestamp!
+}
+
+type Order @table {
+  customer: User!
+  orderDate: Timestamp!
+  totalAmount: Float!
+  status: String!
+}
+
+type OrderItem @table(key: ["order", "image"]) {
+  order: Order!
+  image: Image!
+  quantity: Int!
+  unitPrice: Float!
+}

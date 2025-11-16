@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ImageCarousel from './ImageCarousel';
+import { string } from 'zod';
+import axios from 'axios';
+import { headers } from 'next/headers';
 
 interface Project {
   id: string;
@@ -21,6 +24,12 @@ const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
   const [selectedFileType, setSelectedFileType] = useState<'cad+pdf' | 'pdf'>('pdf');
   const [selectedDrawings, setSelectedDrawings] = useState<string[]>(['architectural']);
   const [quantity, setQuantity] = useState(1);
+  const [accessToken, setAccessToken] = useState("");
+
+useEffect(() => {
+  const token = localStorage.getItem("userAccessToken");
+  if (token) setAccessToken(token);
+}, []);
   
 
   const formatPrice = (price: number) => {
@@ -35,26 +44,24 @@ const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
     return total * quantity;
   };
 
-  const handleCheckout = async () => {
+  const handleAddEnquiry = async (id) => {
+    console.log("AccesTOKEN IS ", accessToken);
     try {
-      const orderData = {
-        projectId: project.id,
-        fileType: selectedFileType,
-        drawings: selectedDrawings,
-        quantity,
-        total: calculateTotal()
-      };
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
-      if (response.ok) {
-        const order = await response.json();
-        window.location.href = `/checkout/${order.id}`;
+
+      const response  = await axios.post('/api/enquiries', {projectId: id},{
+        headers: {
+          'Authorization':`Bearer ${accessToken}`
+        }
+      })
+
+      if(!response) {
+        console.error("Failed to create wishlist with error")
       }
-    } catch (error) {
-      console.error('Error creating order:', error);
+      alert("Product added to wish list");
+
+    } catch (err) {
+      alert("Error while adding product to wishlist")
+      console.error("Failed to add product to wishlist")
     }
   };
 
@@ -127,17 +134,20 @@ const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
                 <span className="text-lg font-semibold text-gray-800">Total</span>
                 <span className="text-2xl font-bold text-gray-600">{formatPrice(calculateTotal())}</span>
               </div>
-              <button
+              {/* <button
                 onClick={handleCheckout}
                 className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors mb-3"
               >
                 Buy Now
-              </button>
-              <button className="w-full border border-green-500 text-green-500 py-3 rounded-lg font-semibold hover:bg-green-50 flex items-center justify-center">
+              </button> */}
+              <button 
+              onClick={()=> handleAddEnquiry(project.id)} 
+              disabled={!accessToken}
+              className="w-full border border-yellow-500 text-yellow-500 py-3 rounded-lg font-semibold hover:bg-yellow-100 flex items-center justify-center">
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
-                Add To Wishlist
+                Add To Enquiry
               </button>
             </div>
           </div>

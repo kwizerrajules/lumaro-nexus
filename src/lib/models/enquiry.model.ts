@@ -36,13 +36,33 @@ export class EnquiryModel extends BaseModel<Enquiry> {
 
 
   /** Get all enquiries for a specific user */
-  async getByUserId(userId: string): Promise<Enquiry[]> {
-    const [rows]: any = await db.query(
-      'SELECT * FROM enquiries WHERE user_id = ? ORDER BY created_at DESC',
-      [userId]
-    );
-    return rows as Enquiry[];
-  }
+ async getByUserId(userId: string): Promise<any[]> {
+  const [rows]: any = await db.query(
+    `SELECT 
+        e.id AS enquiry_id,
+        e.user_id,
+        e.project_id,
+        e.created_at AS enquiry_created_at,
+        
+        p.id AS project_id,
+        p.title AS project_title,
+        p.price AS project_price,
+        p.bedrooms,
+        p.bathrooms,
+        p.floors,
+        p.area,
+        p.description
+
+     FROM enquiries e
+     LEFT JOIN house_projects p 
+       ON e.project_id = p.id
+     WHERE e.user_id = ?
+     ORDER BY e.created_at DESC`,
+    [userId]
+  );
+
+  return rows;
+}
 
   /** Get all enquiries for a specific project */
   async getByProjectId(projectId: string): Promise<Enquiry[]> {
@@ -54,13 +74,36 @@ export class EnquiryModel extends BaseModel<Enquiry> {
   }
 
   /** Get all enquiries made by a user */
-  async getUserEnquiries(userId: string): Promise<Enquiry[]> {
+async getUserEnquiries(userId: string): Promise<any[]> {
   const [rows]: any = await db.query(
-    'SELECT * FROM enquiries WHERE user_id = ? ORDER BY created_at DESC',
+    `SELECT 
+        e.id AS enquiry_id,
+        e.user_id,
+        e.project_id,
+        e.created_at AS enquiry_created_at,
+
+        p.id AS project_id,
+        p.title AS project_title,
+        p.price AS project_price,
+        p.bedrooms,
+        p.bathrooms,
+        p.floors,
+        p.areaSqFt,
+        p.description,
+        p.thumbnail
+
+     FROM enquiries e
+     LEFT JOIN house_projects p
+       ON e.project_id = p.id
+     WHERE e.user_id = ?
+     ORDER BY e.created_at DESC`,
     [userId]
   );
-  return rows as Enquiry[];
+
+  return rows;
 }
+
+
 
   /** PATCH: Update an enquiry (only by owner) */
   async updateEnquiry(

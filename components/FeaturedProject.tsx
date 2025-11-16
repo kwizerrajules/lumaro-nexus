@@ -103,7 +103,7 @@ const FeaturedProject: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
               
               {/* Featured Badge */}
-              <div className="absolute top-6 left-6 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
+              <div className="absolute top-6 left-6 bg-yellow-700 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
                 Discover Our Latest Innovations
               </div>
 
@@ -149,7 +149,7 @@ const FeaturedProject: React.FC = () => {
           {/* Right - Description (1/4 width) */}
           <div className="lg:w-1/4 bg-gray-800 p-8 flex flex-col justify-center">
             <div className="mb-6">
-              <h3 className="text-2xl font-bold mb-4 text-green-400">Featured Project</h3>
+              <h3 className="text-2xl font-bold mb-4 text-yellow-700">Featured Project</h3>
               
               {/* Admin Photo Topic Display */}
               <div className="mb-4 p-3 bg-gray-700 rounded-lg">
@@ -180,7 +180,7 @@ const FeaturedProject: React.FC = () => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Starting Price</span>
-                  <span className="font-semibold text-green-400">${currentProject.price}</span>
+                  <span className="font-semibold text-yellow-700">${currentProject.price}</span>
                 </div>
               </div>
 
@@ -194,7 +194,7 @@ const FeaturedProject: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              <button className="w-full bg-green-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-300 text-center">
+              <button className="w-full bg-yellow-700 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-300 text-center">
                 View Project Details
               </button>
               

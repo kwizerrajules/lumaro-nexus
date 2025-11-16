@@ -241,7 +241,7 @@ const CustomPlanBuilder: React.FC = () => {
         <button
           type="button" // Important: Prevents button from submitting the form
           onClick={addNewRoom}
-          className="mt-4 flex items-center space-x-2 text-green-600 hover:text-green-700 font-semibold"
+          className="mt-4 flex items-center space-x-2 text-yellow-600 hover:text-yellow-700 font-semibold"
         >
           <span>+</span>
           <span>Want to add another room? Just Add a room</span>
@@ -281,7 +281,7 @@ const CustomPlanBuilder: React.FC = () => {
         <button 
           type="submit"
           disabled={isLoading}
-          className="w-full bg-green-500 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-green-600 transition-colors duration-300 disabled:bg-gray-400"
+          className="w-full bg-yellow-900 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-yellow-600 transition-colors duration-300 disabled:bg-gray-400"
         >
           {isLoading ? 'Processing...' : 'SUBMIT CUSTOM PLAN'}
         </button>
