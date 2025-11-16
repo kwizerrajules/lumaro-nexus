@@ -143,11 +143,11 @@ useEffect(() => {
               <button 
               onClick={()=> handleAddEnquiry(project.id)} 
               disabled={!accessToken}
-              className="w-full border border-green-500 text-green-500 py-3 rounded-lg font-semibold hover:bg-green-50 flex items-center justify-center">
+              className="w-full border border-yellow-500 text-yellow-500 py-3 rounded-lg font-semibold hover:bg-yellow-100 flex items-center justify-center">
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
-                Add To Inquiry
+                Add To Enquiry
               </button>
             </div>
           </div>

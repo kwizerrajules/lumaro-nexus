@@ -79,55 +79,6 @@ export default function Home() {
     type: project.categoty
   }));
 
-// const handleFilterChange = (newFilters: any) => {
-//   setFilters(newFilters);
-
-//   let filtered = [...projects];
-
-//   console.log("Before filtering: ", filtered)
-//   // --- Bedrooms (array) ---
-//   if (Array.isArray(newFilters.bedrooms) && newFilters.bedrooms.length > 0) {
-//     filtered = filtered.filter(project =>
-//       newFilters.bedrooms.includes(Number(project.bedrooms))
-//     );
-//   }
-
-
-//   // --- Bathrooms (array) ---
-//   if (Array.isArray(newFilters.bathrooms) && newFilters.bathrooms.length > 0) {
-//     filtered = filtered.filter(project =>
-//       newFilters.bathrooms.includes(Number(project.bathrooms))
-//     );
-//   }
-
-
-//   // --- Floors (array) ---
-//   if (Array.isArray(newFilters.floors) && newFilters.floors.length > 0) {
-//     filtered = filtered.filter(project =>
-//       newFilters.floors.includes(Number(project.floors))
-//     );
-//   }
-
-
-//   // --- Min Price ---
-//   if (typeof newFilters.minPrice === "number") {
-//     filtered = filtered.filter(project =>
-//       Number(project.price) >= newFilters.minPrice
-//     );
-//   }
-
-
-//   // --- Max Price ---
-//   if (typeof newFilters.maxPrice === "number" && newFilters.maxPrice > 0) {
-//     filtered = filtered.filter(project =>
-//       Number(project.price) <= newFilters.maxPrice
-//     );
-//   }
-
-// console.log("After filtering", filtered);
-//   setFilteredProjects(filtered);
-// };
-
 
 const handleFilterChange = (newFilters: any) => {
   setFilters(newFilters);
@@ -254,9 +205,9 @@ if (Array.isArray(newFilters.categories) && newFilters.categories.length > 0) {
     <div className="min-h-screen bg-white">
       {/* Updated Header with contact navigation */}
       <Header 
-        // onFilterToggle={toggleSidebar}
-        // onAuthSuccess={handleAuthSuccess}
-        // onContactClick={scrollToContact}
+        onFilterToggle={toggleSidebar}
+        onAuthSuccess={handleAuthSuccess}
+        onContactClick={scrollToContact}
       />
       
       {/* Auth Modal */}
@@ -296,10 +247,9 @@ if (Array.isArray(newFilters.categories) && newFilters.categories.length > 0) {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {/* Browse Catalog Button - Now Functional */}
               <button 
-                onClick={navigateToCatalog}
                 className="bg-white text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2 group"
               >
-                <span>Browse Catalog</span>
+                <a href='#all_house_plans'>Browse Catalog</a>
                 <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
@@ -341,7 +291,7 @@ if (Array.isArray(newFilters.categories) && newFilters.categories.length > 0) {
         )}
         
         {/* Main Content */}
-        <main className="p-8">
+        <main id="all_house_plans"  className="p-8">
           {/* Page Header with Filter Button */}
           <div className="flex justify-between items-center mb-8">
             <div>

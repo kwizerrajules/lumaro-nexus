@@ -9,7 +9,7 @@ interface HouseProject {
   bedrooms: number;
   bathrooms: number;
   floors: number;
-  area: number; // in sqm
+  area: number;
   description?: string;
 }
 
@@ -54,11 +54,6 @@ const HouseProjectCard: React.FC<HouseProjectCardProps> = ({ project }) => {
           <div className="absolute top-4 right-4 bg-white text-gray-900 px-3 py-2 rounded-full text-sm font-semibold shadow-md">
             From {formatPrice(project.price)}
           </div>
-
-          {/* ID Badge */}
-          <div className="absolute top-4 left-4 bg-gray-900 text-white px-2 py-1 rounded text-xs font-medium">
-            ID: {project.id}
-          </div>
         </div>
 
         {/* Content */}
@@ -99,7 +94,7 @@ const HouseProjectCard: React.FC<HouseProjectCardProps> = ({ project }) => {
           {/* View Details Button */}
           <button
             onClick={() => setShowQuickBuy(true)}
-            className="w-full bg-gray-900 text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors duration-300 flex items-center justify-center space-x-2"
+            className="w-full bg-yellow-900 text-white py-3 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-300 flex items-center justify-center space-x-2"
           >
             <span>View Details</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

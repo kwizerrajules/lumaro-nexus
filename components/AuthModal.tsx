@@ -245,7 +245,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-gray-900 text-white py-4 px-6 rounded-lg font-semibold hover:bg-gray-800 transition-colors duration-300"
+              className="w-full bg-yellow-900 text-white py-4 px-6 rounded-lg font-semibold hover:bg-yellow-700 transition-colors duration-300"
             >
               {isLogin ? 'Sign In' : 'Create Account'}
             </button>

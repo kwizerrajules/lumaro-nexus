@@ -121,18 +121,37 @@ export const HouseProjectModel = {
   // UPDATE
   async update(id: string, data: Partial<HouseProject>): Promise<void> {
   const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+
   const [existing]: any = await pool.query("SELECT * FROM house_projects WHERE id = ?", [id]);
   if (!existing.length) throw new Error("Project not found");
 
-  const updated = { ...existing[0], ...data, createdAt: existing[0].createdAt, updatedAt: now };
+  // Merge old data with new
+  const updated = { ...existing[0], ...data, updatedAt: now };
 
+  // Ensure ID is not updated
   delete (updated as any).id;
 
-  if (updated.additionalImages && Array.isArray(updated.additionalImages)) {
+  // Handle additionalImages properly
+  if ("additionalImages" in updated && Array.isArray(updated.additionalImages)) {
     updated.additionalImages = JSON.stringify(updated.additionalImages);
   }
 
-  await pool.query("UPDATE house_projects SET ? WHERE id = ?", [updated, id]);
+  // Remove keys that do not exist in DB table
+  const allowedColumns = [
+    "title", "description", "thumbnail", "additionalImages", "status",
+    "rooms", "height", "width", "areaSqFt", "location", "bedrooms",
+    "bathrooms", "floors", "categoty", "style", "type", "price",
+    "views", "likes", "createdAt", "updatedAt"
+  ];
+
+  const finalUpdate: any = {};
+  for (const key of allowedColumns) {
+    if (updated[key] !== undefined) {
+      finalUpdate[key] = updated[key];
+    }
+  }
+
+  await pool.query("UPDATE house_projects SET ? WHERE id = ?", [finalUpdate, id]);
 },
 
   // DELETE

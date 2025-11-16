@@ -1,0 +1,26 @@
+mutation AddCategory($name: String!, $description: String) @auth(level: USER) {
+  category_insert(data: {name: $name, description: $description})
+}
+
+query ListImagesByCategory($category: String!) @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  images(where: {categories: {includes: $category}}) {
+    id
+    title
+    imageUrl
+    price
+  }
+}
+
+mutation AddToCart($userId: UUID!, $imageId: UUID!, $quantity: Int!) @auth(level: USER) {
+  cartItem_insert(data: {userId: $userId, imageId: $imageId, quantity: $quantity, createdAt_expr: "request.time"})
+}
+
+query GetUserProfile($id: UUID!) @auth(level: USER) {
+  user(id: $id) {
+    id
+    displayName
+    email
+    photoUrl
+    bio
+  }
+}
