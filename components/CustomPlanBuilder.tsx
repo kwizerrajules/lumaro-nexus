@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useState, useEffect, use } from 'react';
 
 // --- INTERFACES ---
 
@@ -24,14 +24,23 @@ const mockDrawingSets: DrawingSet[] = [
   { id: 'ds-3', name: 'Classic Design', category: 'classic', price: 1000 },
 ];
 
-const MOCK_ACCESS_TOKEN = localStorage.getItem("userAccessToken");
+
 
 
 const CustomPlanBuilder: React.FC = () => {
   // Basic Configuration
   const [floors, setFloors] = useState(1);
   const [area, setArea] = useState(156);
+  const [token, setToken] = useState("");
 
+useEffect(()=>{
+  const token = localStorage.getItem("userAccessToken")
+  if(token){
+    setToken(token);
+
+    
+  }
+}, [])
   // Custom Fields for Backend
   const [description, setDescription] = useState('A modern duplex with open living area.');
   const [selectedDrawingSet, setSelectedDrawingSet] = useState<DrawingSet>(mockDrawingSets[0]);
@@ -84,7 +93,6 @@ const CustomPlanBuilder: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setSuccess(false);
-
     const includedRooms = rooms.filter(r => r.included);
     
 
@@ -109,12 +117,12 @@ const CustomPlanBuilder: React.FC = () => {
       total_area: area,
       category: selectedDrawingSet.category,
       description: description,
-    };
+    };  
 
     try {
       const response = await axios.post('/api/custom-plan', payload, {
         headers: {
-          'Authorization': `Bearer ${MOCK_ACCESS_TOKEN}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
       if (!response) {
@@ -239,7 +247,7 @@ const CustomPlanBuilder: React.FC = () => {
 
         {/* Add Room Button */}
         <button
-          type="button" // Important: Prevents button from submitting the form
+          type="button" 
           onClick={addNewRoom}
           className="mt-4 flex items-center space-x-2 text-yellow-600 hover:text-yellow-700 font-semibold"
         >

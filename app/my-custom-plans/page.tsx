@@ -26,12 +26,17 @@ export default function MyCustomPlans() {
   const [editing, setEditing] = useState<CustomPlan | null>(null);
   const [error, setError] = useState("");
   const [showSidebar, setShowSidebar] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
   const footerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Ensure localStorage is only accessed on the client
+    setToken(localStorage.getItem("userAccessToken"));
+  }, []);
 
   // Fetch user plans
   const fetchPlans = async () => {
     try {
-      const token = localStorage.getItem("userAccessToken");
       const res = await axios.get("/api/custom-plan", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -46,15 +51,16 @@ export default function MyCustomPlans() {
   };
 
   useEffect(() => {
-    fetchPlans();
-  }, []);
+    if (token) {
+      fetchPlans();
+    }
+  }, [token]); // Re-run when token is available
 
   // Delete plan
   const deletePlan = async (id: string) => {
     if (!confirm("Are you sure you want to delete this plan?")) return;
 
     try {
-      const token = localStorage.getItem("userAccessToken");
       await axios.delete(`/api/custom-plan/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -69,7 +75,6 @@ export default function MyCustomPlans() {
     if (!editing) return;
 
     try {
-      const token = localStorage.getItem("userAccessToken");
       await axios.put(`/api/custom-plan/${editing.id}`, editing, {
         headers: { Authorization: `Bearer ${token}` },
       });
