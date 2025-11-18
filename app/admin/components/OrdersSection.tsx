@@ -31,7 +31,7 @@ export default function OrdersSection() {
   const fetchEnquiries = async () => {
     try {
       const res = await API.get('/enquiries/manager');
-      setEnquiries(res.data); // nested user_data/project_data
+      setEnquiries(res.data);
     } catch (err) {
       console.error(err);
     }

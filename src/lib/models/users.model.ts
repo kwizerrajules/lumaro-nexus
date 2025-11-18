@@ -49,7 +49,11 @@ export const UsersModel = {
     );
     return rows[0] || null;
   },
-
+  async getAllUsers() {
+    const [rows]: any = await db.query('SELECT id, names, email, phone FROM users');
+    return rows;
+  },
+  
   async updateUser(id: string, updateData: UpdateUserInput) {
     const fields: string[] = [];
     const values: any[] = [];

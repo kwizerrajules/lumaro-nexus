@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import HouseProjectsSection from '../components/HouseProjectsSection';
 import OrdersSection from '../components/OrdersSection';
 import CustomOrderSection from '../components/CustomOrderSection';
+import UsersSection from '../components/UsersSection';
 
 export default function AdminDashboardPage() {
   const [adminName, setAdminName] = useState('Admin');
@@ -68,12 +69,7 @@ export default function AdminDashboardPage() {
   {activeSection === 'houseProjects' && <HouseProjectsSection />}
   {activeSection === 'orders' && <OrdersSection />}
   {activeSection === 'customOrders' && <CustomOrderSection />}
-  {activeSection === 'users' && (
-    <div className="bg-white p-6 rounded-lg shadow mb-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Users</h2>
-      <p className="text-gray-600">Manage registered users, view profiles, or deactivate accounts.</p>
-    </div>
-  )}
+  {activeSection === 'users' && <UsersSection />}
 </div>
       </main>
     </div>
