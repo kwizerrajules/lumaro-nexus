@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { loginSchema } from '../../../../src/schemas/auth.schema';
-import { StaffModel } from '../../../../src/lib/models/staff.model';
+import { loginSchema } from '@/src/schemas/auth.schema';
+import { StaffModel } from '@/src/lib/models/staff.model';
 // to generate then access token
-import { StaffPayload } from '../../../../src/types/jwt.payload';
-import { createAccessToken, createRefreshToken } from '../../../../src/security/auth';
+import { StaffPayload } from '@/src/types/jwt.payload';
+import { createAccessToken, createRefreshToken } from '@/src/security/auth';
 
 import bcrypt from 'bcryptjs';
 

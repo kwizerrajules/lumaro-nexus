@@ -48,3 +48,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }
+
+
+// Admin to see all enquireis

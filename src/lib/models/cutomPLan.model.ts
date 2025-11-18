@@ -46,6 +46,24 @@ export const CustomPlanModel = {
     return rows;
   },
 
+  async getAllCustomPLans() {
+    const sql = `
+      SELECT 
+        cp.*, 
+        u.email, 
+        u.names 
+      FROM 
+        custom_plans cp
+      LEFT JOIN 
+        users u 
+      ON 
+        cp.user_id = u.id
+    `;
+    
+    const [rows] = await db.execute(sql);
+    return rows;
+  },
+
   async getById(id: string) {
     const [rows] = await db.execute(
       `SELECT * FROM custom_plans WHERE id = ?`,
