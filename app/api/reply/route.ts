@@ -1,8 +1,8 @@
-// this is the endpoint to reply to eveyr thing
 import { NextResponse, NextRequest } from 'next/server';
 import { ReplyMethods } from '../../../src/utils/reply.methods';
 // protect this route
-import { permissionMiddleware } from '../../../src/middleware/auth';
+import { permissionMiddleware, roleMiddleware } from '../../../src/middleware/auth';
+const EMAIL_USER = process.env.EMAIL_HOST_USER || '';
 
 export async function POST(request: Request) {
     const req: NextRequest = request as NextRequest;
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
         
         await ReplyMethods.replyForContact({
             to,
-            from,
+            from: EMAIL_USER,
             messageId,
             messegeSubject,
             replyMessage
