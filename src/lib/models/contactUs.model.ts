@@ -18,7 +18,16 @@ export const ContactUsModel = {
                 VALUES (?, ?, ?, ?, ?)`,
                 [contactId, names, email, phone, message]
             );
-        }
-};
+        },
+    async getAllContacts() {
+        const [rows]: any = await db.query("SELECT * FROM contacts");
+        return rows;
+    }
+
+}
+
+
+
+
 
 

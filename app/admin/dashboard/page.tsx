@@ -5,18 +5,22 @@ import HouseProjectsSection from '../components/HouseProjectsSection';
 import OrdersSection from '../components/OrdersSection';
 import CustomOrderSection from '../components/CustomOrderSection';
 import UsersSection from '../components/UsersSection';
+import ContactUsSection from '../components/ContactUsSections';
+import {jwtDecode} from 'jwt-decode';
 
 export default function AdminDashboardPage() {
   const [adminName, setAdminName] = useState('Admin');
+  const [token, setToken] = useState("");
+
   const router = useRouter();
 
-  // Optional: fetch admin info from token/localStorage
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
       router.push('/login');
     } else {
-      setAdminName('John Doe');
+      const decodedPayload: any = jwtDecode(token);
+      setAdminName(decodedPayload.email);
     }
   }, [router]);
 
@@ -28,6 +32,7 @@ export default function AdminDashboardPage() {
     { key: 'orders', label: 'Orders' },
     { key: 'customOrders', label: 'Custom Orders' },
     { key: 'users', label: 'Users' },
+    { key: 'contact_us', label: 'Contacts' },
   ];
 
   return (
@@ -70,6 +75,7 @@ export default function AdminDashboardPage() {
   {activeSection === 'orders' && <OrdersSection />}
   {activeSection === 'customOrders' && <CustomOrderSection />}
   {activeSection === 'users' && <UsersSection />}
+  {activeSection === 'contact_us' && <ContactUsSection />}
 </div>
       </main>
     </div>

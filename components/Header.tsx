@@ -168,7 +168,7 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
               <a href="/" className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Home</a>
               {/* <a href="/catalog" className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Catalog</a> */}
               <a href="/custom-plan" className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Custom Plans</a>
-              <a href="#" onClick={(e) => { e.preventDefault(); onContactClick(); }} className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Contact</a>
+              <a href="/contact_us" onClick={(e) => { e.preventDefault(); onContactClick(); }} className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Contact</a>
             </div>
 
             {/* Action Buttons */}
