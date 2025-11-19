@@ -7,10 +7,28 @@ import CustomOrderSection from '../components/CustomOrderSection';
 import UsersSection from '../components/UsersSection';
 import ContactUsSection from '../components/ContactUsSections';
 import {jwtDecode} from 'jwt-decode';
+import useNavigate from 'react'
+
 
 export default function AdminDashboardPage() {
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken')
+    const refreshToken = localStorage.getItem('refreshToken')
+
+    if(!token || !refreshToken) {
+      window.location.href='/login'
+    }
+  }, [])
+  
   const [adminName, setAdminName] = useState('Admin');
   const [token, setToken] = useState("");
+  
+  const handleLogout = async () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken'),
+    window.location.href = '/login'
+  }
 
   const router = useRouter();
 
@@ -33,6 +51,7 @@ export default function AdminDashboardPage() {
     { key: 'customOrders', label: 'Custom Orders' },
     { key: 'users', label: 'Users' },
     { key: 'contact_us', label: 'Contacts' },
+    {key: 'profile', label: 'Profile'}
   ];
 
   return (
@@ -76,6 +95,14 @@ export default function AdminDashboardPage() {
   {activeSection === 'customOrders' && <CustomOrderSection />}
   {activeSection === 'users' && <UsersSection />}
   {activeSection === 'contact_us' && <ContactUsSection />}
+  {activeSection === 'profile' && (
+    <div>
+        <button className='bg-red-700 hover:bg-red-500  text-white font-bold py-2 px-4 rounded' onClick={handleLogout}>
+            Logout
+        </button>
+    </div>
+)}
+
 </div>
       </main>
     </div>
