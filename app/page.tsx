@@ -482,7 +482,7 @@ if (Array.isArray(newFilters.categories) && newFilters.categories.length > 0) {
                 </li>
                 <li className="flex items-center space-x-2">
                   <span>📍</span>
-                  <span>Location: Kigali Rwanda</span>
+                  <span>Location: Kigali_Rwanda</span>
                 </li>
               </ul>
             </div>
