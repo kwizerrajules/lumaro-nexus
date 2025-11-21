@@ -1,13 +1,11 @@
-
-import DOMPurify from "isomorphic-dompurify";
-
-// Generic sanitizer
-export function sanitizeInput(value: any): any {
+export function sanitizeInput(value) {
   if (value === null || value === undefined) return value;
 
   if (typeof value === "string") {
-    const clean = DOMPurify.sanitize(value.trim(), { ALLOWED_TAGS: [] });
-    return clean;
+    const cleaned = value
+      .trim()
+      .replace(/<[^>]*>/g, "");
+    return cleaned;
   }
 
   if (typeof value === "number" || typeof value === "boolean") {
@@ -19,7 +17,7 @@ export function sanitizeInput(value: any): any {
   }
 
   if (typeof value === "object") {
-    const sanitized: Record<string, any> = {};
+    const sanitized = {};
     for (const key in value) {
       sanitized[key] = sanitizeInput(value[key]);
     }
@@ -29,7 +27,6 @@ export function sanitizeInput(value: any): any {
   return value;
 }
 
-// Utility for sanitizing entire request bodies or params
-export function sanitizeEverything<T>(data: T): T {
+export function sanitizeEverything(data) {
   return sanitizeInput(data);
 }
