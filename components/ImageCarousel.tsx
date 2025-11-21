@@ -14,12 +14,13 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ projectId }) => {
       try {
         const response = await fetch(`/api/houseprojects/${projectId}`);
         const data = await response.json();
-        const allImages = [];
-        allImages.push(data.thumbnail);
-        allImages.push(data.additionalImages);
+        const allImages = [
+          data.thumbnail,
+          ...data.additionalImages
+        ];
+        console.log("All images", allImages)
         setImages(allImages || []);
       } catch (error) {
-        console.error('Error fetching images:', error);
         // Fallback images
         setImages([
           '/placeholder-house-1.jpg',

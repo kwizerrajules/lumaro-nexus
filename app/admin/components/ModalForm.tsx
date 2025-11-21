@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import API from '../../../utils/api';
 
-
 type Props = {
   mode: 'create' | 'edit';
   project?: any;
@@ -13,11 +12,12 @@ type Props = {
 export default function ModalForm({ mode, project, onSuccess, onClose }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     thumbnail: '',
-    additionalImages: [] as string[],
+    additionalImages: '',
     status: '',
     rooms: 0,
     height: 0,
@@ -33,14 +33,15 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
     price: '',
   });
 
-  // --- Pre-fill form in edit mode ---
   useEffect(() => {
     if (mode === 'edit' && project) {
       setFormData({
         title: project.title || '',
         description: project.description || '',
-        thumbnail: null,
-        additionalImages: [],
+        thumbnail: '',
+        additionalImages: Array.isArray(project.additionalImages)
+          ? project.additionalImages.join('\n')
+          : '',
         status: project.status || '',
         rooms: project.rooms || 0,
         height: project.height || 0,
@@ -58,44 +59,47 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
     }
   }, [project, mode]);
 
-const handleChange = (
-  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-) => {
-  const { name, value } = e.target;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
 
-  const numericFields = [
-    'rooms', 'height', 'width', 'areaSqFt',
-    'bedrooms', 'bathrooms', 'floors'
-  ];
+    const numericFields = [
+      'rooms',
+      'height',
+      'width',
+      'areaSqFt',
+      'bedrooms',
+      'bathrooms',
+      'floors',
+    ];
 
-  // handle multi-line input for additionalImages
-  if (name === 'additionalImages') {
-    const urls = value.split('\n').map((url) => url.trim()).filter(Boolean);
-    setFormData((prev) => ({ ...prev, additionalImages: urls }));
-    return;
-  }
+    if (name === 'additionalImages') {
+      setFormData(prev => ({ ...prev, additionalImages: value }));
+      return;
+    }
 
-  setFormData((prev) => ({
-    ...prev,
-    [name]: numericFields.includes(name)
-      ? (value === '' ? 0 : parseFloat(value))
-      : value,
-  }));
-};
-
-
+    setFormData(prev => ({
+      ...prev,
+      [name]: numericFields.includes(name)
+        ? (value === '' ? 0 : parseFloat(value))
+        : value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    try {
-      const { ...restOfData } = formData;
 
+    try {
       const payload = {
-        ...restOfData
+        ...formData,
+        additionalImages: formData.additionalImages
+          .split('\n')
+          .map(url => url.trim())
+          .filter(url => url.length > 0),
       };
-      console.log("Payload is", payload);
 
       if (mode === 'create') {
         await API.post('/houseprojects', payload);
@@ -106,7 +110,7 @@ const handleChange = (
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error("Form submission error:", err);
+      console.error('Form submission error:', err);
       setError(err.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -124,15 +128,17 @@ const handleChange = (
         </h2>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
             <strong className="font-bold">Error: </strong>
             <span className="block sm:inline">{error}</span>
           </div>
         )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          {/* All your existing input fields */}
           <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Title *
+            </label>
             <input
               type="text"
               name="title"
@@ -145,7 +151,9 @@ const handleChange = (
           </div>
 
           <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
             <textarea
               name="description"
               value={formData.description}
@@ -156,99 +164,113 @@ const handleChange = (
             />
           </div>
 
-          {/* Category, Style, Status, Location */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
             <input type="text" name="category" value={formData.category} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Style</label>
             <input type="text" name="style" value={formData.style} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <input type="text" name="status" value={formData.status} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
+
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
             <input type="text" name="location" value={formData.location} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
 
-          {/* Numeric fields */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
             <input type="text" name="price" value={formData.price} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Bedrooms</label>
             <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Bathrooms</label>
             <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Rooms</label>
             <input type="number" name="rooms" value={formData.rooms} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Floors</label>
             <input type="number" name="floors" value={formData.floors} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Height (ft)</label>
             <input type="number" name="height" value={formData.height} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Width (ft)</label>
             <input type="number" name="width" value={formData.width} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Area (sq ft)</label>
             <input type="number" name="areaSqFt" value={formData.areaSqFt} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
 
-          {/* Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
             <input type="text" name="type" value={formData.type} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
           </div>
 
-          {/* Thumbnail */}
-          {/* Thumbnail URL */}
-<div className="md:col-span-2 lg:col-span-3">
-  <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail URL</label>
-  <input
-    type="text"
-    name="thumbnail"
-    value={formData.thumbnail}
-    onChange={handleChange}
-    placeholder="https://example.com/image.jpg"
-    className="w-full p-2 border rounded border-gray-300"
-  />
-</div>
+          <div className="md:col-span-2 lg:col-span-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail URL</label>
+            <input
+              type="text"
+              name="thumbnail"
+              value={formData.thumbnail}
+              onChange={handleChange}
+              placeholder="https://example.com/image.jpg"
+              className="w-full p-2 border rounded border-gray-300"
+            />
+          </div>
 
-{/* Additional Image URLs */}
-<div className="md:col-span-2 lg:col-span-3">
-  <label className="block text-sm font-medium text-gray-700 mb-1">Additional Image URLs (one per line)</label>
-  <textarea
-    name="additionalImages"
-    value={formData.additionalImages.join('\n')}
-    onChange={handleChange}
-    rows={4}
-    placeholder={`https://example.com/img1.jpg\nhttps://example.com/img2.jpg`}
-    className="w-full p-2 border rounded border-gray-300"
-  />
-</div>
-
+          <div className="md:col-span-2 lg:col-span-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Additional Image URLs (one per line)
+            </label>
+            <textarea
+              name="additionalImages"
+              value={formData.additionalImages}
+              onChange={handleChange}
+              rows={4}
+              placeholder={`https://example.com/img1.jpg\nhttps://example.com/img2.jpg`}
+              className="w-full p-2 border rounded border-gray-300"
+            />
+          </div>
         </div>
 
         <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
-          <button type="button" onClick={onClose} disabled={isLoading} className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
             Cancel
           </button>
-          <button type="submit" disabled={isLoading} className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-blue-300">
-            {isLoading ? 'Submitting...' : (mode === 'create' ? 'Create' : 'Update')}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-blue-300"
+          >
+            {isLoading ? 'Submitting...' : mode === 'create' ? 'Create' : 'Update'}
           </button>
         </div>
       </form>

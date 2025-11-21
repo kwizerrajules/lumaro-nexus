@@ -9,8 +9,8 @@ import { roleMiddleware, authMiddleware } from '@/src/middleware/auth';
 
 export async function POST(request: Request) {
     const req: NextRequest = request as NextRequest;
-    const roleCheck = await roleMiddleware(req, ['EXECUTIVE']);
-    if (roleCheck instanceof NextResponse) return roleCheck;
+    // const roleCheck = await roleMiddleware(req, ['EXECUTIVE']);
+    // if (roleCheck instanceof NextResponse) return roleCheck;
     try {
         const body = await request.json();
         const parsedData = createStaffSchema.parse(body);

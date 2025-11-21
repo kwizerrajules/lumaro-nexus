@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ImageCarousel from './ImageCarousel';
-import { string } from 'zod';
 import axios from 'axios';
-import { headers } from 'next/headers';
 
 interface Project {
   id: string;
@@ -20,18 +18,18 @@ interface ModalFormProps {
   onClose: () => void;
 }
 
+
+const STAFF_WHATSAPP_NUMBER = "250787369660";
+
 const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
-  const [selectedFileType, setSelectedFileType] = useState<'cad+pdf' | 'pdf'>('pdf');
-  const [selectedDrawings, setSelectedDrawings] = useState<string[]>(['architectural']);
   const [quantity, setQuantity] = useState(1);
   const [accessToken, setAccessToken] = useState("");
 
-useEffect(() => {
-  const token = localStorage.getItem("userAccessToken");
-  if (token) setAccessToken(token);
-}, []);
-  
-
+  useEffect(() => {
+    const token = localStorage.getItem("userAccessToken");
+    if (token) setAccessToken(token);
+  }, []);
+    
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -44,21 +42,34 @@ useEffect(() => {
     return total * quantity;
   };
 
-  const handleAddEnquiry = async (id) => {
+  // 📌 2. FUNCTION TO GENERATE THE WHATSAPP LINK
+  const getWhatsAppLink = () => {
+    const total = formatPrice(calculateTotal());
+    const message = encodeURIComponent(
+      `Hello, I am interested in project "${project.title}" (ID: ${project.id}).\n` +
+      `\nDetails:\n` +
+      `  - Bedrooms: ${project.bedrooms}\n` +
+      `  - Area: ${project.area}m²\n` +
+      `  - Quantity: ${quantity}\n` +
+      `  - Estimated Price: ${total}`
+    );
+    
+    // Construct the wa.me link
+    return `https://wa.me/${STAFF_WHATSAPP_NUMBER}?text=${message}`;
+  };
+
+  const handleAddEnquiry = async (id: string) => {
     console.log("AccesTOKEN IS ", accessToken);
     try {
-
       const response  = await axios.post('/api/enquiries', {projectId: id},{
         headers: {
           'Authorization':`Bearer ${accessToken}`
         }
       })
-
       if(!response) {
         console.error("Failed to create wishlist with error")
       }
       alert("Product added to wish list");
-
     } catch (err) {
       alert("Error while adding product to wishlist")
       console.error("Failed to add product to wishlist")
@@ -128,18 +139,29 @@ useEffect(() => {
               </select>
             </div>
 
-            {/* Total & Buy Button */}
+            {/* Total & WhatsApp Button */}
             <div className="border-t border-gray-200 pt-4">
               <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-semibold text-gray-800">Total</span>
-                <span className="text-2xl font-bold text-gray-600">{formatPrice(calculateTotal())}</span>
+                <span className="text-lg font-semibold text-gray-800">Total Price</span>
+                <span className="text-2xl font-bold text-green-600">{formatPrice(calculateTotal())}</span>
               </div>
-              {/* <button
-                onClick={handleCheckout}
-                className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors mb-3"
+              
+              {/* 📌 3. WHATSAPP BUTTON REPLACEMENT */}
+              <a 
+                href={getWhatsAppLink()} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors mb-3 flex items-center justify-center text-center"
               >
-                Buy Now
-              </button> */}
+                {/* WhatsApp Icon SVG */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M.057 18.068l1.492-5.742a1.082 1.082 0 01.326-.411l3.541-3.541a1.08 1.08 0 011.53 0l3.7 3.7a1.08 1.08 0 010 1.53l-3.54 3.54a1.08 1.08 0 01-.765.317H.813a.75.75 0 01-.756-.757zM22.5 12A10.5 10.5 0 1012 22.5 10.5 10.5 0 0022.5 12zM12 21.6A9.6 9.6 0 1121.6 12 9.61 9.61 0 0112 21.6zm2.844-3.535l-.707-.707c-2.857-2.857-5.714-5.714-8.571-8.571-.059-.059-.118-.118-.177-.177a.6.6 0 01-.013-.85l.707-.707a.6.6 0 01.85 0l8.57 8.57c.059.059.118.118.177.177a.6.6 0 01.013.85z"/>
+                  <path d="M12.06 1.157c-6.075 0-11 4.925-11 11s4.925 11 11 11 11-4.925 11-11-4.925-11-11-11zm5.992 14.538l-4.598-4.598a.5.5 0 00-.707 0l-4.598 4.598a.5.5 0 000 .707l4.598 4.598a.5.5 0 00.707 0l4.598-4.598a.5.5 0 000-.707z" fill="white"/>
+                  <path d="M16.48 7.52L12 12.001 7.52 7.52a1.08 1.08 0 00-1.53 1.53l4.598 4.598a1.08 1.08 0 001.53 0l4.598-4.598a1.08 1.08 0 00-1.53-1.53z" fill="white"/>
+                </svg>
+                Contact Us on WhatsApp
+              </a>
+
               <button 
               onClick={()=> handleAddEnquiry(project.id)} 
               disabled={!accessToken}
