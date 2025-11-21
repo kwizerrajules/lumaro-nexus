@@ -4,7 +4,6 @@ import { Collection } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
-// Type definitions (assuming they are correctly imported)
 type UserDocument = CreateUserInput & { _id: string; password: string };
 type UserOutput = Omit<UserDocument, '_id' | 'password'> & { id: string };
 
@@ -12,7 +11,6 @@ type UserOutput = Omit<UserDocument, '_id' | 'password'> & { id: string };
 const COLLECTION_NAME = "users";
 const DB_NAME = "LUMARO"; // <-- Update this
 
-// Helper function to get the collection instance
 async function getUsersCollection(): Promise<Collection<UserDocument>> {
     const client = await getClientPromise();
     const db = client.db(DB_NAME);

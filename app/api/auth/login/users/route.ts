@@ -22,12 +22,13 @@ export async function POST(request: Request) {
         if (!isPasswordValid) {
             return NextResponse.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
         }
-        const { passwordHash, ...userData } = user;
+        const { password: passwordHash, ...userData } = user;
         
         const payload: UserPayload = {
             id: user.id ?? '',
             email: user.email,
-            role: user.role,
+            role: (user as any).role ?? undefined,
+            permissions: 'permissions' in user ? (user as any).permissions ?? [] : []
         };
         const accessToken = createAccessToken(payload);
         const refreshToken = createRefreshToken(payload);

@@ -17,7 +17,7 @@ async function getEnquiryCollection(): Promise<Collection<Enquiry & { _id: strin
 }
 
 interface UserData {
-  id: string; names: string; email: string; phone?: string;
+  id: string; names: string; email: string; phone?: string, role?: string;
 }
 interface ProjectData {
   id: string; title: string; description: string; thumbnail: string;
@@ -35,12 +35,11 @@ interface EnquiryWithDetails {
 }
 
 
-export class EnquiryModel extends BaseModel<Enquiry> {
+export class EnquiriesModel extends BaseModel<Enquiry> {
   constructor() {
     super(COLLECTION_NAME, enquirySchema);
   }
 
-  /** Create enquiry safely using authenticated user ID */
   async createEnquiry(
     data: Omit<Enquiry, 'id' | 'createdAt' | 'userId'>,
     userId: string
@@ -49,10 +48,10 @@ export class EnquiryModel extends BaseModel<Enquiry> {
     const createdAt = new Date();
 
     const validated = enquirySchema.parse({
-      id: _id, // Zod uses 'id' but we map it to '_id'
+      id: _id,
       userId,
       projectId: data.projectId ?? null,
-      createdAt: createdAt.toISOString(), // Zod expects string date
+      createdAt: createdAt.toISOString(),
     });
 
     const newDocument = {
@@ -70,7 +69,6 @@ export class EnquiryModel extends BaseModel<Enquiry> {
 
   private getDetailsPipeline(query: any = {}) {
     return [
-      // 1. Initial Filter
       { $match: query },
       
       {
@@ -174,7 +172,7 @@ export class EnquiryModel extends BaseModel<Enquiry> {
     })) as EnquiryWithDetails[];
   }
 
-async updateEnquiry(
+  async updateEnquiry(
     id: string,
     userId: string,
     updates: Partial<Omit<Enquiry, 'id' | 'userId' | 'createdAt'>>
@@ -182,12 +180,11 @@ async updateEnquiry(
     const collection = await getEnquiryCollection();
     
     const rawResult = await collection.findOneAndUpdate(
-      { _id: id, userId: userId }, // Query: check ID and owner ID
-      { $set: updates },           // Updates
-      { returnDocument: 'after' }  // Get the updated document back
+      { _id: id, userId: userId },
+      { $set: updates },           
+      { returnDocument: 'after' } 
     );
 
-    // Normalize to the updated document (or null)
     const updatedDocument = (rawResult as any)?.value ?? (rawResult as any) ?? null;
 
     if (!updatedDocument) return null;
@@ -197,7 +194,14 @@ async updateEnquiry(
     // Map _id back to 'id'
     const { _id, ...rest } = typedDoc;
     
-    // Note: We cast to Enquiry here, assuming the update conforms to the schema
     return { id: _id, ...rest } as Enquiry; 
+  }
+
+  async deleteEnquiry(id: string, userId: string): Promise<boolean> {
+    const collection = await getEnquiryCollection();
+    
+    const result = await collection.deleteOne({ _id: id, userId: userId });
+    
+    return result.deletedCount === 1;
   }
 }

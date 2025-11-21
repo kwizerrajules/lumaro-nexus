@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { verifyAccessToken } from '@/src/security/auth';
 import { EnquiriesModel } from '@/src/lib/models/enquiry.model';
 
+const enquiriesModel = new EnquiriesModel();
+
 export async function POST(req: Request) {
   try {
     const authHeader = req.headers.get('authorization');
@@ -16,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     const data = await req.json();
-    const enquiry = await EnquiriesModel.createEnquiry(data, user.id);
+    const enquiry = await enquiriesModel.createEnquiry(data, user.id);
 
     return NextResponse.json(enquiry, { status: 201 });
   } catch (error: any) {
@@ -41,7 +43,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 403 });
     }
 
-    const enquiries = await EnquiriesModel.getUserEnquiries(user.id);
+    const enquiries = await enquiriesModel.getUserEnquiries(user.id);
     return NextResponse.json(enquiries, { status: 200 });
   } catch (err: any) {
     console.error(err);
@@ -49,5 +51,3 @@ export async function GET(req: Request) {
   }
 }
 
-
-// Admin to see all enquireis
