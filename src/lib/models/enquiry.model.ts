@@ -1,238 +1,203 @@
 import { BaseModel } from '../../../src/lib/models/base.model';
 import { enquirySchema, Enquiry } from '../../../src/schemas/enquiry.schema';
-import db from '../db';
 import { v4 as uuidv4 } from "uuid";
+import getClientPromise from '../mongodb';
+import { Collection } from "mongodb";
 
+const COLLECTION_NAME = "enquiries";
+const USERS_COLLECTION_NAME = "users";
+const PROJECTS_COLLECTION_NAME = "house_projects";
+const DB_NAME = "LUMARO";
+
+// Helper function to get the collection instance
+async function getEnquiryCollection(): Promise<Collection<Enquiry & { _id: string }>> {
+    const client = await getClientPromise();
+    const db = client.db(DB_NAME);
+    return db.collection<Enquiry & { _id: string }>(COLLECTION_NAME);
+}
 
 interface UserData {
-  id: string;
-  names: string;
-  email: string;
-  phone?: string;
+  id: string; names: string; email: string; phone?: string;
 }
-
 interface ProjectData {
-  id: string;
-  title: string;
-  description: string;
-  thumbnail: string;
-  additionalImages?: string[];
-  status: "planned" | "in-progress" | "completed" | "on-hold";
-  rooms?: number;
-  height?: number;
-  width?: number;
-  areaSqFt?: number;
-  location?: string;
-  bedrooms?: number;
-  bathrooms?: number;
-  floors?: number;
-  category?: string;
-  style?: string;
-  type?: string;
-  price?: number;
-  views: number;
-  likes: number;
-  createdAt?: string;
+  id: string; title: string; description: string; thumbnail: string;
+  additionalImages?: string[]; status: string; rooms?: number; height?: number;
+  width?: number; areaSqFt?: number; location?: string; bedrooms?: number;
+  bathrooms?: number; floors?: number; category?: string; style?: string;
+  type?: string; price?: number; views: number; likes: number; createdAt?: string;
   updatedAt?: string;
 }
-
 interface EnquiryWithDetails {
   id: string;
-  created_at: string;
-  user_data: UserData;
-  project_data: ProjectData;
+  createdAt: Date;
+  user_data: Partial<UserData>;
+  project_data: Partial<ProjectData>;
 }
-
 
 
 export class EnquiryModel extends BaseModel<Enquiry> {
   constructor() {
-    super('enquiries', enquirySchema);
+    super(COLLECTION_NAME, enquirySchema);
   }
 
   /** Create enquiry safely using authenticated user ID */
- async createEnquiry(
-  data: Omit<Enquiry, 'id' | 'createdAt' | 'userId'>,
-  userId: string
-): Promise<Enquiry> {
-  const eng_id: string = String(uuidv4());
-  const createdAt = new Date();
+  async createEnquiry(
+    data: Omit<Enquiry, 'id' | 'createdAt' | 'userId'>,
+    userId: string
+  ): Promise<Enquiry> {
+    const _id: string = String(uuidv4());
+    const createdAt = new Date();
 
-  const validated = enquirySchema.parse({
-    id: eng_id,
-    userId,
-    projectId: data.projectId ?? null,
-    createdAt,
-  });
+    const validated = enquirySchema.parse({
+      id: _id, // Zod uses 'id' but we map it to '_id'
+      userId,
+      projectId: data.projectId ?? null,
+      createdAt: createdAt.toISOString(), // Zod expects string date
+    });
 
+    const newDocument = {
+        _id,
+        userId: validated.userId,
+        projectId: validated.projectId,
+        createdAt, // Store as native Date object
+    };
+    
+    const collection = await getEnquiryCollection();
+    await collection.insertOne(newDocument as any);
 
-  await db.query(
-    'INSERT INTO enquiries (id, user_id, project_id, created_at) VALUES (?, ?, ?, ?)',
-    [validated.id, validated.userId, validated.projectId, validated.createdAt]
-  );
-
-
-  return validated;
-}
-
-
-  /** Get all enquiries for a specific user */
- async getByUserId(userId: string): Promise<any[]> {
-  const [rows]: any = await db.query(
-    `SELECT 
-        e.id AS enquiry_id,
-        e.user_id,
-        e.project_id,
-        e.created_at AS enquiry_created_at,
-        
-        p.id AS project_id,
-        p.title AS project_title,
-        p.price AS project_price,
-        p.bedrooms,
-        p.bathrooms,
-        p.floors,
-        p.area,
-        p.description
-
-     FROM enquiries e
-     LEFT JOIN house_projects p 
-       ON e.project_id = p.id
-     WHERE e.user_id = ?
-     ORDER BY e.created_at DESC`,
-    [userId]
-  );
-
-  return rows;
-}
-
-  /** Get all enquiries for a specific project */
-  async getByProjectId(projectId: string): Promise<Enquiry[]> {
-    const [rows]: any = await db.query(
-      'SELECT * FROM enquiries WHERE project_id = ? ORDER BY created_at DESC',
-      [projectId]
-    );
-    return rows as Enquiry[];
+    return validated;
   }
 
-  /** Get all enquiries made by a user */
-async getUserEnquiries(userId: string): Promise<any[]> {
-  const [rows]: any = await db.query(
-    `SELECT 
-        e.id AS enquiry_id,
-        e.user_id,
-        e.project_id,
-        e.created_at AS enquiry_created_at,
+  private getDetailsPipeline(query: any = {}) {
+    return [
+      // 1. Initial Filter
+      { $match: query },
+      
+      {
+        $lookup: {
+          from: USERS_COLLECTION_NAME,
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user_data_array', // Temp array field
+        },
+      },
+      { $unwind: { path: '$user_data_array', preserveNullAndEmptyArrays: true } },
+      
+      {
+        $lookup: {
+          from: PROJECTS_COLLECTION_NAME,
+          localField: 'projectId',
+          foreignField: '_id',
+          as: 'project_data_array', // Temp array field
+        },
+      },
+      { $unwind: { path: '$project_data_array', preserveNullAndEmptyArrays: true } },
 
-        p.id AS project_id,
-        p.title AS project_title,
-        p.price AS project_price,
-        p.bedrooms,
-        p.bathrooms,
-        p.floors,
-        p.areaSqFt,
-        p.description,
-        p.thumbnail
+      {
+        $project: {
+          _id: 0, // Exclude Mongo's _id for clean output
+          id: '$_id', // Map back to 'id'
+          createdAt: '$createdAt',
 
-     FROM enquiries e
-     LEFT JOIN house_projects p
-       ON e.project_id = p.id
-     WHERE e.user_id = ?
-     ORDER BY e.created_at DESC`,
-    [userId]
-  );
+          user_data: {
+            id: '$user_data_array._id',
+            names: '$user_data_array.names', // Assuming 'names' is the user field
+            email: '$user_data_array.email',
+            phone: '$user_data_array.phone',
+          },
+          
+          project_data: {
+            id: '$project_data_array._id',
+            title: '$project_data_array.title',
+            thumbnail: '$project_data_array.thumbnail',
+            status: '$project_data_array.status',
+            price: '$project_data_array.price',
+            description: '$project_data_array.description',
+            areaSqFt: '$project_data_array.areaSqFt',
+            bedrooms: '$project_data_array.bedrooms',
+            bathrooms: '$project_data_array.bathrooms',
+            floors: '$project_data_array.floors',
+          },
+        },
+      },
+      // 5. Sorting
+      { $sort: { createdAt: -1 } },
+    ];
+  }
 
-  return rows;
-}
+  async getUserEnquiries(userId: string): Promise<EnquiryWithDetails[]> {
+    const collection = await getEnquiryCollection();
+    const query = { userId: userId };
+    
+    const pipeline = this.getDetailsPipeline(query);
 
+    const results = await collection.aggregate(pipeline).toArray();
 
+    return results.map(doc => ({
+      id: doc.id,
+      createdAt: doc.createdAt,
+      user_data: doc.user_data,
+      project_data: doc.project_data,
+    })) as EnquiryWithDetails[];
+  }
 
+  async getByProjectId(projectId: string): Promise<Enquiry[]> {
+    const collection = await getEnquiryCollection();
+    const documents = await collection.find({ projectId: projectId })
+      .sort({ createdAt: -1 })
+      .toArray();
 
-async  getAllEnquiries(limit = 20, offset = 0): Promise<EnquiryWithDetails[]> {
-  const [rows]: any = await db.query(`
-    SELECT 
-      e.id AS enquiry_id,
-      e.created_at,
+    // Map _id back to 'id'
+    return documents.map(doc => {
+        const { _id, ...rest } = doc;
+        return { id: _id, ...rest } as Enquiry;
+    });
+  }
 
-      u.id AS user_id,
-      u.names AS user_names,
-      u.email AS user_email,
-      u.phone AS user_phone,
+  async getAllEnquiries(limit = 20, offset = 0): Promise<EnquiryWithDetails[]> {
+    const collection = await getEnquiryCollection();
+    
+    const pipeline = [
+      ...this.getDetailsPipeline(), // Use the core pipeline for JOINs and shape
+      // 6. Pagination
+      { $skip: offset },
+      { $limit: limit },
+    ];
+    
+    const results = await collection.aggregate(pipeline).toArray();
 
-      p.id AS project_id,
-      p.title AS project_title,
-      p.thumbnail AS project_thumbnail,
-      p.status AS project_status,
-      p.price AS project_price
+    return results.map(doc => ({
+      id: doc.id,
+      createdAt: doc.createdAt,
+      user_data: doc.user_data,
+      project_data: doc.project_data,
+    })) as EnquiryWithDetails[];
+  }
 
-    FROM enquiries e
-    JOIN users u ON e.user_id = u.id
-    JOIN house_projects p ON e.project_id = p.id
-    ORDER BY e.created_at DESC
-    LIMIT ? OFFSET ?
-  `, [limit, offset]);
-
-  return rows.map((row: any) => ({
-    id: row.enquiry_id,
-    created_at: row.created_at,
-    user_data: {
-      id: row.user_id,
-      names: row.user_names,
-      email: row.user_email,
-      phone: row.user_phone
-    },
-    project_data: {
-      id: row.project_id,
-      title: row.project_title,
-      thumbnail: row.project_thumbnail,
-      status: row.project_status,
-      price: row.project_price
-    }
-  }));
-}
-
-
-
-  /** PATCH: Update an enquiry (only by owner) */
-  async updateEnquiry(
+async updateEnquiry(
     id: string,
     userId: string,
     updates: Partial<Omit<Enquiry, 'id' | 'userId' | 'createdAt'>>
   ): Promise<Enquiry | null> {
-    // Check if enquiry belongs to user
-    const [existing]: any = await db.query(
-      'SELECT * FROM enquiries WHERE id = ? AND user_id = ?',
-      [id, userId]
-    );
-    if (!existing.length) return null;
-
-    const fields = Object.keys(updates);
-    if (!fields.length) return existing[0] as Enquiry;
-
-    const setClause = fields.map((field) => `${field} = ?`).join(', ');
-    const values = fields.map((field) => (updates as any)[field]);
-    values.push(id, userId);
-
-    await db.query(
-      `UPDATE enquiries SET ${setClause} WHERE id = ? AND user_id = ?`,
-      values
+    const collection = await getEnquiryCollection();
+    
+    const rawResult = await collection.findOneAndUpdate(
+      { _id: id, userId: userId }, // Query: check ID and owner ID
+      { $set: updates },           // Updates
+      { returnDocument: 'after' }  // Get the updated document back
     );
 
-    const [updated]: any = await db.query(
-      'SELECT * FROM enquiries WHERE id = ? AND user_id = ?',
-      [id, userId]
-    );
+    // Normalize to the updated document (or null)
+    const updatedDocument = (rawResult as any)?.value ?? (rawResult as any) ?? null;
 
-    return updated[0] as Enquiry;
-  }
+    if (!updatedDocument) return null;
 
-  /**  DELETE: Remove enquiry (only by owner) */
-  async deleteEnquiry(id: string, userId: string): Promise<boolean> {
-    const [result]: any = await db.query(
-      'DELETE FROM enquiries WHERE id = ? AND user_id = ?',
-      [id, userId]
-    );
-    return result.affectedRows > 0;
+    const typedDoc = updatedDocument as Enquiry & { _id: string };
+
+    // Map _id back to 'id'
+    const { _id, ...rest } = typedDoc;
+    
+    // Note: We cast to Enquiry here, assuming the update conforms to the schema
+    return { id: _id, ...rest } as Enquiry; 
   }
 }
-
-export const EnquiriesModel = new EnquiryModel();

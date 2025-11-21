@@ -1,73 +1,55 @@
-import pool from "../db";
 import { HouseProject, HouseProjectSchema } from "../../../src/schemas/house.projects.schema";
 import { v4 as uuidv4 } from "uuid";
+// Correctly importing your client promise function
+import getClientPromise from "../mongodb"; 
+
+const COLLECTION_NAME = "house_projects";
+const DB_NAME = "LUMARO";
+
+// Helper function to get the collection instance
+async function getHouseProjectsCollection() {
+    const client = await getClientPromise();
+    const db = client.db(DB_NAME);
+    return db.collection<HouseProject & { _id: string }>(COLLECTION_NAME);
+}
 
 export const HouseProjectModel = {
   // CREATE
   async create(data: HouseProject): Promise<HouseProject> {
     const parsed = HouseProjectSchema.parse(data);
-    const id = parsed.id || uuidv4();
-    const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+    
+    const _id = parsed.id || uuidv4(); 
+    const now = new Date();
+    
 
-    // checking if the type is already in the database
+    const newDocument = {
+      ...parsed,
+      _id: _id, 
+      createdAt: now,
+      updatedAt: now,
+    };
+    delete (newDocument as any).id;
 
-    // const checkType =  await pool.query("SELECT category from house_projects WHERE categort = ?", [parsed.type]);
-    // if (checkType.length > 0) {
-    //   throw new Error("The type")
-    // }
-
-    const query = `
-      INSERT INTO house_projects (
-        id, title, description, thumbnail, additionalImages, status, rooms, height, width,
-        areaSqFt, location, bedrooms, bathrooms, floors, category, style,type,
-        price, views, likes, createdAt, updatedAt
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    await pool.query(query, [
-      parsed.id,
-      parsed.title,
-      parsed.description,
-      parsed.thumbnail,
-      JSON.stringify(parsed.additionalImages || []),
-      parsed.status,
-      parsed.rooms || 0,
-      parsed.height || null,
-      parsed.width || null,
-      parsed.areaSqFt || null,
-      parsed.location || null,
-      parsed.bedrooms || 0,
-      parsed.bathrooms || 0,
-      parsed.floors || 0,
-      parsed.category || null,
-      parsed.style || null,
-      parsed.type || null,
-      parsed.price || 0,
-      parsed.views,
-      parsed.likes,
-      now,
-      now,
-    ]);
-    return { ...parsed, id, createdAt: now, updatedAt: now };
+    const collection = await getHouseProjectsCollection();
+    
+    await collection.insertOne(newDocument as any); // Type assertion needed due to dynamic _id addition
+    
+    return { ...parsed, id: _id, createdAt: now.toISOString(), updatedAt: now.toISOString() };
   },
 
   // READ (Single)
   async getById(id: string): Promise<HouseProject | null> {
-  const [rows]: any = await pool.query("SELECT * FROM house_projects WHERE id = ?", [id]);
-  if (!rows.length) return null;
+    const collection = await getHouseProjectsCollection();
+    
+    // findOne takes the query object, searching by _id
+    const document = await collection.findOne({ _id: id });
 
-  const project = rows[0];
-
-  if (typeof project.additionalImages === "string") {
-    try {
-      project.additionalImages = JSON.parse(project.additionalImages);
-    } catch {
-      project.additionalImages = [];
-    }
-  }
-
-  return project;
-},
+    if (!document) return null;
+    
+    // Map _id back to 'id' for the TypeScript interface consistency
+    const { _id, ...rest } = document;
+    return { id: _id, ...rest } as HouseProject;
+  },
 
   // READ (List with Filtering + Pagination + Search)
   async getAll(options?: {
@@ -80,82 +62,66 @@ export const HouseProjectModel = {
   }): Promise<{ data: HouseProject[]; total: number }> {
     const { limit = 10, offset = 0, status, category, style, search } = options || {};
 
-    const conditions: string[] = [];
-    const params: any[] = [];
+    const collection = await getHouseProjectsCollection();
+    const query: any = {};
 
-    if (status) {
-      conditions.push("status = ?");
-      params.push(status);
-    }
-    if (category) {
-      conditions.push("category = ?");
-      params.push(category);
-    }
-    if (style) {
-      conditions.push("style = ?");
-      params.push(style);
-    }
+    if (status) query.status = status;
+    if (category) query.category = category;
+    if (style) query.style = style;
+    
     if (search) {
-      conditions.push("MATCH(title, description) AGAINST(? IN NATURAL LANGUAGE MODE)");
-      params.push(search);
+      // Full-Text Search using $text (requires a text index setup)
+      query.$text = { $search: search }; 
     }
-
-    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
     // Get total count
-    const [countRows]: any = await pool.query(
-      `SELECT COUNT(*) as total FROM house_projects ${whereClause}`,
-      params
-    );
-    const total = countRows[0].total;
+    const total = await collection.countDocuments(query);
 
     // Get paginated data
-    const [rows]: any = await pool.query(
-      `SELECT * FROM house_projects ${whereClause} ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
-      [...params, limit, offset]
-    );
+    const documents = await collection
+      .find(query)
+      .sort({ createdAt: -1 }) // -1 for descending order
+      .skip(offset)
+      .limit(limit)
+      .toArray();
 
-    return { data: rows, total };
+    // Map _id back to 'id'
+    const data = documents.map(doc => {
+        const { _id, ...rest } = doc;
+        return { id: _id, ...rest } as HouseProject;
+    });
+
+    return { data, total };
   },
 
   // UPDATE
   async update(id: string, data: Partial<HouseProject>): Promise<void> {
-  const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+    const collection = await getHouseProjectsCollection();
+    const now = new Date();
+    
+    const updateDocument: any = { 
+        $set: { ...data, updatedAt: now } 
+    };
+    delete updateDocument.$set.id; 
 
-  const [existing]: any = await pool.query("SELECT * FROM house_projects WHERE id = ?", [id]);
-  if (!existing.length) throw new Error("Project not found");
+    const result = await collection.updateOne(
+      { _id: id },
+      updateDocument
+    );
 
-  // Merge old data with new
-  const updated = { ...existing[0], ...data, updatedAt: now };
-
-  // Ensure ID is not updated
-  delete (updated as any).id;
-
-  // Handle additionalImages properly
-  if ("additionalImages" in updated && Array.isArray(updated.additionalImages)) {
-    updated.additionalImages = JSON.stringify(updated.additionalImages);
-  }
-
-  // Remove keys that do not exist in DB table
-  const allowedColumns = [
-    "title", "description", "thumbnail", "additionalImages", "status",
-    "rooms", "height", "width", "areaSqFt", "location", "bedrooms",
-    "bathrooms", "floors", "category", "style", "type", "price",
-    "views", "likes", "createdAt", "updatedAt"
-  ];
-
-  const finalUpdate: any = {};
-  for (const key of allowedColumns) {
-    if (updated[key] !== undefined) {
-      finalUpdate[key] = updated[key];
+    if (result.matchedCount === 0) {
+        throw new Error("Project not found");
     }
-  }
-
-  await pool.query("UPDATE house_projects SET ? WHERE id = ?", [finalUpdate, id]);
-},
+  },
 
   // DELETE
   async delete(id: string): Promise<void> {
-    await pool.query("DELETE FROM house_projects WHERE id = ?", [id]);
+    const collection = await getHouseProjectsCollection();
+    
+    const result = await collection.deleteOne({ _id: id });
+    
+    if (result.deletedCount === 0) {
+         throw new Error("Project not found or already deleted");
+    }
   },
 };

@@ -1,92 +1,150 @@
 import { CreateUserInput, LoginUserInput, UpdateUserInput } from '../../../src/schemas/users.schema';
-import db from '../db';
+import getClientPromise from "../mongodb";
+import { Collection } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
+// Type definitions (assuming they are correctly imported)
+type UserDocument = CreateUserInput & { _id: string; password: string };
+type UserOutput = Omit<UserDocument, '_id' | 'password'> & { id: string };
+
+
+const COLLECTION_NAME = "users";
+const DB_NAME = "LUMARO"; // <-- Update this
+
+// Helper function to get the collection instance
+async function getUsersCollection(): Promise<Collection<UserDocument>> {
+    const client = await getClientPromise();
+    const db = client.db(DB_NAME);
+    return db.collection<UserDocument>(COLLECTION_NAME);
+}
+
 export const UsersModel = {
-  async createUser(userData: CreateUserInput) {
+  async createUser(userData: CreateUserInput): Promise<UserOutput> {
     const { names, email, phone, password } = userData;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const id = uuidv4();
+    const _id = uuidv4();
+    const collection = await getUsersCollection();
 
-    // first check if email already exists
-    const existingUser = await this.getUserByEmail(email);
-    if (existingUser) {
-      throw new Error('Email already in use');
-    }
+    // The unique index setup (recommended above) handles the email and phone checks.
+    // If an email or phone already exists, the insertOne will throw a MongoError (code 11000).
+    // You should wrap the insertion call in a try/catch in your API route 
+    // to handle this specific MongoError and translate it into a friendly message.
 
-    //check if phone already exists
-    if (phone) {
-      const [rows]: any = await db.query(
-        'SELECT id FROM users WHERE phone = ?',
-        [phone]
-      );
-      if (rows.length > 0) {
-        throw new Error('Phone number already in use');
+    const newUserDocument: UserDocument = {
+        _id: _id,
+        names,
+        email,
+        phone,
+        password: hashedPassword, // Stored as 'password' hash in MongoDB
+        // Assuming your schema might have other fields like createdAt, updatedAt if needed
+    };
+
+    try {
+      await collection.insertOne(newUserDocument as any);
+    } catch (error: any) {
+      if (error.code === 11000) { 
+        // Determine which field caused the error for a better message
+        if (error.keyPattern.email) {
+            throw new Error('Email already in use');
+        }
+        if (error.keyPattern.phone) {
+            throw new Error('Phone number already in use');
+        }
       }
+      throw error;
     }
 
-    await db.query(
-      'INSERT INTO users (id, names, email, phone, password) VALUES (?, ?, ?, ?, ?)',
-      [id, names, email, phone, hashedPassword]
-    );
-
-    return { id, names, email, phone };
+    // Return the public-facing output (without password hash) and map _id to id
+    const { _id: insertedId, password: _, ...rest } = newUserDocument;
+    return { id: insertedId, ...rest };
   },
 
-  async getUserByEmail(email: string) {
-    const [rows]: any = await db.query(
-      'SELECT id, names, email, phone, password FROM users WHERE email = ?',
-      [email]
+  async getUserByEmail(email: string): Promise<(UserOutput & { password: string }) | null> {
+    const collection = await getUsersCollection();
+    
+    // Find one document matching the email
+    const userDocument = await collection.findOne(
+      { email: email },
     );
-    return rows[0] || null;
+
+    if (!userDocument) {
+      return null;
+    }
+
+    // Map _id to id and return hash for login verification
+    const { _id, ...rest } = userDocument;
+    return { id: _id, ...rest };
   },
 
-  async getUserById(id: string) {
-    const [rows]: any = await db.query(
-      'SELECT id, names, email, phone FROM users WHERE id = ?',
-      [id]
+  async getUserById(id: string): Promise<UserOutput | null> {
+    const collection = await getUsersCollection();
+    
+    // Find one document by _id
+    const userDocument = await collection.findOne(
+      { _id: id },
+      { projection: { password: 0 } } // Exclude the sensitive password hash
     );
-    return rows[0] || null;
-  },
-  async getAllUsers() {
-    const [rows]: any = await db.query('SELECT id, names, email, phone FROM users');
-    return rows;
+
+    if (!userDocument) {
+      return null;
+    }
+
+    // Map _id to id
+    const { _id, password: _, ...rest } = userDocument;
+    return { id: _id, ...rest };
   },
   
-  async updateUser(id: string, updateData: UpdateUserInput) {
-    const fields: string[] = [];
-    const values: any[] = [];
+  async getAllUsers(): Promise<UserOutput[]> {
+    const collection = await getUsersCollection();
+    
+    const users = await collection.find(
+      {},
+      { projection: { password: 0 } } 
+    ).toArray();
 
-    for (const key in updateData) {
-      if (key === 'password') {
-        const hashed = await bcrypt.hash((updateData as any)[key], 10);
-        fields.push('password = ?');
-        values.push(hashed);
-      } else {
-        fields.push(`${key} = ?`);
-        values.push((updateData as any)[key]);
-      }
+    // Map _id to id for all users
+    return users.map(user => {
+        const { _id, password: _, ...rest } = user;
+        return { id: _id, ...rest };
+    });
+  },
+  
+  async updateUser(id: string, updateData: UpdateUserInput): Promise<UserOutput | null> {
+    const collection = await getUsersCollection();
+    const updateQuery: any = {};
+    const $set: any = {};
+    
+    // 1. Process password update if present
+    if (updateData.password) {
+      $set.password = await bcrypt.hash(updateData.password, 10);
+      delete updateData.password; 
     }
 
-    if (fields.length === 0) return null;
+    Object.assign($set, updateData);
+    
+    // Add updatedAt timestamp (if you want to track updates)
+    $set.updatedAt = new Date(); 
 
-    values.push(id);
+    updateQuery.$set = $set;
 
-    await db.query(
-      `UPDATE users SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-      values
+    const result = await collection.findOneAndUpdate(
+      { _id: id },
+      updateQuery,
+      { returnDocument: 'after', projection: { password: 0 } } // Return updated doc, exclude password
     );
 
-    const [rows]: any = await db.query(
-      'SELECT id, names, email, phone FROM users WHERE id = ?',
-      [id]
-    );
-    return rows[0] || null;
+    if (!result) return null;
+
+    const { _id, password: _, ...rest } = result;
+    return { id: _id, ...rest };
   },
 
-  async deleteUser(id: string) {
-    await db.query('DELETE FROM users WHERE id = ?', [id]);
-    return { success: true };
+  async deleteUser(id: string): Promise<{ success: boolean }> {
+    const collection = await getUsersCollection();
+    
+    const result = await collection.deleteOne({ _id: id });
+    
+    return { success: result.deletedCount > 0 };
   },
 };

@@ -19,7 +19,7 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://your-domain.com"),
+  metadataBase: new URL("https://lumaronexus.com"),
 
   title: {
     default: "Lumaro Nexus Architecture",
@@ -34,6 +34,7 @@ export const metadata: Metadata = {
   "modern African architecture",
   "Kenya house plans",
   "Ghana house plans",
+  "Lumaro Nexus",
   "Nigeria house designs",
   "South Africa home plans",
   "2 bedroom house plan",
@@ -56,7 +57,7 @@ export const metadata: Metadata = {
     type: "website",
     title: "Lumaro Nexus Architecture and House Plans",
     description: "Explore modern house plans, custom architectural designs, and professional building documentation for global clients.",
-    url: "https://your-domain.com",
+    url: "https://lumaronexus.com",
     siteName: "Lumaro Nexus",
   },
 
