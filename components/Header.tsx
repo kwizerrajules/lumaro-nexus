@@ -11,17 +11,12 @@ interface HeaderProps {
   onContactClick: () => void;
 }
 
-
-
 interface User {
   id: string;
   email: string;
   fullName: string;
   country: string;
 }
-
-
-
 
 const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContactClick }) => {
   const [announcements, setAnnouncements] = useState<string[]>([]);
@@ -33,28 +28,31 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
   const [isScrolled, setIsScrolled] = useState(false);
   const [sampleHouses, setSampleHouses] = useState<any[]>([]);
 
+  // 📌 1. NEW STATE FOR MOBILE MENU
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+
 
   useEffect(() => {
-  const fetchHouses = async () => {
-    try {
-      const res = await axios.get('/api/houseprojects');
-      const houses = res.data.data.map((item: any) => ({
-        id: item.id,
-        name: item.title, 
-        price: Number(item.price),
-        floors: item.floors,
-        bedrooms: item.bedrooms,
-        bathrooms: item.bathrooms,
-        type: item.category || 'Residential',
-      }));
-      setSampleHouses(houses);
-    } catch (err) {
-      console.error('Failed to fetch houses:', err);
-    }
-  };
+    const fetchHouses = async () => {
+      try {
+        const res = await axios.get('/api/houseprojects');
+        const houses = res.data.data.map((item: any) => ({
+          id: item.id,
+          name: item.title, 
+          price: Number(item.price),
+          floors: item.floors,
+          bedrooms: item.bedrooms,
+          bathrooms: item.bathrooms,
+          type: item.category || 'Residential',
+        }));
+        setSampleHouses(houses);
+      } catch (err) {
+        console.error('Failed to fetch houses:', err);
+      }
+    };
 
-  fetchHouses();
-}, []);
+    fetchHouses();
+  }, []);
 
 
   useEffect(() => {
@@ -114,6 +112,12 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
     setShowSearchModal(false);
   };
 
+  // Helper function to close menu after clicking a link
+  const handleNavLinkClick = (callback?: () => void) => {
+    setIsMenuOpen(false);
+    if (callback) callback();
+  };
+
   return (
     <header className={`bg-white border-b border-gray-100 transition-all duration-300 ${isScrolled ? 'fixed top-0 left-0 right-0 z-50 shadow-lg' : 'relative'}`}>
       {/* Announcement Bar */}
@@ -135,7 +139,8 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
             
             {/* 🌟 Lumaro Nexus Logo */}
             <a href="/" className="flex items-center space-x-3 group">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm overflow-hidden transition-transform duration-300 group-hover:scale-105">
+              {/* ... (Logo JSX remains unchanged) ... */}
+               <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm overflow-hidden transition-transform duration-300 group-hover:scale-105">
                 <Image
                   src="/image/logo_images/Unex_log.png"
                   alt="Lumaro Nexus Logo"
@@ -163,16 +168,30 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
               </div>
             </a>
 
-            {/* Navigation Links */}
+            {/* Navigation Links (Desktop ONLY) */}
             <div className="hidden lg:flex items-center space-x-8">
               <a href="/" className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Home</a>
-              {/* <a href="/catalog" className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Catalog</a> */}
               <a href="/custom-plan" className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Custom Plans</a>
               <a href="/contact_us" onClick={(e) => { e.preventDefault(); onContactClick(); }} className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Contact</a>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons & Hamburger */}
             <div className="flex items-center space-x-4">
+
+              {/* 📌 2. HAMBURGER BUTTON (Mobile Only) */}
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)} 
+                className="p-2 text-gray-600 hover:text-gray-900 lg:hidden transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {isMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                  )}
+                </svg>
+              </button>
+              
               <button onClick={onFilterToggle} className="hidden lg:flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
@@ -180,8 +199,9 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
                 <span>Filters</span>
               </button>
 
+              {/* User/Sign In Button */}
               {user ? (
-                <div className="relative">
+                <div className="relative hidden lg:block"> {/* Hide user menu button on mobile, show hamburger instead */}
                   <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-colors">
                     <span>👤</span>
                     <span className="hidden sm:inline">{user.fullName}</span>
@@ -204,7 +224,7 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
                   )}
                 </div>
               ) : (
-                <button onClick={() => setShowAuthModal(true)} className="bg-yellow-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-colors flex items-center space-x-2">
+                <button onClick={() => setShowAuthModal(true)} className="hidden lg:flex bg-yellow-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-colors items-center space-x-2">
                   <span className="hidden sm:inline">Sign In</span>
                 </button>
               )}
@@ -224,6 +244,57 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
           </div>
         </div>
       </nav>
+
+      {/* 📌 3. MOBILE DROPDOWN MENU */}
+      <div className={`lg:hidden transition-all duration-300 overflow-hidden ${isMenuOpen ? 'max-h-96 opacity-100 py-2 border-t border-gray-100' : 'max-h-0 opacity-0'}`}>
+        <div className="container mx-auto px-4 flex flex-col space-y-2">
+          
+          {/* Main Links */}
+          <a href="/" onClick={() => handleNavLinkClick()} className="block px-4 py-2 text-gray-700 hover:bg-gray-50 font-medium">Home</a>
+          <a href="/custom-plan" onClick={() => handleNavLinkClick()} className="block px-4 py-2 text-gray-700 hover:bg-gray-50 font-medium">Custom Plans</a>
+          <a 
+            href="/contact_us" 
+            onClick={(e) => { e.preventDefault(); handleNavLinkClick(onContactClick); }} 
+            className="block px-4 py-2 text-gray-700 hover:bg-gray-50 font-medium"
+          >
+            Contact
+          </a>
+
+          <div className="border-t border-gray-100 my-2"></div>
+
+          {/* Filters Button (Mobile) */}
+          <button 
+            onClick={() => handleNavLinkClick(onFilterToggle)} 
+            className="w-full text-left flex items-center space-x-2 bg-gray-50 text-gray-900 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
+            </svg>
+            <span>Filters</span>
+          </button>
+          
+          {/* Auth/User Actions (Mobile) */}
+          {user ? (
+            <>
+              <div className="px-4 py-2 text-sm font-medium text-gray-900 border-t border-gray-100 mt-2">
+                👤 {user.fullName}
+              </div>
+              <a href="/profile" onClick={() => handleNavLinkClick()} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
+              <a href="/orders" onClick={() => handleNavLinkClick()} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Orders</a>
+              <a href="/my-custom-plans" onClick={() => handleNavLinkClick()} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Custom Plans</a>
+              <button onClick={() => handleNavLinkClick(handleLogout)} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Sign Out</button>
+            </>
+          ) : (
+            <button 
+              onClick={() => handleNavLinkClick(() => setShowAuthModal(true))} 
+              className="w-full text-left bg-yellow-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-colors flex items-center justify-center space-x-2"
+            >
+              <span>Sign In</span>
+            </button>
+          )}
+
+        </div>
+      </div>
 
       {/* Auth Modal */}
       {showAuthModal && (
