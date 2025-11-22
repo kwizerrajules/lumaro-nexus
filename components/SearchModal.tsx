@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import ModalForm from './ModalForm';
 
 interface House {
   id: string;
@@ -8,7 +9,9 @@ interface House {
   floors: number;
   bedrooms: number;
   bathrooms: number;
+  title: string;
   type: string;
+  area: number;
 }
 
 interface SearchModalProps {
@@ -24,13 +27,23 @@ const SearchModal: React.FC<SearchModalProps> = ({
   houses, 
   onHouseSelect
 }) => {
+  // 1. FIX: useState moved inside the function body
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredHouses, setFilteredHouses] = useState<House[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  // 2. NEW STATE: Tracks which house is selected to open the ModalForm
+  const [selectedHouseForModal, setSelectedHouseForModal] = useState<House | null>(null);
 
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       searchInputRef.current.focus();
+    }
+    // Optional: Reset results when modal opens/closes
+    if (!isOpen) {
+        setSearchQuery('');
+        setFilteredHouses([]);
+        setSelectedHouseForModal(null); // Close any open quick-buy modal
     }
   }, [isOpen]);
 
@@ -50,17 +63,29 @@ const SearchModal: React.FC<SearchModalProps> = ({
   }, [searchQuery, houses]);
 
   const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
+    // We only close the SearchModal if the click is on the backdrop AND 
+    // the quick-buy modal is not open.
+    if (e.target === e.currentTarget && !selectedHouseForModal) {
       onClose();
     }
   };
 
   const handleHouseClick = (houseId: string) => {
-    // Call the onHouseSelect prop instead of handling navigation here
-    onHouseSelect(houseId);
-    onClose();
+    // 3. LOGIC CHANGE: Find the house and set it to open the ModalForm
+    const houseToOpen = houses.find(h => h.id === houseId);
+    if (houseToOpen) {
+      setSelectedHouseForModal(houseToOpen);
+      // Optional: You might want to keep the SearchModal open behind the quick-buy modal
+    }
+    // If you want the search modal to close and the quick-buy modal to open,
+    // you would call onClose() here. Let's keep it open for now for better UX.
   };
 
+  const handleModalFormClose = () => {
+    // Function to close the ModalForm
+    setSelectedHouseForModal(null);
+  };
+  
   if (!isOpen) return null;
 
   return (
@@ -68,7 +93,20 @@ const SearchModal: React.FC<SearchModalProps> = ({
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-20 px-4"
       onClick={handleOverlayClick}
     >
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+      {/* 4. RENDER MODALFORM HERE: It will overlay the SearchModal */}
+      {selectedHouseForModal && (
+          <ModalForm 
+              project={selectedHouseForModal} 
+              onClose={handleModalFormClose}
+          />
+      )}
+
+      {/* Main Search Modal Content */}
+      <div 
+        className={`bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden transition-opacity duration-300 ${
+            selectedHouseForModal ? 'opacity-50 pointer-events-none' : 'opacity-100'
+        }`}
+      >
         {/* Search Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
@@ -124,7 +162,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
               {filteredHouses.map((house) => (
                 <div
                   key={house.id}
-                  onClick={() => handleHouseClick(house.id)}
+                  onClick={() => handleHouseClick(house.id)} // 5. Click now opens ModalForm
                   className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
                 >
                   <div className="flex justify-between items-start">
