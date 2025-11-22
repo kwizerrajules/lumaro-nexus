@@ -73,6 +73,8 @@ export default function Home() {
     id: project.id,
     name: project.title,
     price: project.price,
+    title: project.title,
+    area: project.areaSqFt,
     floors: project.floors,
     bedrooms: project.bedrooms,
     bathrooms: project.bathrooms,

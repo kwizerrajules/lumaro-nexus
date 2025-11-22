@@ -4,10 +4,26 @@ import { loginSchema } from '@/src/schemas/auth.schema';
 import { UsersModel } from '@/src/lib/models/users.model';
 import { UserPayload } from '@/src/types/jwt.payload';
 import { createAccessToken, createRefreshToken } from '@/src/security/auth';
+import { rateLimiter } from '@/src/security/rateLimiter'; // Your in-memory rate limiter
+import type { NextRequest } from 'next/server'; 
+
 
 import bcrypt from 'bcryptjs';
+import { use } from 'react';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+
+        const ip = request.headers.get('x-forwarded-for') || request.ip;
+        
+        const clientIp = ip || 'anonymous'; 
+    
+        if (!rateLimiter(clientIp)) {
+            return NextResponse.json(
+                { success: false, message: 'Too many requests. Please try again later.' },
+                { status: 429 }
+            );
+        }
+
     try {
         const body = await request.json();
         const parsedData = loginSchema.parse(body);
@@ -28,6 +44,7 @@ export async function POST(request: Request) {
             id: user.id ?? '',
             email: user.email,
             role: (user as any).role ?? undefined,
+            names: user.names,
             permissions: 'permissions' in user ? (user as any).permissions ?? [] : []
         };
         const accessToken = createAccessToken(payload);

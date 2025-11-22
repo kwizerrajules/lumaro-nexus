@@ -30,14 +30,9 @@ export default function LoginPage() {
         onSubmit={handleLogin}
         className="bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-8 flex flex-col"
       >
-        <div className="flex justify-center mb-6">
-          {/* Optional: Logo/Icon */}
-          <div className="bg-blue-600 rounded-full w-12 h-12 flex items-center justify-center text-white font-bold text-xl">
-            A
-          </div>
-        </div>
+        
 
-        <h2 className="text-white text-2xl font-bold mb-6 text-center">Admin Login</h2>
+        <h2 className="text-white text-2xl font-bold mb-6 text-center">Admin Panel</h2>
 
         {error && (
           <div className="flex items-center bg-red-800 text-red-100 text-sm p-2 rounded mb-4 animate-fadeIn">
@@ -62,13 +57,6 @@ export default function LoginPage() {
           className="w-full p-3 mb-4 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
           required
         />
-
-        {/* Optional: Forgot Password */}
-        <div className="flex justify-end mb-4">
-          <a href="#" className="text-blue-400 text-sm hover:underline">
-            Forgot password?
-          </a>
-        </div>
 
         <button
           type="submit"

@@ -1,7 +1,7 @@
 const requests: Record<string, { count: number; lastRequest: number }> = {};
 
 const WINDOW_MS = 60 * 1000; 
-const MAX_REQUESTS = 30; 
+const MAX_REQUESTS = 10; 
 
 export function rateLimiter(ip: string) {
   const now = Date.now();
@@ -17,7 +17,7 @@ export function rateLimiter(ip: string) {
   requests[ip] = entry;
 
   if (entry.count > MAX_REQUESTS) {
-    return false; // blocked
+    return false;
   }
   return true;
 }
