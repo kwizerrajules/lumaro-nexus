@@ -3,6 +3,7 @@ export interface StaffPayload {
     id: string;
     email: string;
     role: string;
+    names: string, 
     permissions?: string[];
 }
 

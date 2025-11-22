@@ -30,6 +30,7 @@ export async function POST(request: Request) {
             id: staff.id ?? '',
             email: staff.email,
             role: staff.role,
+            names: staff.names,
             permissions: staff.permissions,
         };
 

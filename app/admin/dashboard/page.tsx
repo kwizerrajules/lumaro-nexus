@@ -8,7 +8,7 @@ import UsersSection from '../components/UsersSection';
 import ContactUsSection from '../components/ContactUsSections';
 import {jwtDecode} from 'jwt-decode';
 import useNavigate from 'react'
-
+import ProfileSection from '../components/ProfileSection';
 
 export default function AdminDashboardPage() {
 
@@ -38,7 +38,7 @@ export default function AdminDashboardPage() {
       router.push('/login');
     } else {
       const decodedPayload: any = jwtDecode(token);
-      setAdminName(decodedPayload.email);
+      setAdminName(decodedPayload.names);
     }
   }, [router]);
 
@@ -95,13 +95,7 @@ export default function AdminDashboardPage() {
   {activeSection === 'customOrders' && <CustomOrderSection />}
   {activeSection === 'users' && <UsersSection />}
   {activeSection === 'contact_us' && <ContactUsSection />}
-  {activeSection === 'profile' && (
-    <div>
-        <button className='bg-red-700 hover:bg-red-500  text-white font-bold py-2 px-4 rounded' onClick={handleLogout}>
-            Logout
-        </button>
-    </div>
-)}
+  {activeSection === 'profile' && <ProfileSection />}
 
 </div>
       </main>

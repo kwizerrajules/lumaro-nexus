@@ -1,7 +1,7 @@
 const requests: Record<string, { count: number; lastRequest: number }> = {};
 
-const WINDOW_MS = 60 * 1000; // 1 minute
-const MAX_REQUESTS = 30; // per IP per window
+const WINDOW_MS = 60 * 1000; 
+const MAX_REQUESTS = 30; 
 
 export function rateLimiter(ip: string) {
   const now = Date.now();
