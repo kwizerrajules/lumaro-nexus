@@ -11,76 +11,8 @@ type ContactUs = {
   email: string;
   phone?: string;
   message: string;
-  created_at: string;
+  createdAt: string;
 };
-
-// --- START: Mock API Implementation ---
-
-// Mock data to simulate the API response structure
-const MOCK_CONTACTS_DATA: ContactUs[] = [
-    {
-        "id": "e729d836-13fa-4261-8ce4-e449a2df0d81",
-        "names": "Mwimule Bienvenu",
-        "email": "bienvenugashema@gmail.com",
-        "phone": "123-456-7890",
-        "message": "Hello this is the testing message. This message is intentionally long to ensure that the table truncates it correctly and the expand feature works as expected. We need to check responsiveness and usability across different devices.",
-        "created_at": "2025-10-28T05:19:08.339Z"
-    },
-    {
-        "id": "f8a9b0c1-d2e3-4f5a-6b7c-8d9e0f1a2b3c",
-        "names": "Alice Wonderland",
-        "email": "alice@wonderland.com",
-        "phone": null,
-        "message": "I have an inquiry about product availability and bulk discounts. Please reply to this email as soon as possible.",
-        "created_at": "2025-11-15T10:30:00.000Z"
-    },
-    {
-        "id": "g9h0i1j2-k3l4-m5n6-o7p8-q9r0s1t2u3v4",
-        "names": "Bob The Builder",
-        "email": "bob@builder.org",
-        "phone": "999-999-9999",
-        "message": "Can we fix it? Yes we can! I need help with installation and scheduling a follow-up visit. The site address is ready.",
-        "created_at": "2025-11-18T14:45:12.789Z"
-    }
-];
-
-// Mock API call simulation for GET
-const mockContactFetch = (url: string, config: any) => new Promise<{ data: ContactUs[] }>((resolve, reject) => {
-    // Simulate token check if needed, but resolve with mock data
-    if (!config || !config.headers || !config.headers.Authorization) {
-        console.warn("Mock API (GET): Token check bypassed for demonstration.");
-    }
-    setTimeout(() => {
-        if (url === '/admin/contact_us') {
-            resolve({ data: MOCK_CONTACTS_DATA });
-        } else {
-            reject(new Error(`Unknown endpoint: ${url}`));
-        }
-    }, 500); // Simulate network delay
-});
-
-// Mock API call simulation for POST (Reply Endpoint)
-const mockReplyPost = (url: string, data: any, config: any) => new Promise<void>((resolve, reject) => {
-    if (url === '/api/reply') {
-        setTimeout(() => {
-            console.log(`--- Mock Reply Sent Successfully ---`);
-            console.log(`To: ${data.to}`);
-            console.log(`Subject: ${data.messegeSubject}`);
-            console.log(`Message: ${data.replyMessage.substring(0, 50)}...`);
-            console.log(`----------------------------------`);
-            resolve(); // Simulate successful send
-        }, 800);
-    } else {
-        reject(new Error(`Unknown POST endpoint: ${url}`));
-    }
-});
-
-// Mock API object to replace the import
-const API = {
-    get: mockContactFetch,
-    post: mockReplyPost, // Added post method
-};
-// --- END: Mock API Implementation ---
 
 
 export default function ContactUsSection() {
@@ -108,7 +40,7 @@ export default function ContactUsSection() {
     setLoading(true);
     setError(null);
     try {
-      const res = await API.get('/admin/contact_us', {
+      const res = await axios.get('/api/admin/contact_us', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -262,10 +194,7 @@ export default function ContactUsSection() {
         </div>
     );
   };
-  // --- End Reply Modal Component ---
 
-
-  // --- Helper Render Functions ---
 
   if (loading) {
     return (
@@ -333,7 +262,7 @@ export default function ContactUsSection() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredContacts.map((contact) => {
                 const expanded = expandedContactId === contact.id;
-                const date = new Date(contact.created_at);
+                const date = new Date(contact.createdAt);
                 const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 
                 return (

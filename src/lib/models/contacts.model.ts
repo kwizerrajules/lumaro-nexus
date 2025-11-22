@@ -10,5 +10,5 @@ export const ContactUsModel = {
         await db.query(
             `INSERT INTO contacts (id, names, email, phone, messafe) VALUES (?,?,?,?,?)`,[contactId, names, email, phone, message]
         )
-    } 
+    }
 }

@@ -1,10 +1,7 @@
 'use client';
-import { use, useEffect, useState } from 'react';
-import API from '../../../utils/api';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-/**
- * Type definition matching the user data structure from the /api/admin/users endpoint.
- */
+
 type UserData = {
   id: string;
   names: string;
@@ -13,79 +10,59 @@ type UserData = {
 };
 
 
-// Mock data to simulate the API response structure
-const MOCK_USERS_DATA: UserData[] = [
-    {
-        "id": "29b0f369-93b9-4378-bef1-39b68559f138",
-        "names": "Bienvenu Gashema",
-        "email": "bienvenugashema@gmail.com",
-        "phone": "0736701735"
-    },
-    {
-        "id": "e4f8c12a-4d7b-4e0f-9a1b-3c5d6e7f8a90",
-        "names": "Jane Doe Smith",
-        "email": "jane.doe@example.com",
-        "phone": "+1-555-123-4567"
-    },
-    {
-        "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-        "names": "Alex Johnson",
-        "email": "alex.j@company.net",
-        // This user intentionally has no phone number to test conditional rendering
-    },
-];
-
 export default function UsersSection() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  // Initial state should be null or undefined to explicitly indicate 'not yet loaded'
+  const [token, setToken] = useState<string | null>(null); 
 
+  // 1. Initial Load: Get Token from Local Storage
   useEffect(() => {
     const storedToken = localStorage.getItem('accessToken');
     if (storedToken) {
       setToken(storedToken);
+    } else {
+      // If no token exists, set loading to false and handle error/redirection
+      setToken(null);
+      setLoading(false); 
+      setError("Authentication token not found.");
     }
   }, []);
 
 
-  /**
-   * Fetches the list of users from the admin API endpoint.
-   */
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
+    if (!token) return; 
+
     setLoading(true);
     setError(null);
     try {
-      console.log("Fetching users");
-      console.log("TOken is", token);
       const res = await axios.get('/api/admin/users', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-
-      console.log("Users data is: ", res.data)
       setUsers(res.data || []);
     } catch (err) {
       setError("Failed to load users. Check console for details.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]); 
+
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    // Check if token exists and is not an empty string
+    if (token) {
+      fetchUsers();
+    }
+  }, [token, fetchUsers]);
 
-  /**
-   * Toggles the expanded view for a specific user card.
-   * @param id The ID of the user to expand or collapse.
-   */
+  
   const toggleExpand = (id: string) => {
     setExpandedUserId(expandedUserId === id ? null : id);
   };
-
   // --- Loading State UI ---
   if (loading) {
     return (

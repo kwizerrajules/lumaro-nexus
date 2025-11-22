@@ -64,6 +64,7 @@ export const ContactUsModel = {
             const { _id, createdAt, ...rest } = doc;
             return {
                 id: _id,
+                createdAt,
                 ...rest
             }
         });
