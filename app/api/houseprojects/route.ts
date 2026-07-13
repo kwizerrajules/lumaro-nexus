@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { handleSecureFile } from "../../..//src/security/fileSecurity";
 import { HouseProjectModel } from "../../../src/lib/models/houseProject.model";
-import { HouseProjectImagesModel } from "../../../src/lib/models/houseProjectImages.models";
-import { HouseProject } from "../../../src/schemas/house.projects.schema";
-import { v4 as uuidv4 } from "uuid";
 import { sanitizeEverything } from "../../../src/security/sanitizeEverything";
-import pool from "../../../src/lib/db";
-
+import { v4 as uuidv4 } from "uuid";
 
 let cachedTypes: string[] = [];
 let cacheTime = 0;
@@ -37,29 +32,36 @@ export async function GET(req: NextRequest) {
       cacheTime = Date.now();
     }
 
-    return NextResponse.json({ ...result, types: cachedTypes });
+    return NextResponse.json(
+      { ...result, types: cachedTypes },
+      {
+        headers: {
+          // Project JSON can refresh; image bytes themselves are served by Cloudinary CDN
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      }
+    );
   } catch (error: any) {
     console.error("GET Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-
-
 export async function POST(req: NextRequest) {
-  const conn = await pool.getConnection();
   try {
     const rawBody = await req.json();
     const body = sanitizeEverything(rawBody);
-
 
     const now = new Date().toISOString();
     const projectData = {
       id: uuidv4(),
       title: body.title,
       description: body.description,
+      // Expect Cloudinary (or other CDN) URLs only — no binary/base64 blobs
       thumbnail: body.thumbnail || "",
-      additionalImages: body.additionalImages || [],
+      additionalImages: Array.isArray(body.additionalImages)
+        ? body.additionalImages
+        : [],
       status: body.status || "planned",
       rooms: Number(body.rooms) || 0,
       height: Number(body.height) || 0,
@@ -79,17 +81,10 @@ export async function POST(req: NextRequest) {
       updatedAt: now,
     };
 
-    // Save project in DB
-    await conn.beginTransaction();
     const project = await HouseProjectModel.create(projectData);
-    await conn.commit();
-
     return NextResponse.json(project, { status: 201 });
   } catch (error: any) {
-    await conn.rollback();
     console.error("Error creating project:", error);
     return NextResponse.json({ error: error.message }, { status: 400 });
-  } finally {
-    conn.release();
   }
 }

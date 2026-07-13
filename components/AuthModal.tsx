@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import GoogleSignInButton from './GoogleSignInButton';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -29,9 +30,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isLogin) {
-      // Registration validation
       if (formData.password !== formData.confirmPassword) {
         alert('Passwords do not match');
         return;
@@ -40,37 +40,97 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
         alert('Please agree to the terms and conditions');
         return;
       }
+      if (!formData.names.trim()) {
+        alert('Full name is required');
+        return;
+      }
     }
 
     try {
-      // Login and registration Endpoints
       const endpoint = isLogin ? '/api/auth/login/users' : '/api/auth/register/users';
+      const payload = isLogin
+        ? { email: formData.email, password: formData.password }
+        : {
+            email: formData.email,
+            names: formData.names.trim(),
+            phone: formData.phone.trim() || undefined,
+            password: formData.password,
+          };
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload),
       });
-      if (response.ok) {
-        const userData = await response.json();
-        localStorage.setItem("userAccessToken",userData.data.accessToken);
-        localStorage.setItem("userRefreshToken", userData.data.refreshToken);
-        onAuthSuccess(userData);
-        onClose();
-        // Reset form
-        setFormData({
-          email: '',
-          names: '',
-          password: '',
-          confirmPassword: '',
-          phone: '',
-          agreeToTerms: false
-        });
-      } else {
-        alert(isLogin ? 'Login failed' : 'Registration failed');
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        const message =
+          result.message ||
+          result.errors?.[0]?.message ||
+          (isLogin ? 'Login failed' : 'Registration failed');
+        alert(message);
+        return;
       }
+
+      const { accessToken, refreshToken, user } = result.data;
+      if (accessToken) localStorage.setItem('userAccessToken', accessToken);
+      if (refreshToken) localStorage.setItem('userRefreshToken', refreshToken);
+
+      const normalizedUser = {
+        id: user.id,
+        email: user.email,
+        fullName: user.names,
+        names: user.names,
+        phone: user.phone || '',
+        country: '',
+      };
+
+      onAuthSuccess(normalizedUser);
+      onClose();
+      setFormData({
+        email: '',
+        names: '',
+        password: '',
+        confirmPassword: '',
+        phone: '',
+        agreeToTerms: false,
+      });
     } catch (error) {
       console.error('Auth error:', error);
       alert('An error occurred. Please try again.');
+    }
+  };
+
+  const handleGoogleCredential = async (credential: string) => {
+    try {
+      const response = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+      });
+      const result = await response.json();
+      if (response.ok && result.success) {
+        const { accessToken, refreshToken, user } = result.data;
+        if (accessToken) localStorage.setItem('userAccessToken', accessToken);
+        if (refreshToken) localStorage.setItem('userRefreshToken', refreshToken);
+
+        onAuthSuccess({
+          id: user.id,
+          email: user.email,
+          fullName: user.names,
+          names: user.names,
+          phone: user.phone || '',
+          country: '',
+        });
+        onClose();
+      } else {
+        alert(result.message || 'Google sign-in failed');
+      }
+    } catch (error) {
+      console.error('Google auth error:', error);
+      alert('An error occurred during Google sign-in. Please try again.');
     }
   };
 
@@ -178,7 +238,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
-                  placeholder="Enter your full name"
+                  placeholder="Enter your phone number"
                 />
               </div>
             )}
@@ -230,14 +290,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
                   className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
                 />
                 <label className="ml-3 text-sm text-gray-600">
-                  I agree to the{' '}
-                  <a href="/terms" className="text-gray-900 hover:underline font-medium">
-                    Terms and Conditions
-                  </a>{' '}
-                  and{' '}
-                  <a href="/privacy" className="text-gray-900 hover:underline font-medium">
-                    Privacy Policy
-                  </a>
+                  I agree to the Terms and Conditions and Privacy Policy
                 </label>
               </div>
             )}
@@ -250,15 +303,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
               {isLogin ? 'Sign In' : 'Create Account'}
             </button>
 
-            {/* Forgot Password (Login only) */}
-            {isLogin && (
-              <div className="text-center">
-                <a href="/forgot-password" className="text-gray-600 hover:text-gray-900 text-sm">
-                  Forgot your password?
-                </a>
-              </div>
-            )}
-
             {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -270,19 +314,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
             </div>
 
             {/* Social Login */}
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <span className="text-gray-700 font-medium">Google</span>
-              </button>
-              <button
-                type="button"
-                className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <span className="text-gray-700 font-medium">Facebook</span>
-              </button>
+            <div className="flex justify-center">
+              <GoogleSignInButton
+                onCredential={handleGoogleCredential}
+                onError={(message) => console.error('Google sign-in:', message)}
+                text={isLogin ? 'signin_with' : 'signup_with'}
+              />
             </div>
           </form>
         </div>

@@ -4,7 +4,12 @@ import { Collection } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
-type UserDocument = CreateUserInput & { _id: string; password: string };
+type UserDocument = Omit<CreateUserInput, 'password'> & {
+  _id: string;
+  password?: string;
+  authProvider?: string;
+  avatarUrl?: string;
+};
 type UserOutput = Omit<UserDocument, '_id' | 'password'> & { id: string };
 
 
@@ -24,10 +29,17 @@ export const UsersModel = {
     const _id = uuidv4();
     const collection = await getUsersCollection();
 
-    // The unique index setup (recommended above) handles the email and phone checks.
-    // If an email or phone already exists, the insertOne will throw a MongoError (code 11000).
-    // You should wrap the insertion call in a try/catch in your API route 
-    // to handle this specific MongoError and translate it into a friendly message.
+    const existing = await collection.findOne({ email });
+    if (existing) {
+      throw new Error('Email already in use');
+    }
+
+    if (phone) {
+      const existingPhone = await collection.findOne({ phone });
+      if (existingPhone) {
+        throw new Error('Phone number already in use');
+      }
+    }
 
     const newUserDocument: UserDocument = {
         _id: _id,
@@ -35,20 +47,19 @@ export const UsersModel = {
         email,
         phone,
         password: hashedPassword, // Stored as 'password' hash in MongoDB
-        // Assuming your schema might have other fields like createdAt, updatedAt if needed
     };
 
     try {
       await collection.insertOne(newUserDocument as any);
     } catch (error: any) {
       if (error.code === 11000) { 
-        // Determine which field caused the error for a better message
-        if (error.keyPattern.email) {
+        if (error.keyPattern?.email) {
             throw new Error('Email already in use');
         }
-        if (error.keyPattern.phone) {
+        if (error.keyPattern?.phone) {
             throw new Error('Phone number already in use');
         }
+        throw new Error('Account already exists');
       }
       throw error;
     }
@@ -58,7 +69,38 @@ export const UsersModel = {
     return { id: insertedId, ...rest };
   },
 
-  async getUserByEmail(email: string): Promise<(UserOutput & { password: string }) | null> {
+  async createGoogleUser(data: { names: string; email: string; avatarUrl?: string; phone?: string }): Promise<UserOutput> {
+    const { names, email, avatarUrl, phone } = data;
+    const collection = await getUsersCollection();
+
+    const newUserDocument: UserDocument = {
+      _id: uuidv4(),
+      names,
+      email,
+      phone,
+      avatarUrl,
+      authProvider: 'google',
+    };
+
+    try {
+      await collection.insertOne(newUserDocument as any);
+    } catch (error: any) {
+      // If the email already exists (race / already registered), return the existing user.
+      if (error.code === 11000) {
+        const existing = await collection.findOne({ email });
+        if (existing) {
+          const { _id, password: _pw, ...rest } = existing;
+          return { id: _id, ...rest };
+        }
+      }
+      throw error;
+    }
+
+    const { _id: insertedId, password: _pw, ...rest } = newUserDocument;
+    return { id: insertedId, ...rest };
+  },
+
+  async getUserByEmail(email: string): Promise<(UserOutput & { password?: string }) | null> {
     const collection = await getUsersCollection();
     
     // Find one document matching the email

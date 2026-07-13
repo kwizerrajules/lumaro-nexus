@@ -119,26 +119,39 @@ useEffect(()=>{
       description: description,
     };  
 
+    // Read the token fresh at submit time so that logging in on the same
+    // page (without a full reload) is picked up correctly.
+    const currentToken = localStorage.getItem("userAccessToken") || token;
+
+    if (!currentToken) {
+      setError('Please Login First');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await axios.post('/api/custom-plan', payload, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${currentToken}`,
         },
       });
-      if (!response) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
-      const result = await response.data;
-      console.log("Reslut is: ", result)
+      const result = response.data;
       console.log('Project created successfully:', result);
       setSuccess(true);
       // Optional: Redirect user or show confirmation modal
       
     } catch (err) {
       console.error('Submission failed:', err);
-      // @ts-ignore
-      setError(`Please Login First`);
+      const status = axios.isAxiosError(err) ? err.response?.status : undefined;
+      if (status === 401 || status === 403) {
+        setError('Your session has expired. Please log in again.');
+      } else {
+        const message = axios.isAxiosError(err)
+          ? err.response?.data?.error || err.message
+          : 'Something went wrong. Please try again.';
+        setError(message);
+      }
     } finally {
       setIsLoading(false);
     }

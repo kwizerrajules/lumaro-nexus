@@ -1,14 +1,18 @@
-for creating the houseproject /api/houseproject
+for creating the houseproject /api/houseprojects
+
+Images are uploaded to Cloudinary first (browser → Cloudinary, signed via GET /api/upload/sign).
+The create/update payload stores only Cloudinary secure_url strings (no base64/blobs).
+Each image must be 5MB or smaller.
 
 request body
 -------------------------------------------------------------------------------
 {
   "title": "Modern Luxury Villa",
   "description": "A sleek, modern villa with open floor plan, infinity pool, and smart home features.",
-  "thumbnail": "https://example.com/images/villa-thumbnail.jpg",
+  "thumbnail": "https://res.cloudinary.com/<cloud>/image/upload/v123/house-projects/villa-thumbnail.jpg",
   "additionalImages": [
-    "https://example.com/images/villa-1.jpg",
-    "https://example.com/images/villa-2.jpg"
+    "https://res.cloudinary.com/<cloud>/image/upload/v123/house-projects/villa-1.jpg",
+    "https://res.cloudinary.com/<cloud>/image/upload/v123/house-projects/villa-2.jpg"
   ],
   "status": "planned",
   "rooms": 8,
@@ -28,11 +32,14 @@ request body
   "updatedAt": "2025-10-25T12:00:00Z"
 }
 
-Here images must be of 5 MBS at least.
-
 Response is the same body
 
-to get all projects you use get on the same endoitn GET /api/houseproject
+Upload helpers
+-------------------------------------------------------------------------------
+GET  /api/upload/sign   → signed params for direct Cloudinary upload
+POST /api/upload        → multipart fallback (field "files" or "file"), returns { urls }
+
+to get all projects you use get on the same endoitn GET /api/houseprojects
 
 
 THEN FOR FILTERING U USE THIS SAME FOR GET 

@@ -1,6 +1,13 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import API from '../../../utils/api';
+import {
+  MAX_IMAGE_BYTES,
+  uploadImageToCloudinary,
+  uploadImagesToCloudinary,
+} from '../../../utils/cloudinaryUpload';
+import CategoryCombobox from './CategoryCombobox';
+import StyleSelect from './StyleSelect';
 
 type Props = {
   mode: 'create' | 'edit';
@@ -12,12 +19,19 @@ type Props = {
 export default function ModalForm({ mode, project, onSuccess, onClose }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
+  const [additionalPreviews, setAdditionalPreviews] = useState<string[]>([]);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const additionalInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     thumbnail: '',
-    additionalImages: '',
+    additionalImages: [] as string[],
     status: '',
     rooms: 0,
     height: 0,
@@ -35,13 +49,14 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
 
   useEffect(() => {
     if (mode === 'edit' && project) {
+      const existingAdditional = Array.isArray(project.additionalImages)
+        ? project.additionalImages
+        : [];
       setFormData({
         title: project.title || '',
         description: project.description || '',
-        thumbnail: '',
-        additionalImages: Array.isArray(project.additionalImages)
-          ? project.additionalImages.join('\n')
-          : '',
+        thumbnail: project.thumbnail || '',
+        additionalImages: existingAdditional,
         status: project.status || '',
         rooms: project.rooms || 0,
         height: project.height || 0,
@@ -56,8 +71,16 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
         type: project.type || '',
         price: project.price || '',
       });
+      setThumbnailPreview(project.thumbnail || '');
+      setAdditionalPreviews(existingAdditional);
     }
   }, [project, mode]);
+
+  const validateFileSize = (file: File) => {
+    if (file.size > MAX_IMAGE_BYTES) {
+      throw new Error(`"${file.name}" exceeds the 5MB limit`);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -74,11 +97,6 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
       'floors',
     ];
 
-    if (name === 'additionalImages') {
-      setFormData(prev => ({ ...prev, additionalImages: value }));
-      return;
-    }
-
     setFormData(prev => ({
       ...prev,
       [name]: numericFields.includes(name)
@@ -87,18 +105,70 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
     }));
   };
 
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      validateFileSize(file);
+      setError(null);
+      setThumbnailFile(file);
+      setThumbnailPreview(URL.createObjectURL(file));
+    } catch (err: any) {
+      setError(err.message);
+      if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
+    }
+  };
+
+  const handleAdditionalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    try {
+      files.forEach(validateFileSize);
+      setError(null);
+      setAdditionalFiles(files);
+      setAdditionalPreviews(files.map(f => URL.createObjectURL(f)));
+    } catch (err: any) {
+      setError(err.message);
+      if (additionalInputRef.current) additionalInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setUploadProgress(null);
 
     try {
+      let thumbnailUrl = formData.thumbnail;
+      let additionalImageUrls = [...formData.additionalImages];
+
+      if (thumbnailFile) {
+        setUploadProgress('Uploading thumbnail to Cloudinary…');
+        thumbnailUrl = await uploadImageToCloudinary(thumbnailFile);
+      }
+
+      if (mode === 'create' && !thumbnailUrl) {
+        throw new Error('Please select a thumbnail image');
+      }
+
+      if (additionalFiles.length > 0) {
+        setUploadProgress(
+          `Uploading ${additionalFiles.length} additional image(s) to Cloudinary…`
+        );
+        additionalImageUrls = await uploadImagesToCloudinary(additionalFiles);
+      }
+
+      setUploadProgress('Saving project…');
+
       const payload = {
         ...formData,
-        additionalImages: formData.additionalImages
-          .split('\n')
-          .map(url => url.trim())
-          .filter(url => url.length > 0),
+        thumbnail: thumbnailUrl,
+        additionalImages: additionalImageUrls,
+        price:
+          formData.price === '' || formData.price === null
+            ? 0
+            : Number(formData.price),
       };
 
       if (mode === 'create') {
@@ -111,9 +181,14 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
       onClose();
     } catch (err: any) {
       console.error('Form submission error:', err);
-      setError(err.message || 'An unexpected error occurred. Please try again.');
+      setError(
+        err?.response?.data?.error ||
+          err.message ||
+          'An unexpected error occurred. Please try again.'
+      );
     } finally {
       setIsLoading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -131,6 +206,12 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
             <strong className="font-bold">Error: </strong>
             <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+
+        {uploadProgress && (
+          <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded mb-4">
+            {uploadProgress}
           </div>
         )}
 
@@ -166,12 +247,27 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-            <input type="text" name="category" value={formData.category} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
+            <CategoryCombobox
+              value={formData.category}
+              onChange={(name) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  category: name,
+                  style: prev.category === name ? prev.style : '',
+                }))
+              }
+              disabled={isLoading}
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Style</label>
-            <input type="text" name="style" value={formData.style} onChange={handleChange} className="w-full p-2 border rounded border-gray-300" />
+            <StyleSelect
+              categoryName={formData.category}
+              value={formData.style}
+              onChange={(name) => setFormData((prev) => ({ ...prev, style: name }))}
+              disabled={isLoading}
+            />
           </div>
 
           <div>
@@ -230,29 +326,54 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
           </div>
 
           <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail URL</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Thumbnail image {mode === 'create' ? '*' : '(optional — leave empty to keep current)'}
+            </label>
             <input
-              type="text"
-              name="thumbnail"
-              value={formData.thumbnail}
-              onChange={handleChange}
-              placeholder="https://example.com/image.jpg"
+              ref={thumbnailInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              onChange={handleThumbnailChange}
               className="w-full p-2 border rounded border-gray-300"
+              required={mode === 'create'}
             />
+            <p className="text-xs text-gray-500 mt-1">Max 5MB. Uploaded to Cloudinary; only the URL is stored.</p>
+            {thumbnailPreview && (
+              <img
+                src={thumbnailPreview}
+                alt="Thumbnail preview"
+                className="mt-2 h-32 w-auto object-cover rounded border"
+              />
+            )}
           </div>
 
           <div className="md:col-span-2 lg:col-span-3">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Additional Image URLs (one per line)
+              Additional images (multi-select)
             </label>
-            <textarea
-              name="additionalImages"
-              value={formData.additionalImages}
-              onChange={handleChange}
-              rows={4}
-              placeholder={`https://example.com/img1.jpg\nhttps://example.com/img2.jpg`}
+            <input
+              ref={additionalInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              multiple
+              onChange={handleAdditionalChange}
               className="w-full p-2 border rounded border-gray-300"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Select multiple images (each max 5MB). Replacing files overwrites previous additional images on save.
+            </p>
+            {additionalPreviews.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {additionalPreviews.map((src, idx) => (
+                  <img
+                    key={`${src}-${idx}`}
+                    src={src}
+                    alt={`Additional ${idx + 1}`}
+                    className="h-20 w-20 object-cover rounded border"
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,6 +22,20 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
+    }
+  };
+
+  const handleGoogleCredential = async (credential: string) => {
+    setError('');
+    try {
+      const res = await axios.post('/api/auth/google/admin', { credential });
+      if (res.data.success) {
+        localStorage.setItem('accessToken', res.data.data.accessToken);
+        localStorage.setItem('refreshToken', res.data.data.refreshToken);
+        router.push('/admin/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Google sign-in failed');
     }
   };
 
@@ -64,6 +79,23 @@ export default function LoginPage() {
         >
           Login
         </button>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-600"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-gray-800 text-gray-400">Or continue with</span>
+          </div>
+        </div>
+
+        <div className="flex justify-center">
+          <GoogleSignInButton
+            onCredential={handleGoogleCredential}
+            onError={(message) => setError(message)}
+            text="signin_with"
+          />
+        </div>
       </form>
     </div>
   );

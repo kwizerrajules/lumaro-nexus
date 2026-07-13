@@ -1,4 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Camera,
+  Tag,
+  Bed,
+  Shower,
+  Ruler,
+  CurrencyDollar,
+  Trophy,
+} from '@phosphor-icons/react';
 
 interface FeaturedProject {
   id: string;
@@ -42,7 +51,7 @@ const FeaturedProject: React.FC = () => {
             bedrooms: 2,
             bathrooms: 2,
             areaSqFt: 85,
-            featuredText: '🏆 Project of the Month',
+            featuredText: 'Project of the Month',
             photoTopic: 'Modern Urban Living',
             category: 'Apartment Complex',
             tags: ['Modern', 'Luxury', 'Urban', 'Sustainable']
@@ -108,34 +117,36 @@ const FeaturedProject: React.FC = () => {
                 Discover Our Latest Innovations
               </div>
 
-              <div className="absolute top-6 right-6 bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-sm">
-                📸 {currentProject.photoTopic}
+              <div className="absolute top-6 right-6 bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-sm flex items-center gap-2">
+                <Camera size={16} weight="fill" />
+                {currentProject.photoTopic}
               </div>
 
               <div className="absolute bottom-6 left-6">
                 <h2 className="text-3xl lg:text-4xl font-bold mb-2">{currentProject.title}</h2>
 
                 <div className="mb-3">
-                  <span className="bg-blue-500/80 text-white px-3 py-1 rounded-full text-xs font-medium">
-                    🏷️ {currentProject.category}
+                  <span className="bg-blue-500/80 text-white px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1">
+                    <Tag size={12} weight="fill" />
+                    {currentProject.category}
                   </span>
                 </div>
 
                 <div className="flex items-center space-x-4 text-sm">
                   <span className="flex items-center space-x-1">
-                    <span>🛏️</span>
+                    <Bed size={16} weight="regular" />
                     <span>{currentProject.bedrooms} Bed</span>
                   </span>
                   <span className="flex items-center space-x-1">
-                    <span>🚿</span>
+                    <Shower size={16} weight="regular" />
                     <span>{currentProject.bathrooms} Bath</span>
                   </span>
                   <span className="flex items-center space-x-1">
-                    <span>📐</span>
+                    <Ruler size={16} weight="regular" />
                     <span>{currentProject.areaSqFt} m²</span>
                   </span>
                   <span className="flex items-center space-x-1 font-bold text-green-400">
-                    <span>💰</span>
+                    <CurrencyDollar size={16} weight="bold" />
                     <span>${currentProject.price}</span>
                   </span>
                 </div>
@@ -145,10 +156,13 @@ const FeaturedProject: React.FC = () => {
 
           {/* Right - Description */}
           <div className="lg:w-1/4 bg-gray-800 p-8 flex flex-col justify-center">
-            <h3 className="text-2xl font-bold mb-4 text-yellow-700">Featured Project</h3>
+            <h3 className="text-2xl font-bold mb-4 text-yellow-700 flex items-center gap-2">
+              <Trophy size={22} weight="fill" />
+              Featured Project
+            </h3>
             <div className="mb-4 p-3 bg-gray-700 rounded-lg">
               <div className="flex items-center space-x-2 text-sm text-green-300 mb-1">
-                <span>📸</span>
+                <Camera size={16} weight="fill" />
                 <span className="font-semibold">Photo Topic</span>
               </div>
               <p className="text-white font-medium">{currentProject.photoTopic}</p>

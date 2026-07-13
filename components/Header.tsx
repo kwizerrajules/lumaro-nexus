@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { User } from '@phosphor-icons/react';
 import AuthModal from './AuthModal';
 import SearchModal from './SearchModal';
 import Image from 'next/image';
@@ -74,9 +75,9 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
         setAnnouncements(data);
       } catch {
         setAnnouncements([
-          '✨New House Plan Added Weekly!',
-          '🏠Special Offer:Get 20% on 3+ Bedroom PlanSpecial Offer',
-          '🟩Customise Your Own House Plan Now!'
+          'New House Plan Added Weekly!',
+          'Special Offer: Get 20% on 3+ Bedroom Plan',
+          'Customise Your Own House Plan Now!'
         ]);
       }
     };
@@ -102,6 +103,8 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('lumaro_user');
+    localStorage.removeItem('userAccessToken');
+    localStorage.removeItem('userRefreshToken');
     setShowUserMenu(false);
   };
 
@@ -172,7 +175,7 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
             <div className="hidden lg:flex items-center space-x-8">
               <a href="/" className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Home</a>
               <a href="/custom-plan" className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Custom Plans</a>
-              <a href="/contact_us" onClick={(e) => { e.preventDefault(); onContactClick(); }} className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Contact</a>
+              <a href="#contact" onClick={(e) => { e.preventDefault(); onContactClick(); }} className="text-gray-700 hover:text-gray-900 font-medium text-sm uppercase tracking-wide border-b-2 border-transparent hover:border-gray-900 py-1">Contact</a>
             </div>
 
             {/* Action Buttons & Hamburger */}
@@ -203,7 +206,7 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
               {user ? (
                 <div className="relative hidden lg:block"> {/* Hide user menu button on mobile, show hamburger instead */}
                   <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-colors">
-                    <span>👤</span>
+                    <User size={18} weight="fill" />
                     <span className="hidden sm:inline">{user.fullName}</span>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -216,7 +219,6 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
                         <p className="text-sm font-medium text-gray-900">{user.fullName}</p>
                         <p className="text-sm text-gray-500 truncate">{user.email}</p>
                       </div>
-                      <a href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
                       <a href="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Orders</a>
                       <a href="/my-custom-plans" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Custom Plans</a>
                       <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Sign Out</button>
@@ -253,7 +255,7 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
           <a href="/" onClick={() => handleNavLinkClick()} className="block px-4 py-2 text-gray-700 hover:bg-gray-50 font-medium">Home</a>
           <a href="/custom-plan" onClick={() => handleNavLinkClick()} className="block px-4 py-2 text-gray-700 hover:bg-gray-50 font-medium">Custom Plans</a>
           <a 
-            href="/contact_us" 
+            href="#contact" 
             onClick={(e) => { e.preventDefault(); handleNavLinkClick(onContactClick); }} 
             className="block px-4 py-2 text-gray-700 hover:bg-gray-50 font-medium"
           >
@@ -276,10 +278,10 @@ const Header: React.FC<HeaderProps> = ({ onFilterToggle, onAuthSuccess, onContac
           {/* Auth/User Actions (Mobile) */}
           {user ? (
             <>
-              <div className="px-4 py-2 text-sm font-medium text-gray-900 border-t border-gray-100 mt-2">
-                👤 {user.fullName}
+              <div className="px-4 py-2 text-sm font-medium text-gray-900 border-t border-gray-100 mt-2 flex items-center gap-2">
+                <User size={16} weight="fill" />
+                {user.fullName}
               </div>
-              <a href="/profile" onClick={() => handleNavLinkClick()} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
               <a href="/orders" onClick={() => handleNavLinkClick()} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Orders</a>
               <a href="/my-custom-plans" onClick={() => handleNavLinkClick()} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Custom Plans</a>
               <button onClick={() => handleNavLinkClick(handleLogout)} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Sign Out</button>

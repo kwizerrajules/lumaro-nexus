@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import { House, Shower, Buildings, Lightbulb } from '@phosphor-icons/react';
 import ModalForm from './ModalForm';
 
 interface House {
@@ -170,9 +171,18 @@ const SearchModal: React.FC<SearchModalProps> = ({
                       <h3 className="font-semibold text-gray-900">{house.name}</h3>
                       <p className="text-sm text-gray-600 mt-1">ID: {house.id}</p>
                       <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                        <span>🏠 {house.bedrooms} Bed</span>
-                        <span>🚿 {house.bathrooms} Bath</span>
-                        <span>🏢 {house.floors} Floor{house.floors > 1 ? 's' : ''}</span>
+                        <span className="inline-flex items-center gap-1">
+                          <House size={14} weight="regular" />
+                          {house.bedrooms} Bed
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Shower size={14} weight="regular" />
+                          {house.bathrooms} Bath
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Buildings size={14} weight="regular" />
+                          {house.floors} Floor{house.floors > 1 ? 's' : ''}
+                        </span>
                       </div>
                     </div>
                     <div className="text-right">
@@ -188,8 +198,9 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
         {/* Search Tips */}
         <div className="p-4 bg-gray-50 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center">
-            💡 Try searching by: house name, plan ID, number of bedrooms (e.g., "4 bedroom"), or bathrooms
+          <p className="text-xs text-gray-500 text-center inline-flex items-center justify-center gap-1 w-full">
+            <Lightbulb size={14} weight="fill" className="shrink-0" />
+            Try searching by: house name, plan ID, number of bedrooms (e.g., &quot;4 bedroom&quot;), or bathrooms
           </p>
         </div>
       </div>

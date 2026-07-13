@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Lightbulb } from '@phosphor-icons/react';
 
 interface CostItem {
   id: string;
@@ -116,8 +117,9 @@ const ConstructionCalculator: React.FC = () => {
 
       {/* Info Note */}
       <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <p className="text-blue-700 text-sm">
-          💡 This is an estimate based on current market rates. Final costs may vary based on location, materials, and labor rates.
+        <p className="text-blue-700 text-sm flex items-start gap-2">
+          <Lightbulb size={16} weight="fill" className="shrink-0 mt-0.5" />
+          This is an estimate based on current market rates. Final costs may vary based on location, materials, and labor rates.
         </p>
       </div>
     </div>

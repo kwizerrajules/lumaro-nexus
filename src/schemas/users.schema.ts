@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { id } from 'zod/locales';
 
 export const createUserSchema = z.object({
     names: z.string().min(2, 'Names must be at least 2 characters long').max(100, 'Names cannot exceed 100 characters'),

@@ -9,7 +9,6 @@ import type { NextRequest } from 'next/server';
 
 
 import bcrypt from 'bcryptjs';
-import { use } from 'react';
 
 export async function POST(request: NextRequest) {
 
@@ -33,7 +32,12 @@ export async function POST(request: NextRequest) {
         if (!user) {
             return NextResponse.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
         }
-        
+
+        if (!user.password) {
+            // Account was created via Google sign-in and has no password set.
+            return NextResponse.json({ success: false, message: 'This account uses Google sign-in. Please continue with Google.' }, { status: 401 });
+        }
+
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             return NextResponse.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
@@ -43,7 +47,7 @@ export async function POST(request: NextRequest) {
         const payload: UserPayload = {
             id: user.id ?? '',
             email: user.email,
-            role: (user as any).role ?? undefined,
+            role: (user as any).role ?? 'USER',
             names: user.names,
             permissions: 'permissions' in user ? (user as any).permissions ?? [] : []
         };

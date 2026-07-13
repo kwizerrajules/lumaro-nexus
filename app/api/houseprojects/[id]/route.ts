@@ -9,7 +9,13 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
   if (!project)
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
 
-  return NextResponse.json(project, { status: 200 });
+  return NextResponse.json(project, {
+    status: 200,
+    headers: {
+      // Metadata only; image bytes are served from Cloudinary CDN with its own caching
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+    },
+  });
 }
 
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {

@@ -1,6 +1,20 @@
 'use client';
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
+import {
+  Phone,
+  CreditCard,
+  Users,
+  InstagramLogo,
+  ChatCircle,
+  Envelope,
+  Globe,
+  Lifebuoy,
+  DeviceMobile,
+  MapPin,
+  FacebookLogo,
+  TwitterLogo,
+} from '@phosphor-icons/react';
 import Header from './Header';
 import Newsletter from './Newsletter';
 import CustomPlanBuilder from './CustomPlanBuilder';
@@ -69,7 +83,7 @@ export default function CustomPlanPage() {
             {/* Customer Service */}
             <div className="text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">📞</span>
+                <Phone size={28} weight="fill" className="text-green-700" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Customer Service</h3>
               <p className="text-gray-600 mb-2">
@@ -86,7 +100,7 @@ export default function CustomPlanPage() {
             {/* Secure Payment */}
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">💳</span>
+                <CreditCard size={28} weight="fill" className="text-blue-700" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Secure Payment</h3>
               <p className="text-gray-600">
@@ -97,7 +111,7 @@ export default function CustomPlanPage() {
             {/* Refer a Friend */}
             <div className="text-center">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">👥</span>
+                <Users size={28} weight="fill" className="text-purple-700" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Refer a Friend</h3>
               <p className="text-gray-600">
@@ -114,7 +128,7 @@ export default function CustomPlanPage() {
       {/* Footer with contact section */}
       <footer ref={footerRef} className="bg-gray-900 text-white py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Column 1: Logo and Company Info */}
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -143,17 +157,17 @@ export default function CustomPlanPage() {
               
               {/* Social Media Links */}
               <div className="flex space-x-4">
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-green-500 transition-colors">
-                  <span className="text-white">f</span>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-green-500 transition-colors" aria-label="Facebook">
+                  <FacebookLogo size={20} weight="fill" className="text-white" />
                 </a>
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-pink-500 transition-colors">
-                  <span className="text-white">📸</span>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-pink-500 transition-colors" aria-label="Instagram">
+                  <InstagramLogo size={20} weight="fill" className="text-white" />
                 </a>
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors">
-                  <span className="text-white">💬</span>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors" aria-label="WhatsApp">
+                  <ChatCircle size={20} weight="fill" className="text-white" />
                 </a>
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-400 transition-colors">
-                  <span className="text-white">t</span>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-400 transition-colors" aria-label="Twitter">
+                  <TwitterLogo size={20} weight="fill" className="text-white" />
                 </a>
               </div>
             </div>
@@ -162,45 +176,34 @@ export default function CustomPlanPage() {
             <div>
               <h4 className="font-semibold mb-4 text-lg">Shop</h4>
               <ul className="space-y-3 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Back to Head</a></li>
+                <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
                 <li><a href="/catalog" className="hover:text-white transition-colors">Catalog</a></li>
                 <li><a href="/custom-plan" className="hover:text-white transition-colors">Customise Your Design</a></li>
               </ul>
             </div>
             
-            {/* Column 3: Learn Links */}
-            <div>
-              <h4 className="font-semibold mb-4 text-lg">Learn</h4>
-              <ul className="space-y-3 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Frequently Asked Questions</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">For Affiliates</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Refer a friend</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms and Conditions</a></li>
-              </ul>
-            </div>
-            
-            {/* Column 4: Contact Info */}
+            {/* Column 3: Contact Info */}
             <div id="contact-section">
               <h4 className="font-semibold mb-4 text-lg">Contact</h4>
               <ul className="space-y-3 text-sm text-gray-400">
                 <li className="flex items-center space-x-2">
-                  <span>📧</span>
+                  <Envelope size={16} weight="regular" className="shrink-0" />
                   <span>Email: info@lumaro_nexus.com</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <span>🌐</span>
+                  <Globe size={16} weight="regular" className="shrink-0" />
                   <span>Website: www.lumaro_nexus.com</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <span>🛟</span>
+                  <Lifebuoy size={16} weight="regular" className="shrink-0" />
                   <span>Support: help@lumaro_nexus.com</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <span>📱</span>
+                  <DeviceMobile size={16} weight="regular" className="shrink-0" />
                   <span>WhatsApp: +250791756343</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <span>📍</span>
+                  <MapPin size={16} weight="regular" className="shrink-0" />
                   <span>Location: Kigali Rwanda</span>
                 </li>
               </ul>
@@ -208,7 +211,7 @@ export default function CustomPlanPage() {
           </div>
           
           <div className="border-t border-gray-800 mt-12 pt-8 text-center">
-            <p className="text-gray-400 text-sm">&copy; 2025 Lumaro Nexus House Plans. All rights reserved. | Privacy Policy | Terms of Service</p>
+            <p className="text-gray-400 text-sm">&copy; 2025 Lumaro Nexus House Plans. All rights reserved.</p>
           </div>
         </div>
       </footer>

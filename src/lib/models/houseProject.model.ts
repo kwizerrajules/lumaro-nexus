@@ -68,10 +68,22 @@ export const HouseProjectModel = {
     if (status) query.status = status;
     if (category) query.category = category;
     if (style) query.style = style;
-    
-    if (search) {
-      // Full-Text Search using $text (requires a text index setup)
-      query.$text = { $search: search }; 
+
+    if (search && search.trim()) {
+      const escaped = search
+        .trim()
+        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = { $regex: escaped, $options: "i" };
+      // Full-text style match across common fields (works without a $text index)
+      query.$or = [
+        { title: regex },
+        { description: regex },
+        { location: regex },
+        { category: regex },
+        { style: regex },
+        { type: regex },
+        { status: regex },
+      ];
     }
 
     // Get total count

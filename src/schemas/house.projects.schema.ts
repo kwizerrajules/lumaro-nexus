@@ -7,8 +7,9 @@ export const HouseProjectSchema = z.object({
   id: z.string().uuid().default(() => uuidv4()),
   title: z.string().min(1).max(255),
   description: z.string().min(1).max(10000),
-  thumbnail: z.string().min(1).max(255),
-  additionalImages: z.array(z.string()).optional(),
+  // Cloudinary secure_url values are longer than classic path URLs
+  thumbnail: z.string().min(1).max(2048),
+  additionalImages: z.array(z.string().max(2048)).optional(),
   status: z.string().min(1).max(100).optional(),
   rooms: z.number().int().min(0).optional(),
   height: z.number().positive().optional(),

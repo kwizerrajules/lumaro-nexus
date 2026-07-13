@@ -2,12 +2,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import {
+  InstagramLogo,
+  ChatCircle,
+  Envelope,
+  Globe,
+  Lifebuoy,
+  DeviceMobile,
+  MapPin,
+  FacebookLogo,
+  TwitterLogo,
+} from '@phosphor-icons/react';
 import AuthModal from '../components/AuthModal';
 import Header from '../components/Header';
 import HouseProjectCard from '../components/HouseProjectCard';
 import Sidebar from '../components/Sidebar';
 import Newsletter from '../components/Newsletter';
 import FeaturedProject from '../components/FeaturedProject';
+import CategoryStyleBrowser from '../components/CategoryStyleBrowser';
 import SearchModal from '../components/SearchModal';
 import axios from 'axios';
 import { Console } from 'console';
@@ -16,7 +28,9 @@ export default function Home() {
   const [projects, setProjects] = useState<any[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({});
+  const [sidebarFilters, setSidebarFilters] = useState<any>({});
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeStyle, setActiveStyle] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -83,72 +97,83 @@ export default function Home() {
 
 
 const handleFilterChange = (newFilters: any) => {
-  setFilters(newFilters);
+  setSidebarFilters(newFilters);
+};
+
+// Recompute the visible projects whenever the source data, the category/style
+// browser selection, or the sidebar filters change. All conditions combine (AND).
+useEffect(() => {
   let filtered = [...projects];
-  console.log("FIlters: ", newFilters);
-  console.log("Orginals", filtered)
-  if (Array.isArray(newFilters.bedrooms) && newFilters.bedrooms.length > 0) {
-    filtered = filtered.filter(project =>
-      newFilters.bedrooms.includes(project.bedrooms)
-    );
+
+  // Category & style browser (primary, always-visible controls)
+  if (activeCategory) {
+    filtered = filtered.filter(project => (project.category || '') === activeCategory);
+  }
+  if (activeStyle) {
+    filtered = filtered.filter(project => (project.style || '') === activeStyle);
   }
 
-  if (Array.isArray(newFilters.bathrooms) && newFilters.bathrooms.length > 0) {
-    filtered = filtered.filter(project =>
-      newFilters.bathrooms.includes(project.bathrooms)
-    );
+  const f = sidebarFilters || {};
+
+  if (Array.isArray(f.bedrooms) && f.bedrooms.length > 0) {
+    filtered = filtered.filter(project => f.bedrooms.includes(project.bedrooms));
   }
-  
-  if (Array.isArray(newFilters.areas) && newFilters.areas.length > 0) {
-    filtered = filtered.filter(project => {
-      return newFilters.areas.some(rangeStr => {
+
+  if (Array.isArray(f.bathrooms) && f.bathrooms.length > 0) {
+    filtered = filtered.filter(project => f.bathrooms.includes(project.bathrooms));
+  }
+
+  if (Array.isArray(f.areas) && f.areas.length > 0) {
+    filtered = filtered.filter(project =>
+      f.areas.some((rangeStr: string) => {
         const [minStr, maxStr] = rangeStr.split("-");
-
         const min = Number(minStr);
         const max = maxStr === "null" ? null : Number(maxStr);
-
-        if (max === null) {
-          return project.area >= min;
-        }
-
+        if (max === null) return project.area >= min;
         return project.area >= min && project.area <= max;
-      });
-    });
-  }  
+      })
+    );
+  }
 
-  
-  if (Array.isArray(newFilters.priceRanges) && newFilters.priceRanges.length > 0) {
-    filtered = filtered.filter(project => {
-      return newFilters.priceRanges.some(rangeStr => {
+  if (Array.isArray(f.priceRanges) && f.priceRanges.length > 0) {
+    filtered = filtered.filter(project =>
+      f.priceRanges.some((rangeStr: string) => {
         const [minStr, maxStr] = rangeStr.split("-");
         const min = Number(minStr);
         const max = maxStr === "null" ? null : Number(maxStr);
-
-        if (max === null) {
-          return project.price >= min;
-        }
-
+        if (max === null) return project.price >= min;
         return project.price >= min && project.price <= max;
-      });
-    });
+      })
+    );
   }
-  
- if (Array.isArray(newFilters.styles) && newFilters.styles.length > 0) {
-  filtered = filtered.filter(
-  project => (project.type || "Unknown") && newFilters.styles.includes(project.type || "Unknown")
-);
-}
 
-if (Array.isArray(newFilters.categories) && newFilters.categories.length > 0) {
-  filtered = filtered.filter(project =>
-    project.category && newFilters.categories.includes(project.category)
-  );
-}
-  console.log("Filitered types", filtered);
+  // Sidebar "Product Type" filter matches the project's type field.
+  if (Array.isArray(f.styles) && f.styles.length > 0) {
+    filtered = filtered.filter(project => f.styles.includes(project.type || "Unknown"));
+  }
 
+  // Sidebar "Category" filter matches the project's category field.
+  if (Array.isArray(f.categories) && f.categories.length > 0) {
+    filtered = filtered.filter(project =>
+      project.category && f.categories.includes(project.category)
+    );
+  }
 
   setFilteredProjects(filtered);
+}, [projects, sidebarFilters, activeCategory, activeStyle]);
+
+const clearAllFilters = () => {
+  setActiveCategory(null);
+  setActiveStyle(null);
+  setSidebarFilters({});
 };
+
+const hasActiveFilters =
+  !!activeCategory ||
+  !!activeStyle ||
+  Object.values(sidebarFilters || {}).some(
+    (v: any) => Array.isArray(v) && v.length > 0
+  );
 
 
   const toggleSidebar = () => {
@@ -402,7 +427,7 @@ if (Array.isArray(newFilters.categories) && newFilters.categories.length > 0) {
       {/* Premium Footer with Social Media - Added ref for contact navigation */}
       <footer ref={footerRef} className="bg-gray-900 text-white py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Column 1: Logo and Company Info */}
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -426,17 +451,17 @@ if (Array.isArray(newFilters.categories) && newFilters.categories.length > 0) {
               
               {/* Social Media Links */}
               <div className="flex space-x-4">
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-green-500 transition-colors">
-                  <span className="text-white">f</span>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-green-500 transition-colors" aria-label="Facebook">
+                  <FacebookLogo size={20} weight="fill" className="text-white" />
                 </a>
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-pink-500 transition-colors">
-                  <span className="text-white">📸</span>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-pink-500 transition-colors" aria-label="Instagram">
+                  <InstagramLogo size={20} weight="fill" className="text-white" />
                 </a>
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors">
-                  <span className="text-white">💬</span>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors" aria-label="WhatsApp">
+                  <ChatCircle size={20} weight="fill" className="text-white" />
                 </a>
-                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-400 transition-colors">
-                  <span className="text-white">t</span>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-400 transition-colors" aria-label="Twitter">
+                  <TwitterLogo size={20} weight="fill" className="text-white" />
                 </a>
               </div>
             </div>
@@ -445,45 +470,34 @@ if (Array.isArray(newFilters.categories) && newFilters.categories.length > 0) {
             <div>
               <h4 className="font-semibold mb-4 text-lg">Shop</h4>
               <ul className="space-y-3 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Back to Head</a></li>
+                <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
                 <li><a href="/catalog" className="hover:text-white transition-colors">Catalog</a></li>
                 <li><a href="/custom-plan" className="hover:text-white transition-colors">Customise Your Design</a></li>
               </ul>
             </div>
             
-            {/* Column 3: Learn Links */}
-            <div>
-              <h4 className="font-semibold mb-4 text-lg">Learn</h4>
-              <ul className="space-y-3 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Frequently Asked Questions</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">For Affiliates</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Refer a friend</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms and Conditions</a></li>
-              </ul>
-            </div>
-            
-            {/* Column 4: Contact Info */}
+            {/* Column 3: Contact Info */}
             <div>
               <h4 className="font-semibold mb-4 text-lg">Contact</h4>
               <ul className="space-y-3 text-sm text-gray-400">
                 <li className="flex items-center space-x-2">
-                  <span>📧</span>
+                  <Envelope size={16} weight="regular" className="shrink-0" />
                   <span>Email: info@lumaro_nexus.com</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <span>🌐</span>
+                  <Globe size={16} weight="regular" className="shrink-0" />
                   <span>Website: www.Lumaro_nexus.com</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <span>🛟</span>
+                  <Lifebuoy size={16} weight="regular" className="shrink-0" />
                   <span>Support: help@lumaro_nexus.com</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <span>📱</span>
+                  <DeviceMobile size={16} weight="regular" className="shrink-0" />
                   <span>WhatsApp: +250791756343</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <span>📍</span>
+                  <MapPin size={16} weight="regular" className="shrink-0" />
                   <span>Location: Kigali_Rwanda</span>
                 </li>
               </ul>
@@ -491,7 +505,7 @@ if (Array.isArray(newFilters.categories) && newFilters.categories.length > 0) {
           </div>
           
                 <div className="border-t border-gray-800 mt-12 pt-8 text-center">
-                  <p className="text-gray-400 text-sm">&copy; 2025 Lumaro Nexus House Plans. All rights reserved. | Privacy Policy | Terms of Service</p>
+                  <p className="text-gray-400 text-sm">&copy; 2025 Lumaro Nexus House Plans. All rights reserved.</p>
                 </div>
               </div>
             </footer>
