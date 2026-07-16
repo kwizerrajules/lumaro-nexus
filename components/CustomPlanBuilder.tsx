@@ -1,7 +1,6 @@
+'use client';
 import axios from 'axios';
-import React, { useState, useEffect, use } from 'react';
-
-// --- INTERFACES ---
+import React, { useState, useEffect } from 'react';
 
 interface Room {
   id: string;
@@ -10,42 +9,84 @@ interface Room {
   included: boolean;
 }
 
-interface DrawingSet {
+interface CategoryOption {
   id: string;
   name: string;
-  category: string; 
-  price: number;
 }
 
-
-const mockDrawingSets: DrawingSet[] = [
-  { id: 'ds-1', name: 'Modern Style', category: 'modern', price: 1500 },
-  { id: 'ds-2', name: 'Rustic Cottage', category: 'rustic', price: 1200 },
-  { id: 'ds-3', name: 'Classic Design', category: 'classic', price: 1000 },
-];
-
-
-
+interface StyleOption {
+  id: string;
+  name: string;
+  categoryName: string;
+}
 
 const CustomPlanBuilder: React.FC = () => {
-  // Basic Configuration
   const [floors, setFloors] = useState(1);
   const [area, setArea] = useState(156);
-  const [token, setToken] = useState("");
+  const [token, setToken] = useState('');
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [styles, setStyles] = useState<StyleOption[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedStyle, setSelectedStyle] = useState('');
+  const [optionsLoading, setOptionsLoading] = useState(true);
 
-useEffect(()=>{
-  const token = localStorage.getItem("userAccessToken")
-  if(token){
-    setToken(token);
+  useEffect(() => {
+    const stored = localStorage.getItem('userAccessToken');
+    if (stored) setToken(stored);
+  }, []);
 
-    
-  }
-}, [])
-  // Custom Fields for Backend
-  const [description, setDescription] = useState('A modern duplex with open living area.');
-  const [selectedDrawingSet, setSelectedDrawingSet] = useState<DrawingSet>(mockDrawingSets[0]);
+  useEffect(() => {
+    const loadOptions = async () => {
+      setOptionsLoading(true);
+      try {
+        const [catRes, styleRes] = await Promise.all([
+          axios.get('/api/categories'),
+          axios.get('/api/styles'),
+        ]);
+        const cats: CategoryOption[] = (catRes.data?.data || []).map((c: any) => ({
+          id: c.id,
+          name: c.name,
+        }));
+        const styleList: StyleOption[] = (styleRes.data?.data || []).map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          categoryName: s.categoryName || s.category || '',
+        }));
+        setCategories(cats);
+        setStyles(styleList);
+        if (cats.length > 0) setSelectedCategory(cats[0].name);
+        if (styleList.length > 0) setSelectedStyle(styleList[0].name);
+      } catch (err) {
+        console.error('Failed to load categories/styles:', err);
+      } finally {
+        setOptionsLoading(false);
+      }
+    };
+    loadOptions();
+  }, []);
 
-  // Room Configuration
+  const filteredStyles = selectedCategory
+    ? styles.filter(
+        (s) =>
+          !s.categoryName ||
+          s.categoryName.toLowerCase() === selectedCategory.toLowerCase()
+      )
+    : styles;
+
+  useEffect(() => {
+    if (filteredStyles.length === 0) {
+      setSelectedStyle('');
+      return;
+    }
+    if (!filteredStyles.some((s) => s.name === selectedStyle)) {
+      setSelectedStyle(filteredStyles[0].name);
+    }
+  }, [selectedCategory, styles]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const [description, setDescription] = useState(
+    'A modern duplex with open living area.'
+  );
+
   const initialRooms: Room[] = [
     { id: 'master-bedroom', name: 'Master Bedroom', count: 1, included: true },
     { id: 'bedroom', name: 'Bedroom', count: 1, included: true },
@@ -57,24 +98,24 @@ useEffect(()=>{
     { id: 'veranda', name: 'Veranda', count: 1, included: false },
   ];
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
-
-  // Status
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-
-  // --- ROOM HANDLERS (No Change) ---
   const toggleRoom = (roomId: string) => {
-    setRooms(rooms.map(room => 
-      room.id === roomId ? { ...room, included: !room.included } : room
-    ));
+    setRooms(
+      rooms.map((room) =>
+        room.id === roomId ? { ...room, included: !room.included } : room
+      )
+    );
   };
 
   const updateRoomCount = (roomId: string, count: number) => {
-    setRooms(rooms.map(room => 
-      room.id === roomId ? { ...room, count: Math.max(0, count) } : room
-    ));
+    setRooms(
+      rooms.map((room) =>
+        room.id === roomId ? { ...room, count: Math.max(0, count) } : room
+      )
+    );
   };
 
   const addNewRoom = () => {
@@ -82,31 +123,31 @@ useEffect(()=>{
       id: `room-${Date.now()}`,
       name: 'New Room',
       count: 1,
-      included: true
+      included: true,
     };
     setRooms([...rooms, newRoom]);
   };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     setSuccess(false);
-    const includedRooms = rooms.filter(r => r.included);
-    
+    const includedRooms = rooms.filter((r) => r.included);
 
-    const getRoomCount = (namePart: string) => 
+    const getRoomCount = (namePart: string) =>
       includedRooms
-        .filter(r => r.name.toLowerCase().includes(namePart))
+        .filter((r) => r.name.toLowerCase().includes(namePart))
         .reduce((sum, room) => sum + room.count, 0);
 
-    // This handles both 'Master Bedroom' and 'Bedroom'
-    const totalBedrooms = getRoomCount('bedroom'); 
+    const totalBedrooms = getRoomCount('bedroom');
     const totalBathrooms = getRoomCount('bathroom');
     const totalDiningRooms = getRoomCount('dining room');
     const totalKitchen = getRoomCount('kitchen');
 
+    const categoryValue = selectedStyle
+      ? `${selectedCategory}${selectedStyle ? ` / ${selectedStyle}` : ''}`
+      : selectedCategory || 'Custom';
 
     const payload = {
       bedrooms: totalBedrooms,
@@ -115,13 +156,11 @@ useEffect(()=>{
       kitchen: totalKitchen,
       floors: floors,
       total_area: area,
-      category: selectedDrawingSet.category,
+      category: categoryValue,
       description: description,
-    };  
+    };
 
-    // Read the token fresh at submit time so that logging in on the same
-    // page (without a full reload) is picked up correctly.
-    const currentToken = localStorage.getItem("userAccessToken") || token;
+    const currentToken = localStorage.getItem('userAccessToken') || token;
 
     if (!currentToken) {
       setError('Please Login First');
@@ -130,17 +169,12 @@ useEffect(()=>{
     }
 
     try {
-      const response = await axios.post('/api/custom-plan', payload, {
+      await axios.post('/api/custom-plan', payload, {
         headers: {
-          'Authorization': `Bearer ${currentToken}`,
+          Authorization: `Bearer ${currentToken}`,
         },
       });
-
-      const result = response.data;
-      console.log('Project created successfully:', result);
       setSuccess(true);
-      // Optional: Redirect user or show confirmation modal
-      
     } catch (err) {
       console.error('Submission failed:', err);
       const status = axios.isAxiosError(err) ? err.response?.status : undefined;
@@ -157,15 +191,13 @@ useEffect(()=>{
     }
   };
 
-  // --- RENDER ---
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Custom Plan Builder</h2>
 
-      {/* Basic Configuration */}
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Basic Configuration</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Number Of Floors
@@ -173,16 +205,17 @@ useEffect(()=>{
             <select
               value={floors}
               onChange={(e) => setFloors(Number(e.target.value))}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-700 focus:border-yellow-700"
             >
-              {[1, 2, 3].map(num => (
-                <option key={num} value={num}>{num}</option>
+              {[1, 2, 3].map((num) => (
+                <option key={num} value={num}>
+                  {num}
+                </option>
               ))}
             </select>
           </div>
 
-          {/* Bedrooms dropdown is now removed as total bedrooms are calculated from rooms state */}
-          <div className="col-span-1">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Total Area (m²)
             </label>
@@ -190,54 +223,79 @@ useEffect(()=>{
               type="number"
               value={area}
               onChange={(e) => setArea(Number(e.target.value))}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-700 focus:border-yellow-700"
               required
             />
           </div>
-          
-          {/* Drawing Set Selection (Category) */}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Drawing Set / Category
+              Category
             </label>
             <select
-              value={selectedDrawingSet.id}
-              onChange={(e) => {
-                const selected = mockDrawingSets.find(ds => ds.id === e.target.value);
-                if (selected) {
-                  setSelectedDrawingSet(selected);
-                }
-              }}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              disabled={optionsLoading || categories.length === 0}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-700 focus:border-yellow-700 disabled:bg-gray-100"
             >
-              {mockDrawingSets.map(ds => (
-                <option key={ds.id} value={ds.id}>{ds.name} ({ds.category})</option>
-              ))}
+              {categories.length === 0 ? (
+                <option value="">No categories available</option>
+              ) : (
+                categories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Style
+            </label>
+            <select
+              value={selectedStyle}
+              onChange={(e) => setSelectedStyle(e.target.value)}
+              disabled={optionsLoading || filteredStyles.length === 0}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-700 focus:border-yellow-700 disabled:bg-gray-100"
+            >
+              {filteredStyles.length === 0 ? (
+                <option value="">No styles available</option>
+              ) : (
+                filteredStyles.map((style) => (
+                  <option key={style.id} value={style.name}>
+                    {style.name}
+                  </option>
+                ))
+              )}
             </select>
           </div>
         </div>
       </div>
 
-      {/* Room Selection */}
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Room Selection</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {rooms.map(room => (
-            <div key={room.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+          {rooms.map((room) => (
+            <div
+              key={room.id}
+              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+            >
               <div className="flex items-center space-x-3">
                 <input
                   type="checkbox"
                   checked={room.included}
                   onChange={() => toggleRoom(room.id)}
-                  className="w-4 h-4 text-green-500 border-gray-300 rounded focus:ring-green-500"
+                  className="w-4 h-4 text-yellow-900 border-gray-300 rounded focus:ring-yellow-700"
                 />
                 <span className="text-gray-700 font-medium">{room.name}</span>
               </div>
-              
+
               {room.included && (
                 <div className="flex items-center space-x-2">
                   <button
-                    type="button" // Important: Prevents button from submitting the form
+                    type="button"
                     onClick={() => updateRoomCount(room.id, room.count - 1)}
                     disabled={room.count <= 1}
                     className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center disabled:opacity-50"
@@ -246,7 +304,7 @@ useEffect(()=>{
                   </button>
                   <span className="w-8 text-center font-semibold">{room.count}</span>
                   <button
-                    type="button" // Important: Prevents button from submitting the form
+                    type="button"
                     onClick={() => updateRoomCount(room.id, room.count + 1)}
                     className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
                   >
@@ -258,33 +316,32 @@ useEffect(()=>{
           ))}
         </div>
 
-        {/* Add Room Button */}
         <button
-          type="button" 
+          type="button"
           onClick={addNewRoom}
-          className="mt-4 flex items-center space-x-2 text-yellow-600 hover:text-yellow-700 font-semibold"
+          className="mt-4 flex items-center space-x-2 text-yellow-700 hover:text-yellow-900 font-semibold"
         >
           <span>+</span>
-          <span>Want to add another room? Just Add a room</span>
+          <span>Add another room</span>
         </button>
       </div>
-      
-      {/* Description Field */}
+
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Project Description</h3>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={4}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-700 focus:border-yellow-700"
           placeholder="e.g., A modern duplex with open living area, facing the east..."
           required
-        ></textarea>
+        />
       </div>
 
-      {/* Status Messages */}
       {isLoading && (
-        <p className="text-blue-600 font-medium text-center mb-4">Submitting custom plan...</p>
+        <p className="text-gray-700 font-medium text-center mb-4">
+          Submitting custom plan...
+        </p>
       )}
       {error && (
         <p className="text-red-600 font-medium text-center mb-4 border border-red-300 bg-red-50 p-3 rounded-lg">
@@ -292,17 +349,16 @@ useEffect(()=>{
         </p>
       )}
       {success && (
-        <p className="text-green-600 font-medium text-center mb-4 border border-green-300 bg-green-50 p-3 rounded-lg">
+        <p className="text-amber-800 font-medium text-center mb-4 border border-amber-300 bg-amber-50 p-3 rounded-lg">
           Success! Your custom project has been submitted.
         </p>
       )}
 
-      {/* Submit Button (Replaces Buy Now) */}
       <div className="border-t border-gray-200 pt-6">
-        <button 
+        <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-yellow-900 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-yellow-600 transition-colors duration-300 disabled:bg-gray-400"
+          className="w-full btn-primary py-4 text-lg disabled:bg-gray-400 disabled:hover:bg-gray-400"
         >
           {isLoading ? 'Processing...' : 'SUBMIT CUSTOM PLAN'}
         </button>

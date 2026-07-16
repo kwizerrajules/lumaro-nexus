@@ -27,10 +27,14 @@ type SignResponse = {
 };
 
 async function getUploadSignature(): Promise<SignResponse> {
-  const res = await fetch("/api/upload/sign");
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+  const res = await fetch("/api/upload/sign", {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.error || "Failed to get upload signature");
+    throw new Error(data.error || data.message || "Failed to get upload signature");
   }
   return data;
 }

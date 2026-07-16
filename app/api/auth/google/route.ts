@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         const payload: UserPayload = {
             id: user.id ?? '',
             email: user.email,
-            role: (user as any).role ?? undefined,
+            role: (user as any).role || 'USER',
             names: user.names,
             permissions: 'permissions' in user ? (user as any).permissions ?? [] : [],
         };

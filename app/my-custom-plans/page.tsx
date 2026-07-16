@@ -1,8 +1,10 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
+import Footer from '@/components/Footer';
 import Newsletter from '@/components/Newsletter';
+import AuthModal from '@/components/AuthModal';
 import axios from 'axios';
 
 interface CustomPlan {
@@ -21,44 +23,53 @@ interface CustomPlan {
 }
 
 export default function MyCustomPlans() {
+  const router = useRouter();
   const [plans, setPlans] = useState<CustomPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<CustomPlan | null>(null);
-  const [error, setError] = useState("");
-  const [showSidebar, setShowSidebar] = useState(false);
+  const [error, setError] = useState('');
   const [token, setToken] = useState<string | null>(null);
-  const footerRef = useRef<HTMLDivElement>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const footerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    // Ensure localStorage is only accessed on the client
-    setToken(localStorage.getItem("userAccessToken"));
+    const stored = localStorage.getItem('userAccessToken');
+    setToken(stored);
+    if (!stored) {
+      setLoading(false);
+      setShowAuthModal(true);
+    }
   }, []);
 
-  // Fetch user plans
-  const fetchPlans = async () => {
+  const fetchPlans = async (accessToken: string) => {
     try {
-      const res = await axios.get("/api/custom-plan", {
-        headers: { Authorization: `Bearer ${token}` },
+      setLoading(true);
+      const res = await axios.get('/api/custom-plan', {
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
-
-      const cleaned = res.data.filter((p: CustomPlan) => p.id && p.id !== "");
+      const cleaned = (res.data || []).filter((p: CustomPlan) => p.id && p.id !== '');
       setPlans(cleaned);
+      setError('');
     } catch (err: any) {
-      setError(err.message);
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        localStorage.removeItem('userAccessToken');
+        setToken(null);
+        setShowAuthModal(true);
+        setError('Please sign in to view your custom plans.');
+      } else {
+        setError(err.message || 'Failed to load plans.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (token) {
-      fetchPlans();
-    }
-  }, [token]); // Re-run when token is available
+    if (token) fetchPlans(token);
+  }, [token]);
 
-  // Delete plan
   const deletePlan = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this plan?")) return;
+    if (!confirm('Are you sure you want to delete this plan?')) return;
 
     try {
       await axios.delete(`/api/custom-plan/${id}`, {
@@ -66,11 +77,10 @@ export default function MyCustomPlans() {
       });
       setPlans(plans.filter((p) => p.id !== id));
     } catch (err: any) {
-      alert("Delete failed: " + err.message);
+      alert('Delete failed: ' + err.message);
     }
   };
 
-  // Update plan
   const updatePlan = async () => {
     if (!editing) return;
 
@@ -78,173 +88,181 @@ export default function MyCustomPlans() {
       await axios.put(`/api/custom-plan/${editing.id}`, editing, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setPlans(plans.map((p) => (p.id === editing.id ? editing : p)));
       setEditing(null);
     } catch (err: any) {
-      alert("Update failed: " + err.message);
+      alert('Update failed: ' + err.message);
     }
   };
 
   const scrollToContact = () => {
-    footerRef.current?.scrollIntoView({ behavior: "smooth" });
+    footerRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleFilterChange = (newFilters: any) => {
-    console.log("Filters applied:", newFilters);
-    // Implement filtering logic if needed
+  const handleAuthSuccess = () => {
+    const stored = localStorage.getItem('userAccessToken');
+    setShowAuthModal(false);
+    setToken(stored);
   };
-
-  if (loading) return <p>Loading plans...</p>;
-  if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="min-h-screen bg-white">
       <Header
-        onFilterToggle={() => setShowSidebar(!showSidebar)}
-        onAuthSuccess={() => {}}
+        onFilterToggle={() => {}}
+        onAuthSuccess={handleAuthSuccess}
         onContactClick={scrollToContact}
       />
 
-      {/* Page Hero */}
       <section className="bg-black text-white py-20">
-        <div className="container mx-auto px-4 text-center max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            My Custom Plans
-          </h1>
+        <div className="container mx-auto px-4 text-center max-w-3xl">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">My Custom Plans</h1>
           <p className="text-lg text-gray-300 mb-8">
             View, edit, or delete your personalized house plans
           </p>
         </div>
       </section>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Your Plans ({plans.length})
-            </h2>
-            <p className="text-gray-600">Manage your house plans easily</p>
+        {!token && !loading ? (
+          <div className="text-center py-16">
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Sign in required</h2>
+            <p className="text-gray-600 mb-6">
+              Please sign in to view and manage your custom plans.
+            </p>
+            <button onClick={() => setShowAuthModal(true)} className="btn-primary">
+              Sign In
+            </button>
           </div>
+        ) : loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
+          </div>
+        ) : error ? (
+          <p className="text-center mt-10 text-red-500">{error}</p>
+        ) : (
+          <>
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Your Plans ({plans.length})
+              </h2>
+              <p className="text-gray-600">Manage your house plans easily</p>
+            </div>
 
-          <button
-            onClick={() => setShowSidebar(!showSidebar)}
-            className="bg-gray-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors flex items-center space-x-2"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"
-              />
-            </svg>
-            <span>Filters</span>
-          </button>
-        </div>
-
-        {/* Plans Table */}
-        <table className="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">Category</th>
-              <th className="border p-2">Bedrooms</th>
-              <th className="border p-2">Bathrooms</th>
-              <th className="border p-2">Floors</th>
-              <th className="border p-2">Area (m²)</th>
-              <th className="border p-2">Created</th>
-              <th className="border p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {plans.map((plan) => (
-              <tr key={plan.id}>
-                <td className="border p-2">{plan.category}</td>
-                <td className="border p-2">{plan.bedrooms}</td>
-                <td className="border p-2">{plan.bathrooms}</td>
-                <td className="border p-2">{plan.floors}</td>
-                <td className="border p-2">{plan.total_area}</td>
-                <td className="border p-2">
-                  {new Date(plan.created_at).toLocaleDateString()}
-                </td>
-                <td className="border p-2 space-x-2">
-                  <button
-                    className="bg-blue-500 text-white px-3 py-1 rounded"
-                    onClick={() => setEditing(plan)}
+            {plans.length === 0 ? (
+              <div className="text-center py-16">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No custom plans yet</h3>
+                <p className="text-gray-600 mb-6">
+                  Start by creating a custom plan tailored to your needs.
+                </p>
+                <a href="/custom-plan" className="btn-secondary inline-block">
+                  Create Custom Plan
+                </a>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {plans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
                   >
-                    Edit
-                  </button>
-                  <button
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                    onClick={() => deletePlan(plan.id)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {plan.category || 'Custom Plan'}
+                      </h3>
+                      <span className="text-xs text-gray-500">
+                        {new Date(plan.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                      {plan.description || 'No description'}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 mb-5 text-sm text-gray-700">
+                      <div>
+                        <span className="text-gray-500">Bedrooms</span>
+                        <p className="font-semibold">{plan.bedrooms}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Bathrooms</span>
+                        <p className="font-semibold">{plan.bathrooms}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Floors</span>
+                        <p className="font-semibold">{plan.floors}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Area</span>
+                        <p className="font-semibold">{plan.total_area} m²</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        className="flex-1 btn-secondary py-2 text-sm"
+                        onClick={() => setEditing(plan)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold"
+                        onClick={() => deletePlan(plan.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
-      {/* Newsletter */}
       <Newsletter />
+      <Footer ref={footerRef} />
 
-      <footer ref={footerRef} className="bg-gray-900 text-white py-16">
-        {/* Footer content */}
-      </footer>
-
-      {/* Sidebar */}
-      {showSidebar && (
-        <div className="fixed right-0 top-0 h-full z-50">
-          <Sidebar onFilterChange={handleFilterChange} onClose={() => setShowSidebar(false)} />
-        </div>
-      )}
-
-      {/* Edit Modal */}
       {editing && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
-          <div className="bg-white p-6 rounded shadow-lg w-96">
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Edit Plan</h2>
-            <label className="block mb-2">Category</label>
+            <label className="block mb-2 text-sm font-medium text-gray-700">Category</label>
             <input
               type="text"
               value={editing.category}
-              className="border p-2 w-full mb-3"
-              onChange={(e) =>
-                setEditing({ ...editing, category: e.target.value })
-              }
+              className="border border-gray-300 p-2 w-full mb-3 rounded-lg"
+              onChange={(e) => setEditing({ ...editing, category: e.target.value })}
             />
-            <label className="block mb-2">Description</label>
+            <label className="block mb-2 text-sm font-medium text-gray-700">Description</label>
             <textarea
-              className="border p-2 w-full mb-3"
+              className="border border-gray-300 p-2 w-full mb-3 rounded-lg"
+              rows={4}
               value={editing.description}
-              onChange={(e) =>
-                setEditing({ ...editing, description: e.target.value })
-              }
+              onChange={(e) => setEditing({ ...editing, description: e.target.value })}
             />
             <div className="flex justify-end gap-3">
               <button
-                className="px-4 py-2 bg-gray-400 text-white rounded"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold"
                 onClick={() => setEditing(null)}
               >
                 Cancel
               </button>
-              <button
-                className="px-4 py-2 bg-green-600 text-white rounded"
-                onClick={updatePlan}
-              >
+              <button className="btn-primary px-4 py-2" onClick={updatePlan}>
                 Save
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => {
+            setShowAuthModal(false);
+            if (!localStorage.getItem('userAccessToken')) {
+              router.push('/');
+            }
+          }}
+          onAuthSuccess={handleAuthSuccess}
+        />
       )}
     </div>
   );

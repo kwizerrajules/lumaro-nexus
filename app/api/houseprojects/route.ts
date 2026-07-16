@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HouseProjectModel } from "../../../src/lib/models/houseProject.model";
 import { sanitizeEverything } from "../../../src/security/sanitizeEverything";
+import { roleMiddleware } from "@/src/middleware/auth";
 import { v4 as uuidv4 } from "uuid";
+
+const STAFF_ROLES = ["ADMIN", "EXECUTIVE", "SUPER_ADMIN", "MANAGER"];
 
 let cachedTypes: string[] = [];
 let cacheTime = 0;
@@ -48,6 +51,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const authResult = await roleMiddleware(req, STAFF_ROLES);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const rawBody = await req.json();
     const body = sanitizeEverything(rawBody);

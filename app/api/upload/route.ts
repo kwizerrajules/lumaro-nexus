@@ -3,6 +3,7 @@ import {
   MAX_FILE_SIZE_BYTES,
   uploadBufferToCloudinary,
 } from "../../../src/lib/cloudinary";
+import { roleMiddleware } from "@/src/middleware/auth";
 
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
@@ -12,11 +13,16 @@ const ALLOWED_TYPES = new Set([
   "image/webp",
 ]);
 
+const STAFF_ROLES = ["ADMIN", "EXECUTIVE", "SUPER_ADMIN", "MANAGER"];
+
 /**
  * Multipart fallback upload. Prefer client → Cloudinary direct upload via /api/upload/sign.
  * Accepts one or more files under field name "files" (or a single "file").
  */
 export async function POST(req: NextRequest) {
+  const authResult = await roleMiddleware(req, STAFF_ROLES);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const formData = await req.formData();
     const files = [

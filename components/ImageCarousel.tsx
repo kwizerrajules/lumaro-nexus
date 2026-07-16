@@ -115,7 +115,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ projectId }) => {
             src={src}
             alt={`Thumbnail ${idx + 1}`}
             className={`w-16 h-16 object-cover rounded cursor-pointer border-2 ${
-              idx === currentIndex ? 'border-green-500' : 'border-gray-300'
+              idx === currentIndex ? 'border-amber-600' : 'border-stone-300'
             }`}
             loading="lazy"
             decoding="async"

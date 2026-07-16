@@ -1,9 +1,18 @@
 import { z } from 'zod';
 
+const optionalPhone = z.preprocess(
+    (val) => {
+        if (typeof val !== 'string') return undefined;
+        const trimmed = val.trim();
+        return trimmed.length ? trimmed : undefined;
+    },
+    z.string().max(20, 'Phone number cannot exceed 20 characters').optional()
+);
+
 export const createUserSchema = z.object({
     names: z.string().min(2, 'Names must be at least 2 characters long').max(100, 'Names cannot exceed 100 characters'),
     email: z.string().email('Invalid email address').max(150, 'Email cannot exceed 150 characters'),
-    phone: z.string().max(20, 'Phone number cannot exceed 20 characters').optional(),
+    phone: optionalPhone,
     password: z.string().min(6, 'Password must be at least 6 characters long').max(255, 'Password cannot exceed 255 characters'),
 });
 

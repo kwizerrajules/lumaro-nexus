@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
-import ModalForm from './ModalForm';
+'use client';
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Bed, Shower, Buildings, Ruler, ArrowRight } from '@phosphor-icons/react';
+import { formatPlanPrice, planHref } from '@/utils/brand';
 
 interface HouseProject {
   id: string;
+  slug?: string;
   title: string;
   price: number;
   image: string;
@@ -11,6 +16,8 @@ interface HouseProject {
   floors: number;
   area: number;
   description?: string;
+  category?: string;
+  style?: string;
 }
 
 interface HouseProjectCardProps {
@@ -18,95 +25,64 @@ interface HouseProjectCardProps {
 }
 
 const HouseProjectCard: React.FC<HouseProjectCardProps> = ({ project }) => {
-  const [showQuickBuy, setShowQuickBuy] = useState(false);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
   return (
-    <>
-      <div className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2">
-        
-        {/* Image */}
-        <div className="relative h-56 overflow-hidden rounded-t-xl">
-          <img
-            src={project.image}
-            alt={project.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-
-          {/* Overlay with Quick View */}
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center transition-all duration-500">
-            <button
-              onClick={() => setShowQuickBuy(true)}
-              className="opacity-0 group-hover:opacity-100 bg-white text-gray-900 px-6 py-3 rounded-lg font-semibold shadow-lg transition-opacity duration-300 hover:bg-gray-50"
-            >
-              Quick View
-            </button>
-          </div>
-
-          {/* Price Badge */}
-          <div className="absolute top-4 right-4 bg-white text-gray-900 px-3 py-2 rounded-full text-sm font-semibold shadow-md">
-            From {formatPrice(project.price)}
+    <article className="group h-full bg-white border border-brand-line overflow-hidden transition-all duration-500 hover:shadow-brand hover:-translate-y-1">
+      <Link href={planHref(project)} className="flex h-full flex-col">
+        <div className="relative h-36 sm:h-44 xl:h-40 overflow-hidden bg-stone-100">
+          {project.image ? (
+            <Image
+              src={project.image}
+              alt={project.title}
+              fill
+              className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              unoptimized
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-stone-300">
+              <Buildings size={32} />
+            </div>
+          )}
+          <div className="absolute top-2 right-2 bg-neutral-900/90 text-amber-400 px-2 py-1 text-[11px] sm:text-xs font-semibold backdrop-blur-sm">
+            From {formatPlanPrice(project.price)}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 leading-tight">{project.title}</h3>
+        <div className="flex flex-1 flex-col p-3 sm:p-4">
+          <h3 className="font-display text-base sm:text-lg font-semibold text-neutral-900 mb-2 sm:mb-3 leading-snug line-clamp-2 group-hover:text-amber-800 transition-colors">
+            {project.title}
+          </h3>
 
-          {/* Specifications Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-600 text-sm font-bold">{project.bedrooms}</span>
-              </div>
-              <span className="text-gray-600 text-sm">Bedrooms</span>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-600 text-sm font-bold">{project.bathrooms}</span>
-              </div>
-              <span className="text-gray-600 text-sm">Bathrooms</span>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-600 text-sm font-bold">{project.floors}</span>
-              </div>
-              <span className="text-gray-600 text-sm">Floors</span>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-600 text-sm font-bold">{project.area}</span>
-              </div>
-              <span className="text-gray-600 text-sm">m²</span>
-            </div>
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mb-3 sm:mb-4 text-[11px] sm:text-sm text-neutral-600">
+            <span className="inline-flex items-center gap-1 sm:gap-1.5 truncate">
+              <Bed size={14} className="shrink-0 text-amber-700" />
+              {project.bedrooms} Bed
+            </span>
+            <span className="inline-flex items-center gap-1 sm:gap-1.5 truncate">
+              <Shower size={14} className="shrink-0 text-amber-700" />
+              {project.bathrooms} Bath
+            </span>
+            <span className="inline-flex items-center gap-1 sm:gap-1.5 truncate">
+              <Buildings size={14} className="shrink-0 text-amber-700" />
+              {project.floors} Fl
+            </span>
+            <span className="inline-flex items-center gap-1 sm:gap-1.5 truncate">
+              <Ruler size={14} className="shrink-0 text-amber-700" />
+              {project.area} m²
+            </span>
           </div>
 
-          {/* View Details Button */}
-          <button
-            onClick={() => setShowQuickBuy(true)}
-            className="w-full bg-yellow-900 text-white py-3 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-300 flex items-center justify-center space-x-2"
-          >
-            <span>View Details</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+          <span className="btn-primary mt-auto w-full text-xs sm:text-sm py-2 sm:py-2.5 px-3">
+            View plan
+            <ArrowRight
+              size={14}
+              weight="bold"
+              className="transition-transform group-hover:translate-x-0.5"
+            />
+          </span>
         </div>
-      </div>
-
-      {/* Quick View Modal */}
-      {showQuickBuy && <ModalForm project={project} onClose={() => setShowQuickBuy(false)} />}
-    </>
+      </Link>
+    </article>
   );
 };
 

@@ -64,7 +64,7 @@ const ConstructionCalculator: React.FC = () => {
               onClick={() => setConstructionType(type.id as 'basic' | 'standard' | 'luxury')}
               className={`p-3 rounded-lg border-2 text-center transition-all ${
                 constructionType === type.id
-                  ? 'border-green-500 bg-green-50 text-green-700 font-semibold'
+                  ? 'border-amber-600 bg-amber-50 text-amber-800 font-semibold'
                   : 'border-gray-200 text-gray-600 hover:border-gray-300'
               }`}
             >
@@ -83,7 +83,7 @@ const ConstructionCalculator: React.FC = () => {
           type="number"
           value={area}
           onChange={(e) => setArea(Number(e.target.value))}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
         />
       </div>
 
@@ -106,7 +106,7 @@ const ConstructionCalculator: React.FC = () => {
       <div className="border-t border-gray-200 pt-4">
         <div className="flex justify-between items-center">
           <span className="text-lg font-bold text-gray-900">TOTAL</span>
-          <span className="text-2xl font-bold text-green-600">
+          <span className="text-2xl font-bold text-amber-700">
             {formatPrice(totalCost)}
           </span>
         </div>

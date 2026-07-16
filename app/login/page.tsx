@@ -16,8 +16,10 @@ export default function LoginPage() {
     try {
       const res = await axios.post('/api/auth/login', { email, password });
       if (res.data.success) {
-        localStorage.setItem('accessToken', res.data.data.accessToken);
-        localStorage.setItem('refreshToken', res.data.data.refreshToken);
+        const { accessToken, refreshToken } = res.data.data;
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        document.cookie = `adminAccessToken=${accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
         router.push('/admin/dashboard');
       }
     } catch (err: any) {
@@ -30,8 +32,10 @@ export default function LoginPage() {
     try {
       const res = await axios.post('/api/auth/google/admin', { credential });
       if (res.data.success) {
-        localStorage.setItem('accessToken', res.data.data.accessToken);
-        localStorage.setItem('refreshToken', res.data.data.refreshToken);
+        const { accessToken, refreshToken } = res.data.data;
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        document.cookie = `adminAccessToken=${accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
         router.push('/admin/dashboard');
       }
     } catch (err: any) {
@@ -61,7 +65,7 @@ export default function LoginPage() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 mb-4 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+          className="w-full p-3 mb-4 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:outline-none transition"
           required
         />
         <input
@@ -69,13 +73,13 @@ export default function LoginPage() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 mb-4 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+          className="w-full p-3 mb-4 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:outline-none transition"
           required
         />
 
         <button
           type="submit"
-          className="w-full p-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
+          className="w-full p-3 bg-amber-700 text-white font-bold rounded-lg hover:bg-amber-600 transition"
         >
           Login
         </button>

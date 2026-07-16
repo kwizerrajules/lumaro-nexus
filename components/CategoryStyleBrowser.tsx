@@ -13,6 +13,8 @@ interface CategoryStyleBrowserProps {
   activeStyle: string | null;
   onCategoryChange: (category: string | null) => void;
   onStyleChange: (style: string | null) => void;
+  /** Compact strip so it doesn't compete with the left filter panel */
+  compact?: boolean;
 }
 
 type ManagedCategory = { id: string; name: string };
@@ -24,11 +26,11 @@ const CategoryStyleBrowser: React.FC<CategoryStyleBrowserProps> = ({
   activeStyle,
   onCategoryChange,
   onStyleChange,
+  compact = true,
 }) => {
   const [managedCategories, setManagedCategories] = useState<ManagedCategory[]>([]);
   const [managedStyles, setManagedStyles] = useState<ManagedStyle[]>([]);
 
-  // Load the admin-defined categories and styles (the canonical taxonomy).
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -53,9 +55,6 @@ const CategoryStyleBrowser: React.FC<CategoryStyleBrowserProps> = ({
   const categoryCount = (name: string) =>
     projects.filter((p) => (p.category || '') === name).length;
 
-  // Prefer the admin taxonomy; fall back to names found on projects so the bar
-  // still works before any categories are configured. Only surface categories
-  // that actually have houses, so visitors never hit an empty result.
   const categories = useMemo(() => {
     const names = new Set<string>();
     managedCategories.forEach((c) => names.add(c.name));
@@ -101,104 +100,91 @@ const CategoryStyleBrowser: React.FC<CategoryStyleBrowserProps> = ({
 
   if (categories.length === 0) return null;
 
-  const totalCount = projects.length;
-
   return (
-    <section className="border-b border-gray-100 bg-white">
-      <div className="container mx-auto px-4 py-6">
-        <div className="mb-4 flex items-end justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Browse by Category</h2>
-            <p className="text-sm text-gray-500">
-              Find your perfect plan by category and style
-            </p>
-          </div>
+    <div className={compact ? 'mb-5' : 'border-b border-brand-line bg-white mb-6'}>
+      {!compact && (
+        <div className="mb-3">
+          <h2 className="font-display text-2xl font-semibold text-neutral-900">
+            Browse by category
+          </h2>
         </div>
+      )}
 
-        {/* Category chips */}
-        <div className="flex flex-nowrap gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          <button
-            onClick={() => handleCategoryClick(null)}
-            className={`flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
-              activeCategory === null
-                ? 'bg-gray-900 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            All Plans
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs ${
-                activeCategory === null
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white text-gray-500'
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 shrink-0">
+          Quick
+        </span>
+        <div className="h-px flex-1 bg-brand-line" />
+      </div>
+
+      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <button
+          type="button"
+          onClick={() => handleCategoryClick(null)}
+          className={`shrink-0 px-3.5 py-1.5 text-sm font-medium transition-colors border ${
+            activeCategory === null
+              ? 'bg-neutral-900 text-white border-neutral-900'
+              : 'bg-white text-neutral-700 border-brand-line hover:border-neutral-400'
+          }`}
+        >
+          All
+        </button>
+        {categories.map((category) => {
+          const isActive = activeCategory === category.name;
+          return (
+            <button
+              key={category.name}
+              type="button"
+              onClick={() => handleCategoryClick(category.name)}
+              className={`shrink-0 px-3.5 py-1.5 text-sm font-medium transition-colors border ${
+                isActive
+                  ? 'bg-neutral-900 text-white border-neutral-900'
+                  : 'bg-white text-neutral-700 border-brand-line hover:border-neutral-400'
               }`}
             >
-              {totalCount}
-            </span>
-          </button>
+              {category.name}
+              <span className="ml-1.5 text-xs opacity-60">{category.count}</span>
+            </button>
+          );
+        })}
+      </div>
 
-          {categories.map((category) => {
-            const isActive = activeCategory === category.name;
+      {activeCategory && styles.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mr-1">
+            Style
+          </span>
+          <button
+            type="button"
+            onClick={() => onStyleChange(null)}
+            className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+              activeStyle === null
+                ? 'bg-amber-700 text-white'
+                : 'bg-stone-100 text-neutral-700 hover:bg-amber-50'
+            }`}
+          >
+            All
+          </button>
+          {styles.map((style) => {
+            const isActive = activeStyle === style.name;
             return (
               <button
-                key={category.name}
-                onClick={() => handleCategoryClick(category.name)}
-                className={`flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
+                key={style.name}
+                type="button"
+                onClick={() => onStyleChange(isActive ? null : style.name)}
+                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
                   isActive
-                    ? 'bg-gray-900 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-amber-700 text-white'
+                    : 'bg-stone-100 text-neutral-700 hover:bg-amber-50'
                 }`}
               >
-                {category.name}
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs ${
-                    isActive ? 'bg-white/20 text-white' : 'bg-white text-gray-500'
-                  }`}
-                >
-                  {category.count}
-                </span>
+                {style.name}
               </button>
             );
           })}
         </div>
-
-        {/* Style pills for the active category */}
-        {activeCategory && styles.length > 0 && (
-          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-gray-50 p-4">
-            <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Styles
-            </span>
-            <button
-              onClick={() => onStyleChange(null)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                activeStyle === null
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-orange-50 hover:text-orange-600'
-              }`}
-            >
-              All {activeCategory}
-            </button>
-            {styles.map((style) => {
-              const isActive = activeStyle === style.name;
-              return (
-                <button
-                  key={style.name}
-                  onClick={() => onStyleChange(isActive ? null : style.name)}
-                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-white text-gray-700 hover:bg-orange-50 hover:text-orange-600'
-                  }`}
-                >
-                  {style.name}
-                  <span className="ml-1.5 text-xs opacity-70">({style.count})</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </section>
+      )}
+    </div>
   );
 };
 

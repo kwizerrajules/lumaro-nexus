@@ -74,11 +74,9 @@ export default function ProfileSection() {
 
   // --- Logout Functionality ---
   const handleLogout = () => {
-    // Clear all authentication tokens
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    
-    // Redirect the user to the login page
+    document.cookie = 'adminAccessToken=; path=/; max-age=0; SameSite=Lax';
     window.location.href = '/login';
   };
 

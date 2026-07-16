@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lumaro Nexus Website
 
-## Getting Started
+Next.js 14 (App Router) site for Lumaro Nexus — affordable African house plans, custom designs, and enquiry management.
 
-First, run the development server:
+**Production domain:** [https://lumaronexus.com](https://lumaronexus.com)
+
+## Getting started
 
 ```bash
+cp .env.example .env.local
+# Fill in MongoDB, Cloudinary, JWT, email, and Google OAuth values
+
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Required environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Purpose |
+|----------|---------|
+| `MONGODB_URI` | MongoDB connection string |
+| `CLOUDINARY_*` | Image uploads |
+| `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | Auth tokens |
+| `EMAIL_*` | Contact / reply email |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_ID` | Google sign-in |
 
-## Learn More
+See [`.env.example`](.env.example) for the full list.
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run dev     # development
+npm run build   # production build
+npm run start   # serve production build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy (Vercel or similar)
 
-## Deploy on Vercel
+1. Connect the repo to your host (e.g. Vercel).
+2. Set all variables from `.env.example` in the project Environment Variables (Production + Preview as needed).
+3. Deploy. The app serves `/sitemap.xml` via `app/sitemap.ts` and `public/robots.txt`.
+4. Confirm admin login at `/login` and that public pages load with real catalog data.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Main routes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Route | Audience |
+|-------|----------|
+| `/` | Public home + catalog |
+| `/catalog` | Full house plan catalog |
+| `/custom-plan` | Custom plan builder |
+| `/orders` | User enquiries (auth) |
+| `/my-custom-plans` | User custom plans (auth) |
+| `/login` | Staff admin login |
+| `/admin/dashboard` | Admin panel |

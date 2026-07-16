@@ -1,16 +1,20 @@
+'use client';
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import {
-  Camera,
-  Tag,
   Bed,
   Shower,
   Ruler,
-  CurrencyDollar,
-  Trophy,
+  CaretLeft,
+  CaretRight,
+  ArrowRight,
 } from '@phosphor-icons/react';
+import { formatPlanPrice, planHref } from '@/utils/brand';
 
 interface FeaturedProject {
   id: string;
+  slug?: string;
   title: string;
   description: string;
   thumbnail: string;
@@ -18,10 +22,8 @@ interface FeaturedProject {
   bedrooms: number;
   bathrooms: number;
   areaSqFt: number;
-  featuredText: string;
-  photoTopic: string;
   category: string;
-  tags: string[];
+  style?: string;
 }
 
 const FeaturedProject: React.FC = () => {
@@ -29,169 +31,148 @@ const FeaturedProject: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Fetch first 4 featured projects from API
   useEffect(() => {
     const fetchFeaturedProjects = async () => {
       try {
-        const response = await fetch('/api/houseprojects');
+        const response = await fetch('/api/houseprojects?limit=20');
         const data = await response.json();
         const firstFour: FeaturedProject[] = (data.data || []).slice(0, 4);
-
-        if (firstFour.length > 0) {
-          setProjects(firstFour);
-          preloadImages(firstFour.map(p => p.thumbnail));
-        } else {
-          // Fallback project
-          setProjects([{
-            id: '49801',
-            title: 'Luxury 2 Bedroom Apartments',
-            description: 'Premium apartment complex with modern amenities and stunning architectural design.',
-            thumbnail: 'https://cdn.pixabay.com/photo/2016/11/18/17/46/house-1836070_960_720.jpg',
-            price: 985,
-            bedrooms: 2,
-            bathrooms: 2,
-            areaSqFt: 85,
-            featuredText: 'Project of the Month',
-            photoTopic: 'Modern Urban Living',
-            category: 'Apartment Complex',
-            tags: ['Modern', 'Luxury', 'Urban', 'Sustainable']
-          }]);
-        }
+        setProjects(firstFour);
       } catch (error) {
         console.error('Error fetching featured projects:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchFeaturedProjects();
   }, []);
 
-  // Rotate featured project every 1 minute
   useEffect(() => {
-    if (!projects.length) return;
-
+    if (projects.length < 2) return;
     const interval = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % projects.length);
-    }, 60000); // 60000ms = 1 minute
-
+      setCurrentIndex((prev) => (prev + 1) % projects.length);
+    }, 8000);
     return () => clearInterval(interval);
   }, [projects]);
 
-  // Preload project images for smooth transition
-  const preloadImages = (urls: string[]) => {
-    urls.forEach(url => {
-      const img = new Image();
-      img.src = url;
-    });
-  };
-
-  const currentProject = projects[currentIndex];
-
   if (loading) {
     return (
-      <div className="w-full h-96 bg-gray-100 animate-pulse flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading featured project...</p>
-        </div>
-      </div>
+      <section className="w-full border-y border-brand-line bg-neutral-900">
+        <div className="h-[380px] skeleton rounded-none bg-neutral-800" />
+      </section>
     );
   }
 
-  if (!currentProject) return null;
+  if (!projects.length) return null;
+
+  const current = projects[currentIndex];
 
   return (
-    <div className="w-full bg-gradient-to-r from-gray-900 to-black text-white transition-all duration-700 ease-in-out">
-      <div className="container mx-auto">
-        <div className="flex flex-col lg:flex-row">
-          {/* Left - Project Image */}
-          <div className="lg:w-3/4 relative">
-            <div 
-              className="h-96 lg:h-[500px] bg-cover bg-center relative transition-all duration-700 ease-in-out"
-              style={{ backgroundImage: `url(${currentProject.thumbnail})` }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
+    <section className="w-full bg-neutral-950 text-white border-y border-neutral-800">
+      <div className="container mx-auto px-4 py-10 md:py-12">
+        <div className="flex items-end justify-between gap-4 mb-6">
+          <div>
+            <p className="text-amber-500 text-xs font-semibold tracking-[0.2em] uppercase mb-2">
+              Featured plans
+            </p>
+            <h2 className="font-display text-3xl md:text-4xl font-semibold">
+              Selected from the catalog
+            </h2>
+          </div>
+          {projects.length > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                aria-label="Previous featured plan"
+                onClick={() =>
+                  setCurrentIndex((i) => (i - 1 + projects.length) % projects.length)
+                }
+                className="p-2 border border-white/20 hover:border-amber-500 hover:text-amber-400 transition-colors"
+              >
+                <CaretLeft size={20} weight="bold" />
+              </button>
+              <button
+                type="button"
+                aria-label="Next featured plan"
+                onClick={() => setCurrentIndex((i) => (i + 1) % projects.length)}
+                className="p-2 border border-white/20 hover:border-amber-500 hover:text-amber-400 transition-colors"
+              >
+                <CaretRight size={20} weight="bold" />
+              </button>
+            </div>
+          )}
+        </div>
 
-              <div className="absolute top-6 left-6 bg-yellow-700 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-                Discover Our Latest Innovations
-              </div>
-
-              <div className="absolute top-6 right-6 bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-sm flex items-center gap-2">
-                <Camera size={16} weight="fill" />
-                {currentProject.photoTopic}
-              </div>
-
-              <div className="absolute bottom-6 left-6">
-                <h2 className="text-3xl lg:text-4xl font-bold mb-2">{currentProject.title}</h2>
-
-                <div className="mb-3">
-                  <span className="bg-blue-500/80 text-white px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1">
-                    <Tag size={12} weight="fill" />
-                    {currentProject.category}
-                  </span>
-                </div>
-
-                <div className="flex items-center space-x-4 text-sm">
-                  <span className="flex items-center space-x-1">
-                    <Bed size={16} weight="regular" />
-                    <span>{currentProject.bedrooms} Bed</span>
-                  </span>
-                  <span className="flex items-center space-x-1">
-                    <Shower size={16} weight="regular" />
-                    <span>{currentProject.bathrooms} Bath</span>
-                  </span>
-                  <span className="flex items-center space-x-1">
-                    <Ruler size={16} weight="regular" />
-                    <span>{currentProject.areaSqFt} m²</span>
-                  </span>
-                  <span className="flex items-center space-x-1 font-bold text-green-400">
-                    <CurrencyDollar size={16} weight="bold" />
-                    <span>${currentProject.price}</span>
-                  </span>
-                </div>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:min-h-[380px] border border-white/10 overflow-hidden">
+          <div className="relative lg:col-span-8 h-64 lg:h-auto min-h-[280px]">
+            {current.thumbnail ? (
+              <Image
+                key={current.id}
+                src={current.thumbnail}
+                alt={current.title}
+                fill
+                className="object-cover animate-hero-reveal"
+                sizes="(max-width: 1024px) 100vw, 66vw"
+                unoptimized
+                priority
+              />
+            ) : (
+              <div className="absolute inset-0 bg-neutral-800" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+            <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-3 text-sm">
+              <span className="inline-flex items-center gap-1.5 bg-black/50 px-2.5 py-1 backdrop-blur-sm">
+                <Bed size={14} /> {current.bedrooms} Bed
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-black/50 px-2.5 py-1 backdrop-blur-sm">
+                <Shower size={14} /> {current.bathrooms} Bath
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-black/50 px-2.5 py-1 backdrop-blur-sm">
+                <Ruler size={14} /> {current.areaSqFt} m²
+              </span>
             </div>
           </div>
 
-          {/* Right - Description */}
-          <div className="lg:w-1/4 bg-gray-800 p-8 flex flex-col justify-center">
-            <h3 className="text-2xl font-bold mb-4 text-yellow-700 flex items-center gap-2">
-              <Trophy size={22} weight="fill" />
-              Featured Project
+          <div className="lg:col-span-4 bg-neutral-900 p-6 md:p-8 flex flex-col justify-center">
+            <p className="text-xs text-neutral-400 uppercase tracking-wider mb-2">
+              {[current.category, current.style].filter(Boolean).join(' · ') || 'House plan'}
+            </p>
+            <h3 className="font-display text-2xl md:text-3xl font-semibold mb-3 leading-tight">
+              {current.title}
             </h3>
-            <div className="mb-4 p-3 bg-gray-700 rounded-lg">
-              <div className="flex items-center space-x-2 text-sm text-green-300 mb-1">
-                <Camera size={16} weight="fill" />
-                <span className="font-semibold">Photo Topic</span>
-              </div>
-              <p className="text-white font-medium">{currentProject.photoTopic}</p>
-            </div>
+            <p className="text-neutral-400 text-sm leading-relaxed mb-5 line-clamp-4">
+              {current.description ||
+                'A carefully documented plan ready for review with your builder.'}
+            </p>
+            <p className="text-amber-400 text-xl font-semibold mb-6">
+              From {formatPlanPrice(current.price)}
+            </p>
+            <Link href={planHref(current)} className="btn-primary w-full justify-center">
+              View this plan
+              <ArrowRight size={16} weight="bold" />
+            </Link>
 
-            <p className="text-gray-300 leading-relaxed mb-6">{currentProject.description}</p>
-
-            <div className="space-y-3 mb-6">
-              <div className="flex justify-between items-center pb-2 border-b border-gray-700">
-                <span className="text-gray-400">Category</span>
-                <span className="font-semibold text-blue-400">{currentProject.category}</span>
+            {projects.length > 1 && (
+              <div className="flex gap-1.5 mt-6 justify-center">
+                {projects.map((p, i) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    aria-label={`Show featured plan ${i + 1}`}
+                    onClick={() => setCurrentIndex(i)}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === currentIndex
+                        ? 'w-8 bg-amber-500'
+                        : 'w-1.5 bg-white/25 hover:bg-white/50'
+                    }`}
+                  />
+                ))}
               </div>
-              <div className="flex justify-between items-center pb-2 border-b border-gray-700">
-                <span className="text-gray-400">Total Area</span>
-                <span className="font-semibold">{currentProject.areaSqFt} m²</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Starting Price</span>
-                <span className="font-semibold text-yellow-700">${currentProject.price}</span>
-              </div>
-            </div>
-
-            <button className="w-full bg-yellow-700 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-300 text-center">
-              View Project Details
-            </button>
+            )}
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

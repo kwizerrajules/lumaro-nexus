@@ -8,50 +8,103 @@ interface AuthModalProps {
   onAuthSuccess: (userData: any) => void;
 }
 
+function formatAuthError(result: any, fallback: string): string {
+  if (result?.message) return result.message;
+  if (Array.isArray(result?.errors) && result.errors.length > 0) {
+    return result.errors
+      .map((e: any) => e.message)
+      .filter(Boolean)
+      .join('. ');
+  }
+  return fallback;
+}
+
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     names: '',
     password: '',
     confirmPassword: '',
     phone: '',
-    agreeToTerms: false
+    agreeToTerms: false,
   });
 
+  const resetForm = () => {
+    setFormData({
+      email: '',
+      names: '',
+      password: '',
+      confirmPassword: '',
+      phone: '',
+      agreeToTerms: false,
+    });
+    setError('');
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }));
+    if (error) setError('');
+  };
+
+  const finishAuth = (accessToken: string, refreshToken: string, user: any) => {
+    if (accessToken) localStorage.setItem('userAccessToken', accessToken);
+    if (refreshToken) localStorage.setItem('userRefreshToken', refreshToken);
+
+    const normalizedUser = {
+      id: user.id,
+      email: user.email,
+      fullName: user.names,
+      names: user.names,
+      phone: user.phone || '',
+      country: '',
+    };
+
+    onAuthSuccess(normalizedUser);
+    onClose();
+    resetForm();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
     if (!isLogin) {
       if (formData.password !== formData.confirmPassword) {
-        alert('Passwords do not match');
+        setError('Passwords do not match');
         return;
       }
       if (!formData.agreeToTerms) {
-        alert('Please agree to the terms and conditions');
+        setError('Please agree to the Terms & Conditions and Privacy Policy');
         return;
       }
       if (!formData.names.trim()) {
-        alert('Full name is required');
+        setError('Full name is required');
+        return;
+      }
+      if (!formData.phone.trim()) {
+        setError('Phone number is required');
+        return;
+      }
+      if (formData.phone.trim().length > 20) {
+        setError('Phone number cannot exceed 20 characters');
         return;
       }
     }
 
+    setIsSubmitting(true);
     try {
       const endpoint = isLogin ? '/api/auth/login/users' : '/api/auth/register/users';
       const payload = isLogin
-        ? { email: formData.email, password: formData.password }
+        ? { email: formData.email.trim(), password: formData.password }
         : {
-            email: formData.email,
+            email: formData.email.trim(),
             names: formData.names.trim(),
             phone: formData.phone.trim() || undefined,
             password: formData.password,
@@ -66,44 +119,25 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        const message =
-          result.message ||
-          result.errors?.[0]?.message ||
-          (isLogin ? 'Login failed' : 'Registration failed');
-        alert(message);
+        setError(
+          formatAuthError(result, isLogin ? 'Login failed' : 'Registration failed')
+        );
         return;
       }
 
       const { accessToken, refreshToken, user } = result.data;
-      if (accessToken) localStorage.setItem('userAccessToken', accessToken);
-      if (refreshToken) localStorage.setItem('userRefreshToken', refreshToken);
-
-      const normalizedUser = {
-        id: user.id,
-        email: user.email,
-        fullName: user.names,
-        names: user.names,
-        phone: user.phone || '',
-        country: '',
-      };
-
-      onAuthSuccess(normalizedUser);
-      onClose();
-      setFormData({
-        email: '',
-        names: '',
-        password: '',
-        confirmPassword: '',
-        phone: '',
-        agreeToTerms: false,
-      });
-    } catch (error) {
-      console.error('Auth error:', error);
-      alert('An error occurred. Please try again.');
+      finishAuth(accessToken, refreshToken, user);
+    } catch (err) {
+      console.error('Auth error:', err);
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleGoogleCredential = async (credential: string) => {
+    setError('');
+    setIsSubmitting(true);
     try {
       const response = await fetch('/api/auth/google', {
         method: 'POST',
@@ -113,50 +147,40 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
       const result = await response.json();
       if (response.ok && result.success) {
         const { accessToken, refreshToken, user } = result.data;
-        if (accessToken) localStorage.setItem('userAccessToken', accessToken);
-        if (refreshToken) localStorage.setItem('userRefreshToken', refreshToken);
-
-        onAuthSuccess({
-          id: user.id,
-          email: user.email,
-          fullName: user.names,
-          names: user.names,
-          phone: user.phone || '',
-          country: '',
-        });
-        onClose();
+        finishAuth(accessToken, refreshToken, user);
       } else {
-        alert(result.message || 'Google sign-in failed');
+        setError(formatAuthError(result, 'Google sign-in failed'));
       }
-    } catch (error) {
-      console.error('Google auth error:', error);
-      alert('An error occurred during Google sign-in. Please try again.');
+    } catch (err) {
+      console.error('Google auth error:', err);
+      setError('An error occurred during Google sign-in. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (!isOpen) return null;
 
+  const inputClass =
+    'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-800 focus:border-yellow-800 transition-colors';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
-      <div 
-        className="absolute inset-0 bg-black bg-opacity-50"
-        onClick={onClose}
-      ></div>
-      
-      {/* Auth Modal - 50% width */}
+      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
+
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-1">
               {isLogin ? 'Welcome Back' : 'Create Account'}
             </h2>
-            <div className="h-1 w-12 bg-gray-900"></div>
+            <div className="h-1 w-12 bg-gray-900" />
           </div>
-          <button 
+          <button
+            type="button"
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
+            aria-label="Close"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -164,25 +188,31 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-8">
-          {/* Toggle between Login and Register */}
           <div className="flex mb-8 bg-gray-100 rounded-lg p-1">
             <button
-              onClick={() => setIsLogin(true)}
+              type="button"
+              onClick={() => {
+                setIsLogin(true);
+                setError('');
+              }}
               className={`flex-1 py-3 px-4 rounded-md font-semibold transition-all ${
-                isLogin 
-                  ? 'bg-white text-gray-900 shadow-sm' 
+                isLogin
+                  ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               Sign In
             </button>
             <button
-              onClick={() => setIsLogin(false)}
+              type="button"
+              onClick={() => {
+                setIsLogin(false);
+                setError('');
+              }}
               className={`flex-1 py-3 px-4 rounded-md font-semibold transition-all ${
-                !isLogin 
-                  ? 'bg-white text-gray-900 shadow-sm' 
+                !isLogin
+                  ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -190,8 +220,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
+          {error && (
+            <div
+              className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              role="alert"
+            >
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address *
@@ -199,15 +237,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
               <input
                 type="email"
                 name="email"
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
+                className={inputClass}
                 placeholder="Enter your email"
               />
             </div>
 
-            {/* Full Name (Registration only) */}
             {!isLogin && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -216,34 +254,35 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
                 <input
                   type="text"
                   name="names"
+                  autoComplete="name"
                   value={formData.names}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
+                  className={inputClass}
                   placeholder="Enter your full name"
                 />
               </div>
             )}
 
-            {/* Phone For Registration */}
             {!isLogin && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Phone *
                 </label>
-              <input
-                  type="text"
+                <input
+                  type="tel"
                   name="phone"
+                  autoComplete="tel"
                   value={formData.phone}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
-                  placeholder="Enter your phone number"
+                  maxLength={20}
+                  className={inputClass}
+                  placeholder="e.g. 0788123456"
                 />
               </div>
             )}
 
-            {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password *
@@ -251,16 +290,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
               <input
                 type="password"
                 name="password"
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
                 value={formData.password}
                 onChange={handleInputChange}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
+                className={inputClass}
                 placeholder="Enter your password"
               />
             </div>
 
-            {/* Confirm Password (Registration only) */}
             {!isLogin && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -269,55 +308,77 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
                 <input
                   type="password"
                   name="confirmPassword"
+                  autoComplete="new-password"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
+                  className={inputClass}
                   placeholder="Confirm your password"
                 />
               </div>
             )}
 
-            {/* Terms and Conditions (Registration only) */}
             {!isLogin && (
-              <div className="flex items-center">
+              <div className="flex items-start">
                 <input
                   type="checkbox"
                   name="agreeToTerms"
+                  id="agreeToTerms"
                   checked={formData.agreeToTerms}
                   onChange={handleInputChange}
-                  className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
+                  className="mt-1 w-4 h-4 text-yellow-900 border-gray-300 rounded focus:ring-yellow-800"
                 />
-                <label className="ml-3 text-sm text-gray-600">
-                  I agree to the Terms and Conditions and Privacy Policy
+                <label htmlFor="agreeToTerms" className="ml-3 text-sm text-gray-600">
+                  I agree to the{' '}
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-yellow-800 underline hover:text-yellow-900"
+                  >
+                    Terms &amp; Conditions
+                  </a>{' '}
+                  and{' '}
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-yellow-800 underline hover:text-yellow-900"
+                  >
+                    Privacy Policy
+                  </a>
                 </label>
               </div>
             )}
 
-            {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-yellow-900 text-white py-4 px-6 rounded-lg font-semibold hover:bg-yellow-700 transition-colors duration-300"
+              disabled={isSubmitting}
+              className="w-full bg-yellow-900 text-white py-4 px-6 rounded-lg font-semibold hover:bg-yellow-700 transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {isLogin ? 'Sign In' : 'Create Account'}
+              {isSubmitting
+                ? isLogin
+                  ? 'Signing in...'
+                  : 'Creating account...'
+                : isLogin
+                  ? 'Sign In'
+                  : 'Create Account'}
             </button>
 
-            {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500">Or continue with</span>
               </div>
             </div>
 
-            {/* Social Login */}
             <div className="flex justify-center">
               <GoogleSignInButton
                 onCredential={handleGoogleCredential}
-                onError={(message) => console.error('Google sign-in:', message)}
+                onError={(message) => setError(message)}
                 text={isLogin ? 'signin_with' : 'signup_with'}
               />
             </div>

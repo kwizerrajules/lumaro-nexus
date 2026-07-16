@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface GoogleSignInButtonProps {
   onCredential: (credential: string) => void;
@@ -45,6 +45,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   const buttonRef = useRef<HTMLDivElement>(null);
   const onCredentialRef = useRef(onCredential);
   const onErrorRef = useRef(onError);
+  const [unavailableMessage, setUnavailableMessage] = useState('');
 
   useEffect(() => {
     onCredentialRef.current = onCredential;
@@ -54,16 +55,21 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   useEffect(() => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) {
-      onErrorRef.current?.('Google sign-in is not configured (missing client ID).');
+      // Soft-fail: show helper text under the button, don't block email/password signup.
+      setUnavailableMessage('not-configured');
       return;
     }
 
+    setUnavailableMessage('');
     let cancelled = false;
 
     loadGisScript()
       .then(() => {
         if (cancelled || !buttonRef.current) return;
         const google = (window as any).google;
+
+        // Clear previous render when switching sign-in / sign-up text
+        buttonRef.current.innerHTML = '';
 
         google.accounts.id.initialize({
           client_id: clientId,
@@ -84,7 +90,9 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         });
       })
       .catch((err: Error) => {
-        onErrorRef.current?.(err.message || 'Failed to initialize Google sign-in.');
+        const msg = err.message || 'Failed to initialize Google sign-in.';
+        setUnavailableMessage(msg);
+        onErrorRef.current?.(msg);
       });
 
     return () => {
@@ -92,7 +100,15 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     };
   }, [text, width]);
 
-  return <div ref={buttonRef} className="flex justify-center" />;
+  if (unavailableMessage) {
+    return (
+      <p className="text-center text-sm text-gray-500 max-w-sm">
+        Google sign-in is not available right now. Please use email and password above.
+      </p>
+    );
+  }
+
+  return <div ref={buttonRef} className="flex justify-center min-h-[44px]" />;
 };
 
 export default GoogleSignInButton;

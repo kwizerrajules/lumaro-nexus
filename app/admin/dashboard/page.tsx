@@ -7,7 +7,6 @@ import CustomOrderSection from '../components/CustomOrderSection';
 import UsersSection from '../components/UsersSection';
 import ContactUsSection from '../components/ContactUsSections';
 import {jwtDecode} from 'jwt-decode';
-import useNavigate from 'react'
 import ProfileSection from '../components/ProfileSection';
 
 export default function AdminDashboardPage() {
@@ -22,11 +21,11 @@ export default function AdminDashboardPage() {
   }, [])
   
   const [adminName, setAdminName] = useState('Admin');
-  const [token, setToken] = useState("");
   
   const handleLogout = async () => {
     localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken'),
+    localStorage.removeItem('refreshToken');
+    document.cookie = 'adminAccessToken=; path=/; max-age=0; SameSite=Lax';
     window.location.href = '/login'
   }
 
