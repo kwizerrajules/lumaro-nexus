@@ -203,6 +203,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                           fill
                           className="object-cover"
                           sizes="80px"
+                          loading="lazy"
                           unoptimized
                         />
                       ) : (

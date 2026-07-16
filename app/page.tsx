@@ -185,7 +185,7 @@ export default function Home() {
               src={heroImage}
               alt=""
               fill
-              className="object-cover object-[center_42%] md:object-center animate-hero-reveal"
+              className="hero-bg-image animate-hero-reveal"
               sizes="100vw"
               priority
               unoptimized

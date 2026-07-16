@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import HouseProjectCard from '@/components/HouseProjectCard';
@@ -138,9 +139,20 @@ export default function Catalog() {
         onContactClick={scrollToContact}
       />
 
-      <section className="relative bg-neutral-950 text-white py-16 md:py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,rgba(217,119,6,0.15),transparent_50%)]" />
-        <div className="container mx-auto px-4 relative z-10">
+      <section className="relative min-h-[38vh] sm:min-h-[42vh] flex items-end overflow-hidden bg-neutral-950 text-white">
+        <div className="absolute inset-0">
+          <Image
+            src="/image/features-template.jpg"
+            alt=""
+            fill
+            className="object-cover object-[center_40%] md:object-center"
+            sizes="100vw"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/40" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,rgba(217,119,6,0.18),transparent_50%)]" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10 pb-10 md:pb-14 pt-28">
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-amber-400 text-xs font-semibold tracking-[0.2em] uppercase mb-3">
               Catalog

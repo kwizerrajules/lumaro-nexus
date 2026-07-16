@@ -124,6 +124,18 @@
   animation: heroReveal 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Mobile hero: shift crop so the house facade sits in the viewport center */
+.hero-bg-image {
+  object-fit: cover !important;
+  object-position: 72% 40% !important;
+}
+
+@media (min-width: 768px) {
+  .hero-bg-image {
+    object-position: center center !important;
+  }
+}
+
 .animate-soft-pulse {
   animation: softPulse 2.4s ease-in-out infinite;
 }

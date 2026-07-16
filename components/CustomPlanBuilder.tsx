@@ -192,20 +192,27 @@ const CustomPlanBuilder: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Custom Plan Builder</h2>
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-brand-line"
+    >
+      <h2 className="font-display text-xl sm:text-2xl font-semibold text-neutral-900 mb-4 sm:mb-6">
+        Custom Plan Builder
+      </h2>
 
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Basic Configuration</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="mb-6 sm:mb-8">
+        <h3 className="text-sm sm:text-lg font-semibold text-neutral-800 mb-3">
+          Basic Configuration
+        </h3>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Number Of Floors
+            <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5">
+              Floors
             </label>
             <select
               value={floors}
               onChange={(e) => setFloors(Number(e.target.value))}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-700 focus:border-yellow-700"
+              className="input-brand text-sm py-2.5 px-3"
             >
               {[1, 2, 3].map((num) => (
                 <option key={num} value={num}>
@@ -216,30 +223,30 @@ const CustomPlanBuilder: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Total Area (m²)
+            <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5">
+              Area (m²)
             </label>
             <input
               type="number"
               value={area}
               onChange={(e) => setArea(Number(e.target.value))}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-700 focus:border-yellow-700"
+              className="input-brand text-sm py-2.5 px-3"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5">
               Category
             </label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               disabled={optionsLoading || categories.length === 0}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-700 focus:border-yellow-700 disabled:bg-gray-100"
+              className="input-brand text-sm py-2.5 px-3 disabled:bg-stone-100"
             >
               {categories.length === 0 ? (
-                <option value="">No categories available</option>
+                <option value="">No categories</option>
               ) : (
                 categories.map((cat) => (
                   <option key={cat.id} value={cat.name}>
@@ -251,17 +258,17 @@ const CustomPlanBuilder: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5">
               Style
             </label>
             <select
               value={selectedStyle}
               onChange={(e) => setSelectedStyle(e.target.value)}
               disabled={optionsLoading || filteredStyles.length === 0}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-700 focus:border-yellow-700 disabled:bg-gray-100"
+              className="input-brand text-sm py-2.5 px-3 disabled:bg-stone-100"
             >
               {filteredStyles.length === 0 ? (
-                <option value="">No styles available</option>
+                <option value="">No styles</option>
               ) : (
                 filteredStyles.map((style) => (
                   <option key={style.id} value={style.name}>
@@ -274,39 +281,47 @@ const CustomPlanBuilder: React.FC = () => {
         </div>
       </div>
 
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Room Selection</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="mb-6 sm:mb-8">
+        <h3 className="text-sm sm:text-lg font-semibold text-neutral-800 mb-3">
+          Room Selection
+        </h3>
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {rooms.map((room) => (
             <div
               key={room.id}
-              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+              className="flex flex-col gap-2 p-2.5 sm:p-3 border border-brand-line bg-stone-50/50"
             >
-              <div className="flex items-center space-x-3">
+              <label className="flex items-start gap-2 cursor-pointer min-w-0">
                 <input
                   type="checkbox"
                   checked={room.included}
                   onChange={() => toggleRoom(room.id)}
-                  className="w-4 h-4 text-yellow-900 border-gray-300 rounded focus:ring-yellow-700"
+                  className="mt-0.5 w-4 h-4 shrink-0 text-amber-700 border-stone-300 rounded focus:ring-amber-500"
                 />
-                <span className="text-gray-700 font-medium">{room.name}</span>
-              </div>
+                <span className="text-xs sm:text-sm text-neutral-800 font-medium leading-snug">
+                  {room.name}
+                </span>
+              </label>
 
               {room.included && (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-end gap-1.5">
                   <button
                     type="button"
                     onClick={() => updateRoomCount(room.id, room.count - 1)}
                     disabled={room.count <= 1}
-                    className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center disabled:opacity-50"
+                    className="w-7 h-7 sm:w-8 sm:h-8 bg-stone-200 rounded-full flex items-center justify-center text-sm disabled:opacity-50"
+                    aria-label={`Decrease ${room.name}`}
                   >
                     -
                   </button>
-                  <span className="w-8 text-center font-semibold">{room.count}</span>
+                  <span className="w-6 text-center text-sm font-semibold">
+                    {room.count}
+                  </span>
                   <button
                     type="button"
                     onClick={() => updateRoomCount(room.id, room.count + 1)}
-                    className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
+                    className="w-7 h-7 sm:w-8 sm:h-8 bg-stone-200 rounded-full flex items-center justify-center text-sm"
+                    aria-label={`Increase ${room.name}`}
                   >
                     +
                   </button>
@@ -319,20 +334,22 @@ const CustomPlanBuilder: React.FC = () => {
         <button
           type="button"
           onClick={addNewRoom}
-          className="mt-4 flex items-center space-x-2 text-yellow-700 hover:text-yellow-900 font-semibold"
+          className="mt-3 flex items-center gap-2 text-sm text-amber-800 hover:text-amber-950 font-semibold"
         >
           <span>+</span>
           <span>Add another room</span>
         </button>
       </div>
 
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Project Description</h3>
+      <div className="mb-6 sm:mb-8">
+        <h3 className="text-sm sm:text-lg font-semibold text-neutral-800 mb-3">
+          Project Description
+        </h3>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          rows={4}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-700 focus:border-yellow-700"
+          rows={3}
+          className="input-brand text-sm"
           placeholder="e.g., A modern duplex with open living area, facing the east..."
           required
         />

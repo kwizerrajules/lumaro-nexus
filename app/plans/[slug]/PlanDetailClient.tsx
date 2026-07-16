@@ -1,8 +1,7 @@
 'use client';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import axios from 'axios';
 import {
   Bed,
@@ -59,7 +58,6 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
         const p = res.data;
         setProject(p);
 
-        // Canonicalize URL to slug when opened via legacy Mongo id
         if (p.slug && p.slug !== slug) {
           router.replace(planHref(p));
         }
@@ -74,7 +72,7 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
           if (cancelled) return;
           const relatedPlans = (listRes.data?.data || [])
             .filter((item: any) => item.id !== p.id)
-            .slice(0, 3)
+            .slice(0, 4)
             .map((item: any) => ({
               id: item.id,
               slug: item.slug,
@@ -108,6 +106,13 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
     };
   }, [slug, router]);
 
+  const galleryImages = useMemo(() => {
+    if (!project) return [];
+    return [project.thumbnail, ...(project.additionalImages || [])].filter(
+      Boolean
+    ) as string[];
+  }, [project]);
+
   const scrollToContact = () => {
     footerRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -126,20 +131,31 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
     }
   };
 
+  const waHref = project
+    ? whatsappPlanUrl({
+        title: project.title,
+        id: project.slug || project.id,
+        bedrooms: project.bedrooms,
+        bathrooms: project.bathrooms,
+        area: project.areaSqFt,
+        price: Number(project.price),
+      })
+    : '#';
+
   return (
     <div className="min-h-screen surface-atmosphere">
       <Header onAuthSuccess={() => {}} onContactClick={scrollToContact} />
 
       {loading ? (
-        <div className="container mx-auto px-4 py-12">
-          <div className="skeleton h-8 w-48 mb-8" />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="skeleton h-80 lg:h-[480px] rounded-none" />
-            <div className="space-y-4">
-              <div className="skeleton h-10 w-3/4" />
-              <div className="skeleton h-4 w-1/2" />
-              <div className="skeleton h-32 w-full" />
-              <div className="skeleton h-12 w-full" />
+        <div className="container mx-auto px-4 py-8">
+          <div className="skeleton h-6 w-40 mb-6" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="skeleton h-[240px] sm:h-[300px] lg:h-[380px] rounded-none" />
+            <div className="space-y-3">
+              <div className="skeleton h-8 w-3/4" />
+              <div className="skeleton h-6 w-1/3" />
+              <div className="skeleton h-20 w-full" />
+              <div className="skeleton h-10 w-full" />
             </div>
           </div>
         </div>
@@ -163,7 +179,7 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
       ) : (
         <>
           <div className="border-b border-brand-line bg-white/70">
-            <div className="container mx-auto px-4 py-4">
+            <div className="container mx-auto px-4 py-3">
               <Link
                 href="/catalog"
                 className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-amber-800 transition-colors"
@@ -174,117 +190,102 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
             </div>
           </div>
 
-          <article className="container mx-auto px-4 py-8 md:py-12">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
-              <div>
-                <div className="relative aspect-[4/3] overflow-hidden bg-stone-100 border border-brand-line mb-4">
-                  {project.thumbnail ? (
-                    <Image
-                      src={project.thumbnail}
-                      alt={project.title}
-                      fill
-                      className="object-cover animate-hero-reveal"
-                      sizes="(max-width: 1024px) 100vw, 50vw"
-                      priority
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-stone-300">
-                      <Buildings size={48} />
-                    </div>
-                  )}
-                </div>
-                <ImageCarousel projectId={project.id} />
-              </div>
+          <article className="container mx-auto px-4 py-5 md:py-10 pb-24 lg:pb-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-10 mb-12">
+              {/* Single fixed gallery */}
+              <ImageCarousel
+                projectId={project.id}
+                initialImages={galleryImages}
+                alt={project.title}
+              />
 
-              <div>
-                <div className="flex flex-wrap gap-2 mb-3">
+              {/* Details — compact so they sit with the gallery on one screen */}
+              <div className="min-w-0">
+                <div className="flex flex-wrap gap-2 mb-2">
                   {project.category && (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 border border-amber-100">
-                      <Tag size={12} weight="fill" />
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 border border-amber-100">
+                      <Tag size={11} weight="fill" />
                       {project.category}
                     </span>
                   )}
                   {project.style && (
-                    <span className="text-xs font-medium uppercase tracking-wider text-neutral-600 bg-stone-100 px-2.5 py-1">
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-neutral-600 bg-stone-100 px-2 py-0.5">
                       {project.style}
                     </span>
                   )}
                 </div>
 
-                <h1 className="font-display text-3xl md:text-5xl font-semibold text-neutral-900 leading-tight mb-2">
+                <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-semibold text-neutral-900 leading-tight mb-2">
                   {project.title}
                 </h1>
-                <p className="text-sm text-neutral-500 mb-6">
-                  {project.slug ? (
-                    <>
-                      <span className="text-neutral-400">/{project.slug}</span>
-                    </>
-                  ) : null}
-                </p>
 
-                <p className="text-3xl price-brand mb-6">
+                <p className="text-2xl sm:text-3xl price-brand mb-4">
                   From {formatPlanPrice(Number(project.price))}
                 </p>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 border border-brand-line bg-white p-4">
+                <div className="grid grid-cols-4 gap-2 mb-4 border border-brand-line bg-white p-3">
                   <div className="text-center">
-                    <Bed size={20} className="mx-auto text-amber-700 mb-1" />
-                    <div className="font-semibold text-neutral-900">{project.bedrooms}</div>
-                    <div className="text-xs text-neutral-500">Bedrooms</div>
+                    <Bed size={18} className="mx-auto text-amber-700 mb-0.5" />
+                    <div className="font-semibold text-sm text-neutral-900">
+                      {project.bedrooms}
+                    </div>
+                    <div className="text-[10px] text-neutral-500">Beds</div>
                   </div>
                   <div className="text-center">
-                    <Shower size={20} className="mx-auto text-amber-700 mb-1" />
-                    <div className="font-semibold text-neutral-900">{project.bathrooms}</div>
-                    <div className="text-xs text-neutral-500">Bathrooms</div>
+                    <Shower size={18} className="mx-auto text-amber-700 mb-0.5" />
+                    <div className="font-semibold text-sm text-neutral-900">
+                      {project.bathrooms}
+                    </div>
+                    <div className="text-[10px] text-neutral-500">Baths</div>
                   </div>
                   <div className="text-center">
-                    <Buildings size={20} className="mx-auto text-amber-700 mb-1" />
-                    <div className="font-semibold text-neutral-900">{project.floors}</div>
-                    <div className="text-xs text-neutral-500">Floors</div>
+                    <Buildings size={18} className="mx-auto text-amber-700 mb-0.5" />
+                    <div className="font-semibold text-sm text-neutral-900">
+                      {project.floors}
+                    </div>
+                    <div className="text-[10px] text-neutral-500">Floors</div>
                   </div>
                   <div className="text-center">
-                    <Ruler size={20} className="mx-auto text-amber-700 mb-1" />
-                    <div className="font-semibold text-neutral-900">{project.areaSqFt}</div>
-                    <div className="text-xs text-neutral-500">m²</div>
+                    <Ruler size={18} className="mx-auto text-amber-700 mb-0.5" />
+                    <div className="font-semibold text-sm text-neutral-900">
+                      {project.areaSqFt}
+                    </div>
+                    <div className="text-[10px] text-neutral-500">m²</div>
                   </div>
                 </div>
 
                 {project.description && (
-                  <div className="mb-8">
-                    <h2 className="font-display text-xl font-semibold text-neutral-900 mb-2">
+                  <div className="mb-4">
+                    <h2 className="font-display text-lg font-semibold text-neutral-900 mb-1">
                       About this plan
                     </h2>
-                    <p className="text-neutral-600 leading-relaxed whitespace-pre-line">
+                    <p className="text-neutral-600 text-sm leading-relaxed whitespace-pre-line line-clamp-4 lg:line-clamp-none">
                       {project.description}
                     </p>
                   </div>
                 )}
 
-                <div className="flex flex-col gap-3 sticky bottom-4 lg:static">
+                {/* Desktop / tablet actions */}
+                <div className="hidden lg:flex flex-col gap-2.5">
                   <a
-                    href={whatsappPlanUrl({
-                      title: project.title,
-                      id: project.slug || project.id,
-                      bedrooms: project.bedrooms,
-                      bathrooms: project.bathrooms,
-                      area: project.areaSqFt,
-                      price: Number(project.price),
-                    })}
+                    href={waHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-primary w-full text-center"
+                    className="btn-primary w-full text-center text-sm py-2.5"
                   >
-                    <WhatsappLogo size={22} weight="fill" />
-                    Order on WhatsApp · {WHATSAPP_DISPLAY}
+                    <WhatsappLogo size={18} weight="fill" />
+                    Order on WhatsApp
                   </a>
+                  <p className="text-center text-xs text-neutral-500">
+                    {WHATSAPP_DISPLAY}
+                  </p>
                   <button
                     type="button"
                     onClick={handleEnquiry}
                     disabled={!accessToken}
-                    className="btn-outline-dark w-full disabled:opacity-40"
+                    className="btn-outline-dark w-full text-sm py-2.5 disabled:opacity-40"
                   >
-                    <Heart size={18} />
+                    <Heart size={16} />
                     {accessToken ? 'Add to enquiry' : 'Sign in to add enquiry'}
                   </button>
                   <Link
@@ -294,12 +295,42 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
                     Need changes? Request a custom plan
                   </Link>
                 </div>
+
+                {/* Mobile inline compact actions (plus sticky bar below) */}
+                <div className="flex lg:hidden flex-col gap-2">
+                  <a
+                    href={waHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary w-full text-center text-sm py-2.5"
+                  >
+                    <WhatsappLogo size={18} weight="fill" />
+                    Order on WhatsApp
+                  </a>
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={handleEnquiry}
+                      disabled={!accessToken}
+                      className="btn-outline-dark flex-1 text-xs py-2 disabled:opacity-40"
+                    >
+                      <Heart size={14} />
+                      Enquiry
+                    </button>
+                    <Link
+                      href="/custom-plan"
+                      className="flex-1 text-center text-xs text-amber-800 hover:underline py-2"
+                    >
+                      Custom plan
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
 
             {related.length > 0 && (
-              <section className="border-t border-brand-line pt-12">
-                <h2 className="font-display text-2xl md:text-3xl font-semibold text-neutral-900 mb-6">
+              <section className="border-t border-brand-line pt-10">
+                <h2 className="font-display text-2xl md:text-3xl font-semibold text-neutral-900 mb-5">
                   Related plans
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 xl:gap-5">
@@ -310,6 +341,29 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
               </section>
             )}
           </article>
+
+          {/* Compact sticky WhatsApp on mobile */}
+          <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-brand-line bg-white/95 backdrop-blur px-4 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
+            <div className="flex items-center gap-3 max-w-lg mx-auto">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-neutral-900 truncate">
+                  {project.title}
+                </p>
+                <p className="text-xs price-brand truncate">
+                  From {formatPlanPrice(Number(project.price))}
+                </p>
+              </div>
+              <a
+                href={waHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center gap-1.5 bg-amber-700 text-white px-3.5 py-2 rounded-md text-sm font-semibold hover:bg-amber-600"
+              >
+                <WhatsappLogo size={18} weight="fill" />
+                Order
+              </a>
+            </div>
+          </div>
         </>
       )}
 

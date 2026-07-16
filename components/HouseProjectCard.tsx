@@ -36,6 +36,7 @@ const HouseProjectCard: React.FC<HouseProjectCardProps> = ({ project }) => {
               fill
               className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              loading="lazy"
               unoptimized
             />
           ) : (
