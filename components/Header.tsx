@@ -9,7 +9,6 @@ import {
 import AuthModal from './AuthModal';
 import SearchModal from './SearchModal';
 import Image from 'next/image';
-import axios from 'axios';
 import { mapProjectForSearch } from '@/utils/brand';
 
 interface HeaderProps {
@@ -40,9 +39,9 @@ const Header: React.FC<HeaderProps> = ({ onAuthSuccess, onContactClick }) => {
   useEffect(() => {
     const fetchHouses = async () => {
       try {
-        const res = await axios.get('/api/houseprojects', { params: { limit: 100 } });
-        const houses = (res.data?.data || []).map(mapProjectForSearch);
-        setSampleHouses(houses);
+        const { fetchHouseProjects } = await import('@/utils/productCache');
+        const items = await fetchHouseProjects({ limit: 100 });
+        setSampleHouses(items.map(mapProjectForSearch));
       } catch (err) {
         console.error('Failed to fetch houses:', err);
       }

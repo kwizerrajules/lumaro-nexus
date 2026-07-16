@@ -47,51 +47,75 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
     if (!slug) return;
     let cancelled = false;
 
+    const mapRelated = (items: any[], currentId: string) =>
+      items
+        .filter((item: any) => item.id !== currentId)
+        .slice(0, 4)
+        .map((item: any) => ({
+          id: item.id,
+          slug: item.slug,
+          title: item.title,
+          price: Number(item.price),
+          image: item.thumbnail,
+          bedrooms: item.bedrooms,
+          bathrooms: item.bathrooms,
+          floors: item.floors,
+          area: item.areaSqFt,
+          category: item.category,
+          style: item.style,
+        }));
+
     const load = async () => {
-      setLoading(true);
       setError(null);
+
+      const {
+        getCachedHouseProject,
+        getCachedHouseProjects,
+        cacheHouseProject,
+        fetchHouseProjects,
+      } = await import('@/utils/productCache');
+
+      // Instant paint from session cache (populated on home/catalog/header)
+      const cached = getCachedHouseProject(slug);
+      if (cached) {
+        setProject(cached);
+        setLoading(false);
+        const cachedList = getCachedHouseProjects();
+        if (cachedList.length) {
+          setRelated(mapRelated(cachedList, cached.id));
+        }
+      } else {
+        setLoading(true);
+      }
+
       try {
+        // Soft revalidate / fill missing fields (e.g. additionalImages)
         const res = await axios.get(
           `/api/houseprojects/${encodeURIComponent(slug)}`
         );
         if (cancelled) return;
         const p = res.data;
         setProject(p);
+        cacheHouseProject(p);
 
         if (p.slug && p.slug !== slug) {
           router.replace(planHref(p));
         }
 
         try {
-          const listRes = await axios.get('/api/houseprojects', {
-            params: {
-              limit: 8,
-              category: p.category || undefined,
-            },
+          const list = await fetchHouseProjects({
+            limit: 8,
+            category: p.category || undefined,
           });
           if (cancelled) return;
-          const relatedPlans = (listRes.data?.data || [])
-            .filter((item: any) => item.id !== p.id)
-            .slice(0, 4)
-            .map((item: any) => ({
-              id: item.id,
-              slug: item.slug,
-              title: item.title,
-              price: Number(item.price),
-              image: item.thumbnail,
-              bedrooms: item.bedrooms,
-              bathrooms: item.bathrooms,
-              floors: item.floors,
-              area: item.areaSqFt,
-              category: item.category,
-              style: item.style,
-            }));
-          setRelated(relatedPlans);
+          setRelated(mapRelated(list, p.id));
         } catch {
-          setRelated([]);
+          const fallback = getCachedHouseProjects();
+          if (fallback.length) setRelated(mapRelated(fallback, p.id));
+          else setRelated([]);
         }
       } catch {
-        if (!cancelled) {
+        if (!cancelled && !cached) {
           setProject(null);
           setError('This plan could not be found or is no longer available.');
         }

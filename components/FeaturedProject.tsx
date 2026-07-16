@@ -34,10 +34,9 @@ const FeaturedProject: React.FC = () => {
   useEffect(() => {
     const fetchFeaturedProjects = async () => {
       try {
-        const response = await fetch('/api/houseprojects?limit=20');
-        const data = await response.json();
-        const firstFour: FeaturedProject[] = (data.data || []).slice(0, 4);
-        setProjects(firstFour);
+        const { fetchHouseProjects } = await import('@/utils/productCache');
+        const data = await fetchHouseProjects({ limit: 20 });
+        setProjects((data || []).slice(0, 4) as FeaturedProject[]);
       } catch (error) {
         console.error('Error fetching featured projects:', error);
       } finally {

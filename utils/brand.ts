@@ -22,22 +22,21 @@ export function whatsappPlanUrl(opts: {
   if (opts.area != null) lines.push(`  - Area: ${opts.area} m²`);
   if (opts.quantity != null) lines.push(`  - Quantity: ${opts.quantity}`);
   if (opts.price != null) {
-    const formatted = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-    }).format(opts.price * (opts.quantity ?? 1));
-    lines.push(`  - Estimated Price: ${formatted}`);
+    lines.push(
+      `  - Estimated Price: ${formatPlanPrice(opts.price * (opts.quantity ?? 1))}`
+    );
   }
   return `${WHATSAPP_URL}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
+/** Display only — no FX conversion. Stored price values shown as RWF. */
 export function formatPlanPrice(price: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-RW", {
     style: "currency",
-    currency: "USD",
+    currency: "RWF",
     minimumFractionDigits: 0,
-  }).format(price);
+    maximumFractionDigits: 0,
+  }).format(Number(price) || 0);
 }
 
 /** Public plan path — prefer SEO slug, fall back to id during transition */

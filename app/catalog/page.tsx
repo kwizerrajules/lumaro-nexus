@@ -8,7 +8,6 @@ import Sidebar from '@/components/Sidebar';
 import Newsletter from '@/components/Newsletter';
 import PlanCardSkeleton from '@/components/PlanCardSkeleton';
 import { FunnelSimple } from '@phosphor-icons/react';
-import axios from 'axios';
 
 export default function Catalog() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -31,32 +30,28 @@ export default function Catalog() {
       setLoading(true);
       setLoadError(false);
       try {
-        const result = await axios.get('/api/houseprojects', {
-          params: { limit: 100 },
-        });
-
-        if (result.data?.data) {
-          const transformed = result.data.data.map((project: any) => ({
-            id: project.id,
-            slug: project.slug,
-            title: project.title,
-            price: parseFloat(project.price),
-            image: project.thumbnail,
-            bedrooms: project.bedrooms,
-            bathrooms: project.bathrooms,
-            floors: project.floors,
-            area: project.areaSqFt,
-            description: project.description,
-            location: project.location,
-            style: project.style,
-            type: project.type,
-            category: project.category,
-            rooms: project.rooms,
-            status: project.status,
-          }));
-          setProjects(transformed);
-          setFilteredProjects(transformed);
-        }
+        const { fetchHouseProjects } = await import('@/utils/productCache');
+        const data = await fetchHouseProjects({ limit: 100 });
+        const transformed = data.map((project: any) => ({
+          id: project.id,
+          slug: project.slug,
+          title: project.title,
+          price: parseFloat(project.price),
+          image: project.thumbnail,
+          bedrooms: project.bedrooms,
+          bathrooms: project.bathrooms,
+          floors: project.floors,
+          area: project.areaSqFt,
+          description: project.description,
+          location: project.location,
+          style: project.style,
+          type: project.type,
+          category: project.category,
+          rooms: project.rooms,
+          status: project.status,
+        }));
+        setProjects(transformed);
+        setFilteredProjects(transformed);
       } catch (error) {
         console.error('Error loading projects:', error);
         setProjects([]);

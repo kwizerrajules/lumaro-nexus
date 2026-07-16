@@ -39,10 +39,11 @@ const ConstructionCalculator: React.FC = () => {
   const totalCost = costItems.reduce((sum, item) => sum + calculateItemCost(item.cost), 0);
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-RW', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'RWF',
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(price);
   };
 

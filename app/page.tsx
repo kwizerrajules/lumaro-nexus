@@ -20,7 +20,6 @@ import Newsletter from '../components/Newsletter';
 import FeaturedProject from '../components/FeaturedProject';
 import CategoryStyleBrowser from '../components/CategoryStyleBrowser';
 import PlanCardSkeleton from '../components/PlanCardSkeleton';
-import axios from 'axios';
 
 export default function Home() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -43,35 +42,32 @@ export default function Home() {
       setLoading(true);
       setLoadError(false);
       try {
-        const result = await axios.get('/api/houseprojects', {
-          params: { limit: 100 },
-        });
+        const { fetchHouseProjects } = await import('@/utils/productCache');
+        const data = await fetchHouseProjects({ limit: 100 });
 
-        if (result.data) {
-          const transformedProjects = result.data.data.map((project: any) => ({
-            id: project.id,
-            slug: project.slug,
-            title: project.title,
-            price: parseFloat(project.price),
-            image: project.thumbnail,
-            bedrooms: project.bedrooms,
-            bathrooms: project.bathrooms,
-            floors: project.floors,
-            area: project.areaSqFt,
-            description: project.description,
-            location: project.location,
-            style: project.style,
-            type: project.type,
-            category: project.category,
-            rooms: project.rooms,
-            status: project.status,
-          }));
+        const transformedProjects = data.map((project: any) => ({
+          id: project.id,
+          slug: project.slug,
+          title: project.title,
+          price: parseFloat(project.price),
+          image: project.thumbnail,
+          bedrooms: project.bedrooms,
+          bathrooms: project.bathrooms,
+          floors: project.floors,
+          area: project.areaSqFt,
+          description: project.description,
+          location: project.location,
+          style: project.style,
+          type: project.type,
+          category: project.category,
+          rooms: project.rooms,
+          status: project.status,
+        }));
 
-          setProjects(transformedProjects);
-          setFilteredProjects(transformedProjects);
-          const withImage = transformedProjects.find((p: any) => p.image);
-          if (withImage) setHeroImage(withImage.image);
-        }
+        setProjects(transformedProjects);
+        setFilteredProjects(transformedProjects);
+        const withImage = transformedProjects.find((p: any) => p.image);
+        if (withImage) setHeroImage(withImage.image);
       } catch (error) {
         console.error('Error loading projects:', error);
         setProjects([]);
