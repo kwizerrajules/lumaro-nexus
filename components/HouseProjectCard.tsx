@@ -1,9 +1,9 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Bed, Shower, Buildings, Ruler, ArrowRight } from '@phosphor-icons/react';
 import { formatPlanPrice, planHref } from '@/utils/brand';
+import WatermarkedImage from '@/components/WatermarkedImage';
 
 interface HouseProject {
   id: string;
@@ -30,14 +30,13 @@ const HouseProjectCard: React.FC<HouseProjectCardProps> = ({ project }) => {
       <Link href={planHref(project)} className="flex h-full flex-col">
         <div className="relative h-36 sm:h-44 xl:h-40 overflow-hidden bg-stone-100">
           {project.image ? (
-            <Image
+            <WatermarkedImage
               src={project.image}
               alt={project.title}
               fill
               className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
               loading="lazy"
-              unoptimized
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-stone-300">

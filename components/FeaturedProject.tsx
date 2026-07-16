@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   Bed,
   Shower,
@@ -11,6 +10,7 @@ import {
   ArrowRight,
 } from '@phosphor-icons/react';
 import { formatPlanPrice, planHref } from '@/utils/brand';
+import WatermarkedImage from '@/components/WatermarkedImage';
 
 interface FeaturedProject {
   id: string;
@@ -105,14 +105,13 @@ const FeaturedProject: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:min-h-[380px] border border-white/10 overflow-hidden">
           <div className="relative lg:col-span-8 h-64 lg:h-auto min-h-[280px]">
             {current.thumbnail ? (
-              <Image
+              <WatermarkedImage
                 key={current.id}
                 src={current.thumbnail}
                 alt={current.title}
                 fill
                 className="object-cover animate-hero-reveal"
                 sizes="(max-width: 1024px) 100vw, 66vw"
-                unoptimized
                 priority
               />
             ) : (

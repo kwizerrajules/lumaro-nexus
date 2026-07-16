@@ -50,11 +50,12 @@ export default function CustomPlanPage() {
               Custom design
             </p>
             <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-semibold leading-tight mb-4">
-              Customize your dream home
+              Brief a custom house plan
             </h1>
             <p className="text-neutral-200 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl">
-              Create a plan with the layout and rooms you need — then we prepare
-              construction documents ready for your builder.
+              Tell us the rooms, floors, and plot needs. We prepare construction
+              documents aligned with Rwanda housing standards — ready for your
+              builder and permitting.
             </p>
           </div>
         </div>

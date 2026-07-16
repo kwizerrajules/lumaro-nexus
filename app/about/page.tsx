@@ -20,23 +20,23 @@ export default function AboutPage() {
   const pillars = [
     {
       icon: Blueprint,
-      title: 'Market-ready plans',
-      text: 'Designs tailored for African plots, climates, and construction practices — from compact homes to multi-floor builds.',
+      title: 'Plans for real plots',
+      text: 'Layouts that fit local sites, materials, and how people actually build here — from compact homes to multi-floor houses.',
     },
     {
       icon: Buildings,
-      title: 'Professional documents',
-      text: 'Clear construction documentation so builders and clients can move from design to site with confidence.',
+      title: 'Clear construction docs',
+      text: 'Drawings prepared with the Rwanda Building Code and permitting in mind, so you can talk to your builder and One Stop Centre with confidence.',
     },
     {
       icon: Handshake,
       title: 'Custom when you need it',
-      text: 'Start from a catalog plan or brief a fully custom layout with rooms, floors, and finishes that match your vision.',
+      text: 'Start from a catalog plan or brief your own rooms, floors, and layout for the land you have.',
     },
     {
       icon: MapPin,
       title: 'Rooted in Kigali',
-      text: 'Based in Rwanda and serving clients across Africa and beyond with responsive support and practical guidance.',
+      text: 'We work from Rwanda — fair pricing, WhatsApp support, and practical guidance for clients at home and nearby.',
     },
   ];
 
@@ -54,8 +54,8 @@ export default function AboutPage() {
             Lumaro Nexus
           </h1>
           <p className="text-neutral-300 text-base md:text-lg leading-relaxed">
-            Affordable, African market-tailored house plans and custom design services —
-            helping families and builders turn ideas into buildable homes.
+            Quality designs. Clear construction documents. Compliant with Rwanda
+            housing standards. Fair pricing.
           </p>
         </div>
       </section>
@@ -68,18 +68,16 @@ export default function AboutPage() {
             </h2>
             <div className="space-y-4 text-neutral-600 leading-relaxed">
               <p>
-                Since 2014, Lumaro Nexus has focused on practical architecture for real
-                African contexts — small plots, local materials, and budgets that make
-                homeownership achievable.
+                Since 2014, Lumaro Nexus has drawn practical house plans for real Rwanda
+                sites — small plots, local materials, and budgets people can actually work with.
               </p>
               <p>
-                We combine design craft with clear documentation so you receive more than
-                a pretty floor plan: you get packages ready to discuss with contractors,
-                engineers, and local authorities.
+                You get more than a floor plan: construction documents you can take to your
+                builder, engineer, and District One Stop Centre when you apply for a permit.
               </p>
               <p>
-                Whether you browse our catalog or request a custom plan, our goal is the
-                same: a home that fits your land, lifestyle, and future.
+                Browse the catalog or brief a custom plan — either way, the aim is a home
+                that fits your land and how you want to live.
               </p>
             </div>
           </div>
@@ -102,7 +100,7 @@ export default function AboutPage() {
               What we stand for
             </h2>
             <p className="text-neutral-600 max-w-2xl mx-auto">
-              Design that respects place, budget, and the people who will live in the home.
+              Good drawings, honest prices, and respect for local rules and the people who will live in the house.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -130,11 +128,11 @@ export default function AboutPage() {
       <section className="container mx-auto px-4 py-14 md:py-16">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-display text-3xl font-semibold text-neutral-900 mb-3">
-            Ready to start?
+            Looking for a plan?
           </h2>
           <p className="text-neutral-600 mb-8">
-            Browse ready plans or tell us about a custom design. We&apos;re here to help
-            from first idea to buildable drawings.
+            Browse ready plans or send a custom brief. We&apos;ll help you get to
+            buildable drawings you can use on site.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a href="/catalog" className="btn-secondary text-center">

@@ -68,9 +68,9 @@ const Header: React.FC<HeaderProps> = ({ onAuthSuccess, onContactClick }) => {
         setAnnouncements(data);
       } catch {
         setAnnouncements([
-          'New house plans added regularly',
-          'Ask about custom modifications on WhatsApp',
-          'Construction documents included with every plan',
+          'House plans prepared with Rwanda housing standards in mind',
+          'Ask about plot changes on WhatsApp',
+          'Clear construction documents with every plan',
         ]);
       }
     };

@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   ArrowRight,
   Plus,
@@ -20,6 +19,7 @@ import Newsletter from '../components/Newsletter';
 import FeaturedProject from '../components/FeaturedProject';
 import CategoryStyleBrowser from '../components/CategoryStyleBrowser';
 import PlanCardSkeleton from '../components/PlanCardSkeleton';
+import WatermarkedImage from '../components/WatermarkedImage';
 
 export default function Home() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -177,14 +177,15 @@ export default function Home() {
       <section className="relative min-h-[88vh] md:min-h-[92vh] flex items-end overflow-hidden bg-neutral-950 text-white">
         <div className="absolute inset-0">
           {heroImage ? (
-            <Image
+            <WatermarkedImage
               src={heroImage}
               alt=""
               fill
               className="hero-bg-image animate-hero-reveal"
               sizes="100vw"
               priority
-              unoptimized
+              mode="light"
+              hideSticker
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black" />
@@ -199,11 +200,11 @@ export default function Home() {
               Lumaro Nexus
             </p>
             <h1 className="animate-fade-in-up-delay font-display text-2xl sm:text-3xl md:text-4xl font-medium text-white/95 leading-snug mb-4">
-              House plans built for African sites
+              House plans for Rwanda sites
             </h1>
             <p className="animate-fade-in-up-delay-2 text-base md:text-lg text-neutral-300 max-w-lg leading-relaxed mb-8">
-              Ready-to-build designs with clear construction documents — browse the
-              catalog or brief a custom plan.
+              Quality designs. Clear construction documents. Compliant with Rwanda
+              housing standards. Fair pricing.
             </p>
             <div className="animate-fade-in-up-delay-2 flex flex-col sm:flex-row gap-3">
               <a href="#all_house_plans" className="btn-primary">
@@ -231,7 +232,8 @@ export default function Home() {
               How we work with you
             </h2>
             <p className="text-neutral-600 text-sm md:text-base">
-              A straightforward path from choosing a plan to talking with your builder.
+              From picking a plan to sitting with your builder — and preparing files
+              you can take to a District One Stop Centre or BPMIS.
             </p>
           </div>
           <div className="flex md:grid md:grid-cols-3 gap-4 md:gap-8 max-w-5xl mx-auto overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-3 md:pb-0 -mx-4 px-4 md:mx-auto md:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
@@ -239,17 +241,17 @@ export default function Home() {
               {
                 icon: Blueprint,
                 title: '1. Choose a plan',
-                text: 'Filter by bedrooms, area, and style — or open any plan for full specs and images.',
+                text: 'Filter by bedrooms, plot size, and style — or open any plan for full specs and images.',
               },
               {
                 icon: FileText,
                 title: '2. Review documents',
-                text: 'Plans include professional construction documentation in formats ready for site discussion.',
+                text: 'You get clear construction drawings prepared with the Rwanda Building Code and local permitting in mind.',
               },
               {
                 icon: ChatCircleDots,
                 title: '3. Order on WhatsApp',
-                text: 'Message us to confirm the package, ask about modifications, or start a custom brief.',
+                text: 'Message us to confirm the package, ask about changes for your plot, or start a custom brief.',
               },
             ].map((item) => {
               const Icon = item.icon;

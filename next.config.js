@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
 
   experimental: {
-    serverComponentsExternalPackages: ['jsdom', 'parse5'],
+    serverComponentsExternalPackages: ['cloudinary', 'jsdom', 'parse5'],
   },
 
   images: {

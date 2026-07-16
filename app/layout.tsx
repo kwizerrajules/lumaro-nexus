@@ -20,12 +20,12 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://lumaronexus.com"),
 
   title: {
-    default: "Lumaro Nexus Architecture | House Plans for Africa",
+    default: "Lumaro Nexus | House Plans for Rwanda",
     template: "%s | Lumaro Nexus",
   },
 
   description:
-    "Affordable African house plans, custom home designs, and professional construction documents from Lumaro Nexus in Kigali, Rwanda.",
+    "Quality house plans and clear construction documents from Kigali — prepared with Rwanda housing standards in mind, at fair prices.",
 
   applicationName: "Lumaro Nexus",
   authors: [{ name: "Lumaro Nexus", url: "https://lumaronexus.com" }],
@@ -64,9 +64,9 @@ export const metadata: Metadata = {
 
   openGraph: {
     type: "website",
-    title: "Lumaro Nexus Architecture and House Plans",
+    title: "Lumaro Nexus | House Plans for Rwanda",
     description:
-      "Explore modern house plans, custom architectural designs, and professional building documentation for African and global clients.",
+      "Quality designs. Clear construction documents. Compliant with Rwanda housing standards. Fair pricing.",
     url: "https://lumaronexus.com",
     siteName: "Lumaro Nexus",
     locale: "en_US",
@@ -75,16 +75,16 @@ export const metadata: Metadata = {
         url: "/brand/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Lumaro Nexus — House Plans for Africa",
+        alt: "Lumaro Nexus — House plans for Rwanda",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Lumaro Nexus Architecture",
+    title: "Lumaro Nexus | House Plans for Rwanda",
     description:
-      "Custom house plans, modern floor plans, and full architectural design services.",
+      "Clear construction documents prepared with Rwanda housing standards in mind — from Lumaro Nexus in Kigali.",
     images: ["/brand/og-image.jpg"],
   },
 

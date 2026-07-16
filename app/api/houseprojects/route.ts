@@ -11,6 +11,12 @@ let cacheTime = 0;
 
 export async function GET(req: NextRequest) {
   try {
+    // Backup if instrumentation did not run (e.g. some serverless cold starts).
+    // Never let watermark setup fail this API response.
+    void import("@/src/lib/ensureWatermark")
+      .then((m) => m.ensureCloudinaryWatermark())
+      .catch(() => {});
+
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);

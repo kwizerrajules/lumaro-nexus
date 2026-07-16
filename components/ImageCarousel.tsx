@@ -1,7 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { CaretLeft, CaretRight, Buildings } from '@phosphor-icons/react';
+import WatermarkedImage from '@/components/WatermarkedImage';
+import { watermarkImageUrls } from '@/utils/cloudinaryWatermark';
 
 interface ImageCarouselProps {
   projectId: string;
@@ -25,7 +26,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   className = '',
 }) => {
   const [images, setImages] = useState<string[]>(
-    initialImages.filter(Boolean)
+    watermarkImageUrls(initialImages)
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const cacheKey = `projectImages-${projectId}`;
@@ -33,7 +34,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   const seedKey = initialImages.filter(Boolean).join('|');
 
   useEffect(() => {
-    const seeded = seedKey ? seedKey.split('|') : [];
+    const seeded = seedKey ? watermarkImageUrls(seedKey.split('|')) : [];
     if (seeded.length) {
       setImages(seeded);
       setCurrentIndex(0);
@@ -50,7 +51,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
         const fresh = Date.now() - cachedAt < CACHE_TTL_MS;
 
         if (urls?.length && fresh) {
-          setImages(urls);
+          setImages(watermarkImageUrls(urls));
           return;
         }
       } catch {
@@ -67,9 +68,10 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
         `/api/houseprojects/${encodeURIComponent(projectId)}`
       );
       const data = await response.json();
-      const allImages = [data.thumbnail, ...(data.additionalImages || [])].filter(
-        Boolean
-      ) as string[];
+      const allImages = watermarkImageUrls([
+        data.thumbnail,
+        ...(data.additionalImages || []),
+      ]);
       if (allImages.length) {
         setImages(allImages);
         localStorage.setItem(
@@ -102,7 +104,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
       {/* Fixed preview box — never grows with image dimensions */}
       <div className="relative w-full h-[240px] sm:h-[300px] lg:h-[380px] overflow-hidden bg-stone-100 border border-brand-line">
         {current ? (
-          <Image
+          <WatermarkedImage
             src={current}
             alt={`${alt} ${currentIndex + 1}`}
             fill
@@ -110,7 +112,6 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority={currentIndex === 0}
             loading={currentIndex === 0 ? 'eager' : 'lazy'}
-            unoptimized
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-stone-300">
@@ -157,14 +158,14 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
               }`}
               aria-label={`View image ${idx + 1}`}
             >
-              <Image
+              <WatermarkedImage
                 src={src}
                 alt=""
                 fill
                 className="object-cover"
                 sizes="64px"
                 loading="lazy"
-                unoptimized
+                hideSticker
               />
             </button>
           ))}

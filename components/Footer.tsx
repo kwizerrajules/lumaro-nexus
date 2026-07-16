@@ -14,7 +14,7 @@ const Footer = forwardRef<HTMLElement>(function Footer(_, ref) {
   return (
     <footer ref={ref} id="contact" className="bg-gray-900 text-white py-16">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
@@ -32,7 +32,8 @@ const Footer = forwardRef<HTMLElement>(function Footer(_, ref) {
               </span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-4">
-              Since 2014, providing affordable, African market-tailored designs with premium construction documents and custom design options.
+              Based in Kigali since 2014. We draw house plans and construction
+              documents that fit local plots, budgets, and Rwanda housing standards.
             </p>
             <a
               href="https://wa.me/250791756343"
@@ -50,8 +51,54 @@ const Footer = forwardRef<HTMLElement>(function Footer(_, ref) {
             <ul className="space-y-3 text-sm text-gray-400">
               <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
               <li><a href="/catalog" className="hover:text-white transition-colors">Catalog</a></li>
-              <li><a href="/custom-plan" className="hover:text-white transition-colors">Customise Your Design</a></li>
-              <li><a href="/about" className="hover:text-white transition-colors">About Us</a></li>
+              <li><a href="/custom-plan" className="hover:text-white transition-colors">Custom design</a></li>
+              <li><a href="/about" className="hover:text-white transition-colors">About us</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4 text-lg">Rwanda housing</h4>
+            <ul className="space-y-3 text-sm text-gray-400">
+              <li>
+                <a
+                  href="https://rha.gov.rw/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Rwanda Housing Authority
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://bpmis.gov.rw/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Building permits (BPMIS)
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.mininfra.gov.rw/1/urbanisation-human-settlement-and-housing-development"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Building Code &amp; Urban Planning
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.rha.gov.rw/publications"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  RHA laws &amp; guidelines
+                </a>
+              </li>
             </ul>
           </div>
 
