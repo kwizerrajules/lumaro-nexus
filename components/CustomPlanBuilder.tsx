@@ -192,6 +192,10 @@ const CustomPlanBuilder: React.FC = () => {
       setSuccess(true);
       setTurnstileToken(null);
       resetTurnstile();
+      // Send user to their dashboard so they can see the new plan
+      window.setTimeout(() => {
+        window.location.href = '/my-custom-plans';
+      }, 1200);
     } catch (err) {
       console.error('Submission failed:', err);
       setTurnstileToken(null);

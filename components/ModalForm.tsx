@@ -43,15 +43,32 @@ const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
   const total = project.price * quantity;
 
   const handleAddEnquiry = async (id: string) => {
+    const token =
+      accessToken ||
+      (typeof window !== 'undefined'
+        ? localStorage.getItem('userAccessToken')
+        : '');
+    if (!token) {
+      alert('Please sign in to add this plan to your enquiry list.');
+      return;
+    }
+    if (!id) {
+      alert('This plan is missing an ID. Please refresh and try again.');
+      return;
+    }
     try {
       await axios.post(
         '/api/enquiries',
         { projectId: id },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert('Product added to wish list');
-    } catch {
-      alert('Error while adding product to wishlist');
+      alert('Added to your enquiry list');
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.error ||
+        err?.message ||
+        'Could not add to enquiry. Please try again.';
+      alert(message);
     }
   };
 

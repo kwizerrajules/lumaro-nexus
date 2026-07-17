@@ -143,16 +143,33 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
   };
 
   const handleEnquiry = async () => {
-    if (!project || !accessToken) return;
+    if (!project) return;
+    const token =
+      accessToken ||
+      (typeof window !== 'undefined'
+        ? localStorage.getItem('userAccessToken')
+        : null);
+    if (!token) {
+      alert('Please sign in to add this plan to your enquiry list.');
+      return;
+    }
+    if (!project.id) {
+      alert('This plan is missing an ID. Please refresh and try again.');
+      return;
+    }
     try {
       await axios.post(
         '/api/enquiries',
         { projectId: project.id },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       alert('Added to your enquiry list');
-    } catch {
-      alert('Could not add to enquiry. Please sign in and try again.');
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.error ||
+        err?.message ||
+        'Could not add to enquiry. Please sign in and try again.';
+      alert(message);
     }
   };
 

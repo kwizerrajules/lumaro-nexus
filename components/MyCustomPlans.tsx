@@ -44,8 +44,16 @@ export default function MyCustomPlans() {
         headers: { Authorization: `Bearer ${accesToken}` },
       });
 
-      // Filter invalid entries (you already have some invalid IDs in DB)
-      const cleaned = res.data.filter((p: CustomPlan) => p.id && p.id !== "");
+      // Filter invalid entries — map Mongo _id → id for the dashboard
+      const cleaned = (res.data || [])
+        .map((p: any) => ({
+          ...p,
+          id: p.id || p._id || '',
+          user_id: p.user_id || p.userId || '',
+          created_at: p.created_at || p.createdAt || '',
+          updated_at: p.updated_at || p.updatedAt || '',
+        }))
+        .filter((p: CustomPlan) => p.id && p.id !== '');
 
       setPlans(cleaned);
     } catch (err: any) {

@@ -32,6 +32,39 @@ interface CustomPlanDocument {
     updatedAt: Date;
 }
 
+/** Shape returned to the user dashboard / API clients */
+export type PublicCustomPlan = {
+  id: string;
+  user_id: string;
+  bedrooms: number;
+  bathrooms: number;
+  dining_rooms: number;
+  kitchen: number;
+  floors: number;
+  total_area: number;
+  category: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+};
+
+function toPublicPlan(doc: CustomPlanDocument): PublicCustomPlan {
+  return {
+    id: doc._id,
+    user_id: doc.userId,
+    bedrooms: doc.bedrooms,
+    bathrooms: doc.bathrooms,
+    dining_rooms: doc.dining_rooms,
+    kitchen: doc.kitchen,
+    floors: doc.floors,
+    total_area: doc.total_area,
+    category: doc.category,
+    description: doc.description,
+    created_at: doc.createdAt?.toISOString?.() ?? String(doc.createdAt),
+    updated_at: doc.updatedAt?.toISOString?.() ?? String(doc.updatedAt),
+  };
+}
+
 interface CustomPlanWithUser extends Omit<CustomPlan, 'user_id' | 'created_at' | 'updated_at'> {
     id: string;
     userId: string;
@@ -88,15 +121,14 @@ const planUserLookupPipeline = () => [
 
 
 export const CustomPlanModel = {
-  async create(plan: CustomPlan): Promise<CustomPlanDocument> {
+  async create(plan: CustomPlan): Promise<PublicCustomPlan> {
     const collection = await getCustomPlansCollection();
     const now = new Date();
-    const newId = crypto.randomUUID(); // Use native crypto.randomUUID()
+    const newId = crypto.randomUUID();
 
-    // Map plan input (user_id, created_at) to MongoDB conventions (userId, createdAt)
     const newDocument: CustomPlanDocument = {
         _id: newId,
-        userId: plan.user_id, // Map from user_id to userId
+        userId: plan.user_id,
         bedrooms: plan.bedrooms,
         bathrooms: plan.bathrooms,
         dining_rooms: plan.dining_rooms,
@@ -111,55 +143,54 @@ export const CustomPlanModel = {
     
     await collection.insertOne(newDocument as any);
     
-    return newDocument;
+    return toPublicPlan(newDocument);
   },
 
-  async getAllByUser(user_id: string): Promise<CustomPlanDocument[]> {
+  async getAllByUser(user_id: string): Promise<PublicCustomPlan[]> {
     const collection = await getCustomPlansCollection();
     
     const documents = await collection
-      .find({ userId: user_id }) // Query using userId
+      .find({ userId: user_id })
       .sort({ createdAt: -1 })
       .toArray();
 
-    return documents;
+    return documents.map(toPublicPlan);
   },
 
   async getAllCustomPLans(): Promise<CustomPlanWithUser[]> {
     const collection = await getCustomPlansCollection();
     
-    // Use the Aggregation Pipeline to perform the JOIN
     const pipeline = planUserLookupPipeline();
     
     const rows = await collection.aggregate(pipeline).toArray();
 
-    // The result from aggregation is already shaped by the $project stage
     return rows as CustomPlanWithUser[];
   },
 
-  async getById(id: string): Promise<CustomPlanDocument | null> {
+  async getById(id: string): Promise<PublicCustomPlan | null> {
     const collection = await getCustomPlansCollection();
     
     const document = await collection.findOne({ _id: id });
     
-    // Map _id back to 'id' if needed for external interface consistency
     if (!document) return null;
     
-    return document;
+    return toPublicPlan(document);
   },
 
-  async update(id: string, updates: Partial<CustomPlan>): Promise<CustomPlanDocument | null> {
+  async update(id: string, updates: Partial<CustomPlan>): Promise<PublicCustomPlan | null> {
     const collection = await getCustomPlansCollection();
     const now = new Date();
     const $set: any = { updatedAt: now };
 
     for (const key in updates) {
-        if (updates.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(updates, key)) {
             let fieldName = key;
             if (key === 'user_id') {
                 fieldName = 'userId';
             } else if (key === 'created_at') {
                 fieldName = 'createdAt';
+            } else if (key === 'id') {
+                continue;
             }
             $set[fieldName] = (updates as any)[key];
         }
@@ -171,7 +202,7 @@ export const CustomPlanModel = {
       { returnDocument: 'after' }
     );
     
-    return result || null;
+    return result ? toPublicPlan(result) : null;
   },
 
   async delete(id: string): Promise<boolean> {

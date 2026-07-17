@@ -41,26 +41,34 @@ export class EnquiriesModel extends BaseModel<Enquiry> {
   }
 
   async createEnquiry(
-    data: Omit<Enquiry, 'id' | 'createdAt' | 'userId'>,
+    data: { projectId?: string | null },
     userId: string
   ): Promise<Enquiry> {
-    const _id: string = String(uuidv4());
+    const projectId = data.projectId?.trim();
+    if (!projectId) {
+      throw new Error('projectId is required');
+    }
+    if (!userId?.trim()) {
+      throw new Error('userId is required');
+    }
+
+    const _id = String(uuidv4());
     const createdAt = new Date();
 
     const validated = enquirySchema.parse({
       id: _id,
       userId,
-      projectId: data.projectId ?? null,
-      createdAt: createdAt.toISOString(),
+      projectId,
+      createdAt,
     });
 
     const newDocument = {
-        _id,
-        userId: validated.userId,
-        projectId: validated.projectId,
-        createdAt, // Store as native Date object
+      _id,
+      userId: validated.userId,
+      projectId: validated.projectId,
+      createdAt: validated.createdAt,
     };
-    
+
     const collection = await getEnquiryCollection();
     await collection.insertOne(newDocument as any);
 
@@ -136,6 +144,16 @@ export class EnquiriesModel extends BaseModel<Enquiry> {
       createdAt: doc.createdAt,
       user_data: doc.user_data,
       project_data: doc.project_data,
+      // Flat fields for /orders dashboard compatibility
+      enquiry_id: doc.id,
+      project_title: doc.project_data?.title || 'House plan',
+      project_price: doc.project_data?.price != null ? String(doc.project_data.price) : '',
+      bedrooms: doc.project_data?.bedrooms ?? 0,
+      bathrooms: doc.project_data?.bathrooms ?? 0,
+      floors: doc.project_data?.floors ?? 0,
+      areaSqFt: doc.project_data?.areaSqFt ?? 0,
+      description: doc.project_data?.description || '',
+      thumbnail: doc.project_data?.thumbnail || '',
     })) as EnquiryWithDetails[];
   }
 

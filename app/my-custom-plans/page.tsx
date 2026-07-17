@@ -47,7 +47,15 @@ export default function MyCustomPlans() {
       const res = await axios.get('/api/custom-plan', {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      const cleaned = (res.data || []).filter((p: CustomPlan) => p.id && p.id !== '');
+      const cleaned = (res.data || [])
+        .map((p: any) => ({
+          ...p,
+          id: p.id || p._id || '',
+          user_id: p.user_id || p.userId || '',
+          created_at: p.created_at || p.createdAt || '',
+          updated_at: p.updated_at || p.updatedAt || '',
+        }))
+        .filter((p: CustomPlan) => p.id && p.id !== '');
       setPlans(cleaned);
       setError('');
     } catch (err: any) {

@@ -49,9 +49,24 @@ export default function UserEnquiriesPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const cleaned = (response.data || []).filter(
-        (e: Enquiry) => e.enquiry_id && e.enquiry_id !== '[object Object]'
-      );
+      const cleaned = (response.data || [])
+        .map((e: any) => ({
+          enquiry_id: e.enquiry_id || e.id || e._id || '',
+          project_title:
+            e.project_title || e.project_data?.title || 'House plan',
+          project_price:
+            e.project_price ??
+            (e.project_data?.price != null ? String(e.project_data.price) : ''),
+          bedrooms: e.bedrooms ?? e.project_data?.bedrooms ?? 0,
+          bathrooms: e.bathrooms ?? e.project_data?.bathrooms ?? 0,
+          floors: e.floors ?? e.project_data?.floors ?? 0,
+          areaSqFt: e.areaSqFt ?? e.project_data?.areaSqFt ?? 0,
+          description: e.description || e.project_data?.description || '',
+          thumbnail: e.thumbnail || e.project_data?.thumbnail || '',
+        }))
+        .filter(
+          (e: Enquiry) => e.enquiry_id && e.enquiry_id !== '[object Object]'
+        );
       setEnquiries(cleaned);
       setError('');
     } catch (err: any) {
