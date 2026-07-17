@@ -87,7 +87,7 @@ async function fadePng(input: Buffer, opacity: number): Promise<Buffer> {
   for (let i = 3; i < data.length; i += 4) {
     data[i] = Math.round(data[i] * opacity);
   }
-  return sharp(data, {
+  const out = await sharp(data, {
     raw: {
       width: info.width,
       height: info.height,
@@ -96,6 +96,7 @@ async function fadePng(input: Buffer, opacity: number): Promise<Buffer> {
   })
     .png()
     .toBuffer();
+  return Buffer.from(out);
 }
 
 /**
@@ -117,18 +118,22 @@ async function buildPngOverlay(
   );
   const opacity = mode === 'light' ? 0.45 : 0.62;
 
-  let tile = await sharp(STICKER_PATH)
-    .resize({ width: targetW, withoutEnlargement: true })
-    .ensureAlpha()
-    .png()
-    .toBuffer();
+  const resized = Buffer.from(
+    await sharp(STICKER_PATH)
+      .resize({ width: targetW, withoutEnlargement: true })
+      .ensureAlpha()
+      .png()
+      .toBuffer()
+  );
 
-  tile = await fadePng(tile, opacity);
+  const tile = await fadePng(resized, opacity);
 
-  const rotated = await sharp(tile)
-    .rotate(-28, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .png()
-    .toBuffer();
+  const rotated = Buffer.from(
+    await sharp(tile)
+      .rotate(-28, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .png()
+      .toBuffer()
+  );
 
   const rm = await sharp(rotated).metadata();
   const rw = rm.width || targetW;
@@ -148,7 +153,7 @@ async function buildPngOverlay(
     }
   }
 
-  return sharp({
+  const overlay = await sharp({
     create: {
       width,
       height,
@@ -159,17 +164,21 @@ async function buildPngOverlay(
     .composite(composites)
     .png()
     .toBuffer();
+
+  return Buffer.from(overlay);
 }
 
 async function buildPreviewBadge(canvasWidth: number): Promise<Buffer | null> {
   if (!fs.existsSync(BADGE_PATH)) return null;
 
   const badgeW = Math.min(130, Math.max(96, Math.round(canvasWidth * 0.12)));
-  const text = await sharp(BADGE_PATH)
-    .resize({ width: Math.round(badgeW * 0.78), withoutEnlargement: true })
-    .ensureAlpha()
-    .png()
-    .toBuffer();
+  const text = Buffer.from(
+    await sharp(BADGE_PATH)
+      .resize({ width: Math.round(badgeW * 0.78), withoutEnlargement: true })
+      .ensureAlpha()
+      .png()
+      .toBuffer()
+  );
   const tm = await sharp(text).metadata();
   const tw = tm.width || 80;
   const th = tm.height || 18;
@@ -178,21 +187,25 @@ async function buildPreviewBadge(canvasWidth: number): Promise<Buffer | null> {
   const boxW = tw + padX * 2;
   const boxH = th + padY * 2;
 
-  const box = await sharp({
-    create: {
-      width: boxW,
-      height: boxH,
-      channels: 4,
-      background: { r: 23, g: 23, b: 23, alpha: 200 },
-    },
-  })
-    .png()
-    .toBuffer();
+  const box = Buffer.from(
+    await sharp({
+      create: {
+        width: boxW,
+        height: boxH,
+        channels: 4,
+        background: { r: 23, g: 23, b: 23, alpha: 200 },
+      },
+    })
+      .png()
+      .toBuffer()
+  );
 
-  return sharp(box)
-    .composite([{ input: text, left: padX, top: padY }])
-    .png()
-    .toBuffer();
+  return Buffer.from(
+    await sharp(box)
+      .composite([{ input: text, left: padX, top: padY }])
+      .png()
+      .toBuffer()
+  );
 }
 
 async function buildWatermarkedBuffer(
@@ -232,10 +245,12 @@ async function buildWatermarkedBuffer(
     }
   }
 
-  const buffer = await sharp(base.data)
-    .composite(composites)
-    .jpeg({ quality: 82, mozjpeg: true })
-    .toBuffer();
+  const buffer = Buffer.from(
+    await sharp(base.data)
+      .composite(composites)
+      .jpeg({ quality: 82, mozjpeg: true })
+      .toBuffer()
+  );
 
   return { buffer, contentType: 'image/jpeg' };
 }
