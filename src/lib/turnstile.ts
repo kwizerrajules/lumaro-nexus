@@ -15,6 +15,10 @@ export function isTurnstileEnabledOnClient(): boolean {
   return Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim());
 }
 
+function fail(message: string): TurnstileVerifyResult {
+  return { ok: false, message };
+}
+
 /**
  * Verify a Turnstile token from the browser.
  * If TURNSTILE_SECRET_KEY is not set, verification is skipped (local/dev).
@@ -26,7 +30,6 @@ export async function verifyTurnstileToken(
   const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
 
   if (!secret) {
-    // Not configured yet — allow requests so deploys don't break before keys are added
     if (process.env.NODE_ENV === 'production') {
       console.warn(
         '[turnstile] TURNSTILE_SECRET_KEY missing — skipping verification'
@@ -36,10 +39,7 @@ export async function verifyTurnstileToken(
   }
 
   if (!token || typeof token !== 'string' || token.length < 10) {
-    return {
-      ok: false,
-      message: 'Please complete the human verification check.',
-    };
+    return fail('Please complete the human verification check.');
   }
 
   try {
@@ -64,18 +64,12 @@ export async function verifyTurnstileToken(
 
     if (!data.success) {
       console.warn('[turnstile] verification failed:', data['error-codes']);
-      return {
-        ok: false,
-        message: 'Human verification failed. Please try again.',
-      };
+      return fail('Human verification failed. Please try again.');
     }
 
     return { ok: true };
   } catch (err) {
     console.error('[turnstile] verify error:', err);
-    return {
-      ok: false,
-      message: 'Could not verify human check. Please try again.',
-    };
+    return fail('Could not verify human check. Please try again.');
   }
 }

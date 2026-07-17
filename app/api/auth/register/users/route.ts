@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       null;
 
     const turnstile = await verifyTurnstileToken(body.turnstileToken, ip);
-    if (!turnstile.ok) {
+    if (turnstile.ok === false) {
       return NextResponse.json(
         { success: false, message: turnstile.message },
         { status: 400 }
