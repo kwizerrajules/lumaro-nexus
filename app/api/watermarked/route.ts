@@ -65,8 +65,8 @@ function parseMode(value: string | null): WatermarkMode {
 }
 
 /**
- * One full-frame overlay: solid "Lumaro Nexus" text on a diagonal grid.
- * Alpha is scaled in raw pixels (avoids SVG opacity / dest-in box artifacts).
+ * One full-frame overlay: diagonal "Lumaro Nexus" with dark underlay + white
+ * fill so the mark stays readable on light brick and dark roofs.
  */
 async function buildTextOverlay(
   width: number,
@@ -74,21 +74,24 @@ async function buildTextOverlay(
   mode: WatermarkMode
 ): Promise<Buffer> {
   const fontSize = Math.max(
-    22,
-    Math.round(Math.min(width, height) * (mode === 'light' ? 0.05 : 0.06))
+    26,
+    Math.round(Math.min(width, height) * (mode === 'light' ? 0.055 : 0.07))
   );
-  const alphaScale = mode === 'light' ? 0.4 : 0.52;
-  // Wide spacing so each phrase is readable (not jammed into boxes)
-  const stepX = Math.round(fontSize * 11);
-  const stepY = Math.round(fontSize * 5.5);
-  const cols = Math.ceil((width * 1.4) / stepX) + 1;
-  const rows = Math.ceil((height * 1.4) / stepY) + 1;
+  const alphaScale = mode === 'light' ? 0.55 : 0.72;
+  const stepX = Math.round(fontSize * 9.5);
+  const stepY = Math.round(fontSize * 4.8);
+  const cols = Math.ceil((width * 1.5) / stepX) + 1;
+  const rows = Math.ceil((height * 1.5) / stepY) + 1;
 
   const marks: string[] = [];
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
-      const x = Math.round(col * stepX - width * 0.1);
-      const y = Math.round(row * stepY - height * 0.05);
+      const x = Math.round(col * stepX - width * 0.12);
+      const y = Math.round(row * stepY - height * 0.06);
+      // Dark shadow first (contrast), then white brand text
+      marks.push(
+        `<text x="${x + 2}" y="${y + 2}" fill="#0a0a0a">Lumaro Nexus</text>`
+      );
       marks.push(
         `<text x="${x}" y="${y}" fill="#FFFFFF">Lumaro Nexus</text>`
       );
@@ -110,11 +113,8 @@ async function buildTextOverlay(
     .raw()
     .toBuffer({ resolveWithObject: true });
 
-  // Scale alpha only — keep RGB pure white (no dark fringe boxes)
+  // Fade the whole overlay uniformly (keeps RGB of both white + dark glyphs)
   for (let i = 0; i < data.length; i += 4) {
-    data[i] = 255;
-    data[i + 1] = 255;
-    data[i + 2] = 255;
     data[i + 3] = Math.round(data[i + 3] * alphaScale);
   }
 
@@ -253,7 +253,7 @@ export async function GET(req: NextRequest) {
         'Content-Type': outType,
         'Cache-Control':
           'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-        'X-Watermark-Version': '6',
+        'X-Watermark-Version': '7',
         'X-Content-Type-Options': 'nosniff',
       },
     });

@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import API from '../../../utils/api';
+import { invalidateHouseProjectsCache } from '../../../utils/productCache';
 import ModalForm from '../components/ModalForm';
 import CategoriesPanel from './CategoriesPanel';
 import StylesPanel from './StylesPanel';
@@ -87,11 +88,17 @@ export default function HouseProjectsSection() {
     if (confirm('Are you sure you want to delete this project?')) {
       try {
         await API.delete(`/houseprojects/${id}`);
+        invalidateHouseProjectsCache();
         fetchProjects();
       } catch (err) {
         console.error(err);
       }
     }
+  };
+
+  const handleProjectSaved = () => {
+    invalidateHouseProjectsCache();
+    fetchProjects();
   };
 
   const clearFilters = () => {
@@ -321,7 +328,7 @@ export default function HouseProjectsSection() {
           mode="edit"
           project={editingProject}
           onClose={closeModal}
-          onSuccess={fetchProjects}
+          onSuccess={handleProjectSaved}
         />
       )}
 
@@ -329,7 +336,7 @@ export default function HouseProjectsSection() {
         <ModalForm
           mode="create"
           onClose={closeModal}
-          onSuccess={fetchProjects}
+          onSuccess={handleProjectSaved}
         />
       )}
     </div>

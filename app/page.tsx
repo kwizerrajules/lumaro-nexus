@@ -45,7 +45,7 @@ export default function Home() {
         const { fetchHouseProjects } = await import('@/utils/productCache');
         const data = await fetchHouseProjects({ limit: 100 });
 
-        const transformedProjects = data.map((project: any) => ({
+        const transform = (project: any) => ({
           id: project.id,
           slug: project.slug,
           title: project.title,
@@ -62,12 +62,21 @@ export default function Home() {
           category: project.category,
           rooms: project.rooms,
           status: project.status,
-        }));
+        });
 
+        const transformedProjects = data.map(transform);
         setProjects(transformedProjects);
         setFilteredProjects(transformedProjects);
         const withImage = transformedProjects.find((p: any) => p.image);
         if (withImage) setHeroImage(withImage.image);
+
+        // Soft revalidate so admin-created plans appear without waiting for TTL
+        void fetchHouseProjects({ limit: 100, force: true }).then((fresh) => {
+          const next = fresh.map(transform);
+          setProjects(next);
+          const img = next.find((p: any) => p.image);
+          if (img) setHeroImage(img.image);
+        });
       } catch (error) {
         console.error('Error loading projects:', error);
         setProjects([]);

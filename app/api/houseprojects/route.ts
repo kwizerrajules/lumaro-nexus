@@ -45,8 +45,8 @@ export async function GET(req: NextRequest) {
       { ...result, types: cachedTypes },
       {
         headers: {
-          // Project JSON can refresh; image bytes themselves are served by Cloudinary CDN
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+          // Short edge cache so new admin uploads show up quickly
+          "Cache-Control": "public, s-maxage=10, stale-while-revalidate=60",
         },
       }
     );
@@ -67,8 +67,8 @@ export async function POST(req: NextRequest) {
     const now = new Date().toISOString();
     const projectData = {
       id: uuidv4(),
-      title: body.title,
-      description: body.description,
+      title: String(body.title || "").trim(),
+      description: String(body.description || "").trim(),
       // Expect Cloudinary (or other CDN) URLs only — no binary/base64 blobs
       thumbnail: body.thumbnail || "",
       additionalImages: Array.isArray(body.additionalImages)
@@ -76,16 +76,25 @@ export async function POST(req: NextRequest) {
         : [],
       status: body.status || "planned",
       rooms: Number(body.rooms) || 0,
-      height: Number(body.height) || 0,
-      width: Number(body.width) || 0,
-      areaSqFt: Number(body.areaSqFt) || 0,
-      location: body.location || "",
+      // Omit zeros — Zod positive() rejects 0; empty optionals must be undefined
+      ...(Number(body.height) > 0 ? { height: Number(body.height) } : {}),
+      ...(Number(body.width) > 0 ? { width: Number(body.width) } : {}),
+      ...(Number(body.areaSqFt) > 0 ? { areaSqFt: Number(body.areaSqFt) } : {}),
+      ...(String(body.location || "").trim()
+        ? { location: String(body.location).trim() }
+        : {}),
       bedrooms: Number(body.bedrooms) || 0,
       bathrooms: Number(body.bathrooms) || 0,
       floors: Number(body.floors) || 0,
-      category: body.category || "",
-      style: body.style || "",
-      type: body.type || "",
+      ...(String(body.category || "").trim()
+        ? { category: String(body.category).trim() }
+        : {}),
+      ...(String(body.style || "").trim()
+        ? { style: String(body.style).trim() }
+        : {}),
+      ...(String(body.type || "").trim().length >= 5
+        ? { type: String(body.type).trim() }
+        : {}),
       price: Number(body.price) || 0,
       views: 0,
       likes: 0,
@@ -97,6 +106,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(project, { status: 201 });
   } catch (error: any) {
     console.error("Error creating project:", error);
+    // Surface Zod issues as readable text for the admin form
+    if (error?.name === "ZodError" || Array.isArray(error?.issues)) {
+      const issues = error.issues || error.errors || [];
+      const message = issues
+        .map((i: { path?: (string | number)[]; message?: string }) => {
+          const field = Array.isArray(i.path) ? i.path.join(".") : "field";
+          return `${field}: ${i.message || "invalid"}`;
+        })
+        .join("; ");
+      return NextResponse.json(
+        { error: message || error.message, issues },
+        { status: 400 }
+      );
+    }
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }

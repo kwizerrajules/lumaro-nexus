@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const CACHE_KEY = "lumaro_houseprojects_v1";
-const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes — keep short so new plans appear sooner
 
 type CachedPayload = {
   items: any[];
@@ -32,7 +32,23 @@ function writeCache(items: any[]) {
   }
 }
 
-/** Merge/replace cache with a fresh list from the API */
+/** Clear catalog cache (call after admin create / update / delete). */
+export function invalidateHouseProjectsCache() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(CACHE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+/** Replace the full catalog snapshot (does not merge — drops deleted items). */
+export function replaceCachedHouseProjects(items: any[]) {
+  if (!Array.isArray(items)) return;
+  writeCache(items);
+}
+
+/** Merge/replace cache entries (detail page upsert). */
 export function setCachedHouseProjects(items: any[]) {
   if (!Array.isArray(items) || items.length === 0) return;
   const existing = readCache()?.items || [];
@@ -89,13 +105,23 @@ export async function fetchHouseProjects(params: {
   }
 
   const res = await axios.get("/api/houseprojects", {
-    params: { limit, category, style, search },
+    params: {
+      limit,
+      category,
+      style,
+      search,
+      // bust shared CDN/browser caches when force-refreshing
+      ...(force ? { _t: Date.now() } : {}),
+    },
+    headers: force
+      ? { "Cache-Control": "no-cache", Pragma: "no-cache" }
+      : undefined,
   });
   const items = res.data?.data || [];
 
-  // Only store the unfiltered catalog snapshot for detail reuse
+  // Full unfiltered catalog replaces the snapshot (so deletes disappear)
   if (!hasFilters) {
-    setCachedHouseProjects(items);
+    replaceCachedHouseProjects(items);
   }
 
   return items;

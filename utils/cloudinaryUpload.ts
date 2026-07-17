@@ -67,11 +67,7 @@ export async function uploadImageToCloudinary(file: File): Promise<string> {
   return result.secure_url as string;
 }
 
-/** Upload many images; preserves order. */
+/** Upload many images in parallel; preserves order. */
 export async function uploadImagesToCloudinary(files: File[]): Promise<string[]> {
-  const urls: string[] = [];
-  for (const file of files) {
-    urls.push(await uploadImageToCloudinary(file));
-  }
-  return urls;
+  return Promise.all(files.map((file) => uploadImageToCloudinary(file)));
 }
