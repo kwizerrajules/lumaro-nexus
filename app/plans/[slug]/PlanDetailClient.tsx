@@ -39,9 +39,26 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState('');
 
+  const syncAccessToken = () => {
+    const token =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('userAccessToken') || ''
+        : '';
+    setAccessToken(token);
+  };
+
   useEffect(() => {
-    const token = localStorage.getItem('userAccessToken');
-    if (token) setAccessToken(token);
+    syncAccessToken();
+    window.addEventListener('lumaro-auth-changed', syncAccessToken);
+    window.addEventListener('storage', syncAccessToken);
+    // Re-check when tab becomes visible (e.g. signed in elsewhere)
+    const onFocus = () => syncAccessToken();
+    window.addEventListener('focus', onFocus);
+    return () => {
+      window.removeEventListener('lumaro-auth-changed', syncAccessToken);
+      window.removeEventListener('storage', syncAccessToken);
+      window.removeEventListener('focus', onFocus);
+    };
   }, []);
 
   useEffect(() => {
@@ -186,7 +203,7 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
 
   return (
     <div className="min-h-screen surface-atmosphere">
-      <Header onAuthSuccess={() => {}} onContactClick={scrollToContact} />
+      <Header onAuthSuccess={syncAccessToken} onContactClick={scrollToContact} />
 
       {loading ? (
         <div className="container mx-auto px-4 py-8">

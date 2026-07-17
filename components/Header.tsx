@@ -57,7 +57,26 @@ const Header: React.FC<HeaderProps> = ({ onAuthSuccess, onContactClick }) => {
 
   useEffect(() => {
     const savedUser = localStorage.getItem('lumaro_user');
-    if (savedUser) setUser(JSON.parse(savedUser));
+    const token = localStorage.getItem('userAccessToken');
+    // Profile without a token is stale — force a fresh sign-in
+    if (savedUser && token) {
+      setUser(JSON.parse(savedUser));
+    } else if (savedUser && !token) {
+      localStorage.removeItem('lumaro_user');
+    }
+
+    const sync = () => {
+      const t = localStorage.getItem('userAccessToken');
+      const u = localStorage.getItem('lumaro_user');
+      if (t && u) setUser(JSON.parse(u));
+      else setUser(null);
+    };
+    window.addEventListener('lumaro-auth-changed', sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('lumaro-auth-changed', sync);
+      window.removeEventListener('storage', sync);
+    };
   }, []);
 
   useEffect(() => {
@@ -89,6 +108,9 @@ const Header: React.FC<HeaderProps> = ({ onAuthSuccess, onContactClick }) => {
     setUser(userData);
     localStorage.setItem('lumaro_user', JSON.stringify(userData));
     setShowAuthModal(false);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('lumaro-auth-changed'));
+    }
     onAuthSuccess(userData);
   };
 
@@ -98,6 +120,9 @@ const Header: React.FC<HeaderProps> = ({ onAuthSuccess, onContactClick }) => {
     localStorage.removeItem('userAccessToken');
     localStorage.removeItem('userRefreshToken');
     setShowUserMenu(false);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('lumaro-auth-changed'));
+    }
   };
 
   const handleNavLinkClick = (callback?: () => void) => {

@@ -108,6 +108,7 @@ const Footer = forwardRef<HTMLElement>(function Footer(_, ref) {
             <h4 className="font-semibold mb-4 text-lg">Legal</h4>
             <ul className="space-y-3 text-sm text-gray-400">
               <li><a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a></li>
+              <li><a href="/cookies" className="hover:text-white transition-colors">Cookie Policy</a></li>
               <li><a href="/terms" className="hover:text-white transition-colors">Terms &amp; Conditions</a></li>
               <li><a href="/tos" className="hover:text-white transition-colors">Terms of Service</a></li>
             </ul>
@@ -168,6 +169,7 @@ const Footer = forwardRef<HTMLElement>(function Footer(_, ref) {
           </p>
           <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500">
             <a href="/privacy" className="hover:text-white transition-colors">Privacy</a>
+            <a href="/cookies" className="hover:text-white transition-colors">Cookies</a>
             <a href="/terms" className="hover:text-white transition-colors">Terms</a>
             <a href="/tos" className="hover:text-white transition-colors">ToS</a>
           </div>

@@ -73,6 +73,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
       country: '',
     };
 
+    localStorage.setItem('lumaro_user', JSON.stringify(normalizedUser));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('lumaro-auth-changed'));
+    }
+
     onAuthSuccess(normalizedUser);
     onClose();
     resetForm();

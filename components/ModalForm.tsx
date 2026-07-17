@@ -28,8 +28,19 @@ const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
   const [accessToken, setAccessToken] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('userAccessToken');
-    if (token) setAccessToken(token);
+    const sync = () => {
+      const token = localStorage.getItem('userAccessToken') || '';
+      setAccessToken(token);
+    };
+    sync();
+    window.addEventListener('lumaro-auth-changed', sync);
+    window.addEventListener('storage', sync);
+    window.addEventListener('focus', sync);
+    return () => {
+      window.removeEventListener('lumaro-auth-changed', sync);
+      window.removeEventListener('storage', sync);
+      window.removeEventListener('focus', sync);
+    };
   }, []);
 
   useEffect(() => {

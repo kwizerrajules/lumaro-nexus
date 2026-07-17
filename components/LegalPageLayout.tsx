@@ -46,6 +46,9 @@ export default function LegalPageLayout({
           <a href="/privacy" className="text-yellow-800 hover:text-yellow-900 font-medium">
             Privacy Policy
           </a>
+          <a href="/cookies" className="text-yellow-800 hover:text-yellow-900 font-medium">
+            Cookie Policy
+          </a>
           <a href="/terms" className="text-yellow-800 hover:text-yellow-900 font-medium">
             Terms &amp; Conditions
           </a>
