@@ -1,16 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs';
 import sharp from 'sharp';
 import type { WatermarkMode } from '@/utils/cloudinaryWatermark';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-const STICKER_PATH = path.join(
-  process.cwd(),
-  'public/brand/lumaro-watermark-sticker.png'
-);
 
 /** Hosts we will fetch and watermark (SSRF guard). */
 const ALLOWED_HOST_SUFFIXES = [
@@ -71,40 +64,67 @@ function parseMode(value: string | null): WatermarkMode {
   return value === 'light' ? 'light' : 'preview';
 }
 
-async function prepareSticker(
-  canvasWidth: number,
+/**
+ * One full-frame overlay: solid "Lumaro Nexus" text on a diagonal grid.
+ * Alpha is scaled in raw pixels (avoids SVG opacity / dest-in box artifacts).
+ */
+async function buildTextOverlay(
+  width: number,
+  height: number,
   mode: WatermarkMode
-): Promise<Buffer | null> {
-  if (!fs.existsSync(STICKER_PATH)) return null;
-
-  const stickerWidth = Math.max(
-    80,
-    Math.round(canvasWidth * (mode === 'light' ? 0.2 : 0.24))
+): Promise<Buffer> {
+  const fontSize = Math.max(
+    22,
+    Math.round(Math.min(width, height) * (mode === 'light' ? 0.05 : 0.06))
   );
-  const opacity = mode === 'light' ? 0.28 : 0.4;
+  const alphaScale = mode === 'light' ? 0.4 : 0.52;
+  // Wide spacing so each phrase is readable (not jammed into boxes)
+  const stepX = Math.round(fontSize * 11);
+  const stepY = Math.round(fontSize * 5.5);
+  const cols = Math.ceil((width * 1.4) / stepX) + 1;
+  const rows = Math.ceil((height * 1.4) / stepY) + 1;
 
-  const resized = await sharp(STICKER_PATH)
-    .resize({ width: stickerWidth, withoutEnlargement: true })
-    .ensureAlpha()
-    .png()
-    .toBuffer();
+  const marks: string[] = [];
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = Math.round(col * stepX - width * 0.1);
+      const y = Math.round(row * stepY - height * 0.05);
+      marks.push(
+        `<text x="${x}" y="${y}" fill="#FFFFFF">Lumaro Nexus</text>`
+      );
+    }
+  }
 
-  // Reduce opacity via dest-in with a solid alpha tile
-  return sharp(resized)
+  const svg = Buffer.from(
+    `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+      <g font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-size="${fontSize}"
+         font-weight="700" text-anchor="middle"
+         transform="rotate(-28 ${width / 2} ${height / 2})">
+        ${marks.join('\n')}
+      </g>
+    </svg>`
+  );
+
+  const { data, info } = await sharp(svg)
     .ensureAlpha()
-    .composite([
-      {
-        input: Buffer.from([
-          255,
-          255,
-          255,
-          Math.round(255 * opacity),
-        ]),
-        raw: { width: 1, height: 1, channels: 4 },
-        tile: true,
-        blend: 'dest-in',
-      },
-    ])
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  // Scale alpha only — keep RGB pure white (no dark fringe boxes)
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = 255;
+    data[i + 1] = 255;
+    data[i + 2] = 255;
+    data[i + 3] = Math.round(data[i + 3] * alphaScale);
+  }
+
+  return sharp(data, {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: 4,
+    },
+  })
     .png()
     .toBuffer();
 }
@@ -143,37 +163,8 @@ async function buildWatermarkedBuffer(
   const height = base.info.height;
   const composites: Array<{ input: Buffer; left: number; top: number }> = [];
 
-  const sticker = await prepareSticker(width, mode);
-  if (sticker) {
-    const sm = await sharp(sticker).metadata();
-    const sw = sm.width || 100;
-    const sh = sm.height || 40;
-    const padX = Math.max(10, Math.round(width * 0.02));
-    const padY = Math.max(10, Math.round(height * 0.02));
-
-    const positions = [
-      { left: padX, top: padY },
-      { left: Math.round((width - sw) / 2), top: padY },
-      { left: Math.max(padX, width - sw - padX), top: padY },
-      { left: padX, top: Math.max(padY, height - sh - padY) },
-      {
-        left: Math.round((width - sw) / 2),
-        top: Math.max(padY, height - sh - padY),
-      },
-      {
-        left: Math.max(padX, width - sw - padX),
-        top: Math.max(padY, height - sh - padY),
-      },
-    ];
-
-    for (const pos of positions) {
-      composites.push({
-        input: sticker,
-        left: Math.max(0, pos.left),
-        top: Math.max(0, pos.top),
-      });
-    }
-  }
+  const overlay = await buildTextOverlay(width, height, mode);
+  composites.push({ input: overlay, left: 0, top: 0 });
 
   if (mode === 'preview') {
     const badge = previewBadge(width);
@@ -261,7 +252,8 @@ export async function GET(req: NextRequest) {
       headers: {
         'Content-Type': outType,
         'Cache-Control':
-          'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
+          'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
+        'X-Watermark-Version': '6',
         'X-Content-Type-Options': 'nosniff',
       },
     });

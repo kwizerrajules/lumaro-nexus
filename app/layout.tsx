@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
 
   description:
-    "Quality house plans and clear construction documents from Kigali — prepared with Rwanda housing standards in mind, at fair prices.",
+    "Lumaro Nexus is a Kigali-based house-plan platform: browse ready designs, request custom plans, and order construction documents prepared for Rwanda District One Stop Centre and BPMIS requirements. Sign in to manage enquiries and orders.",
 
   applicationName: "Lumaro Nexus",
   authors: [{ name: "Lumaro Nexus", url: "https://lumaronexus.com" }],
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     type: "website",
     title: "Lumaro Nexus | House Plans for Rwanda",
     description:
-      "Quality designs. Clear construction documents. Compliant with Rwanda housing standards. Fair pricing.",
+      "Lumaro Nexus helps you browse and order house plans for Rwanda — ready catalog designs, custom briefs, and construction documents prepared for One Stop Centre and BPMIS.",
     url: "https://lumaronexus.com",
     siteName: "Lumaro Nexus",
     locale: "en_US",

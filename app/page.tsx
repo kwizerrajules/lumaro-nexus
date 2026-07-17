@@ -200,11 +200,13 @@ export default function Home() {
               Lumaro Nexus
             </p>
             <h1 className="animate-fade-in-up-delay font-display text-2xl sm:text-3xl md:text-4xl font-medium text-white/95 leading-snug mb-4">
-              House plans for Rwanda sites
+              House plans and construction documents for Rwanda
             </h1>
-            <p className="animate-fade-in-up-delay-2 text-base md:text-lg text-neutral-300 max-w-lg leading-relaxed mb-8">
-              Quality designs. Clear construction documents. Compliant with Rwanda
-              housing standards. Fair pricing.
+            <p className="animate-fade-in-up-delay-2 text-base md:text-lg text-neutral-300 max-w-xl leading-relaxed mb-8">
+              Lumaro Nexus is a Kigali-based platform to browse ready house plans, request
+              custom designs, and order architectural files prepared for District One Stop
+              Centre and BPMIS accreditation. Create an account to save enquiries and manage
+              your orders.
             </p>
             <div className="animate-fade-in-up-delay-2 flex flex-col sm:flex-row gap-3">
               <a href="#all_house_plans" className="btn-primary">
@@ -221,6 +223,37 @@ export default function Home() {
               </button>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* App purpose — clear for visitors and Google OAuth branding review */}
+      <section
+        id="about-lumaro-nexus"
+        className="border-b border-brand-line bg-stone-50 py-14 md:py-16"
+        aria-labelledby="purpose-heading"
+      >
+        <div className="container mx-auto px-4 max-w-3xl text-center">
+          <p className="text-amber-800 text-xs font-semibold tracking-[0.18em] uppercase mb-3">
+            About this application
+          </p>
+          <h2
+            id="purpose-heading"
+            className="font-display text-3xl md:text-4xl font-semibold text-neutral-900 mb-4"
+          >
+            What Lumaro Nexus is for
+          </h2>
+          <p className="text-neutral-700 text-base md:text-lg leading-relaxed mb-4">
+            <strong>Lumaro Nexus</strong> helps homeowners, builders, and developers in
+            Rwanda find and order house plans online. You can browse our catalog, open a
+            plan for full details, message us on WhatsApp to purchase a package, or start a
+            custom design brief for your plot.
+          </p>
+          <p className="text-neutral-600 text-sm md:text-base leading-relaxed">
+            Signing in (including with Google) lets you create and track plan enquiries,
+            submit custom plan requests, and keep your project details in one place. We
+            prepare construction documents with Rwanda Building Code, District One Stop
+            Centre, and BPMIS requirements in mind.
+          </p>
         </div>
       </section>
 

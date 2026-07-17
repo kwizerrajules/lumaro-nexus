@@ -73,6 +73,8 @@ function isWatermarkProxyUrl(url: string): boolean {
   );
 }
 
+const WATERMARK_PROXY_VERSION = '6';
+
 /**
  * Absolute or site-relative URL for the server-side watermark proxy.
  * Keeps the original URL in a query param so Save-as downloads marked bytes.
@@ -81,9 +83,23 @@ export function watermarkProxyUrl(
   url: string,
   mode: WatermarkMode = 'preview'
 ): string {
+  // If we were given an existing proxy URL, unwrap to the source image
+  let source = url;
+  if (isWatermarkProxyUrl(url)) {
+    try {
+      const q = url.includes('?') ? url.slice(url.indexOf('?') + 1) : '';
+      const params = new URLSearchParams(q);
+      const inner = params.get('url');
+      if (inner) source = inner;
+    } catch {
+      // keep as-is
+    }
+  }
+
   const params = new URLSearchParams({
-    url,
+    url: source,
     mode,
+    v: WATERMARK_PROXY_VERSION,
   });
   return `/api/watermarked?${params.toString()}`;
 }
@@ -101,7 +117,10 @@ export function watermarkImageUrl(
   const trimmed = url.trim();
   if (!trimmed) return '';
 
-  if (isWatermarkProxyUrl(trimmed)) return trimmed;
+  // Always re-wrap proxy URLs so version bumps clear stale caches
+  if (isWatermarkProxyUrl(trimmed)) {
+    return watermarkProxyUrl(trimmed, mode);
+  }
 
   // Cloudinary delivery URL — bake overlays into the CDN URL
   if (isCloudinaryUploadUrl(trimmed)) {
