@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyAccessToken } from "@/src/security/auth";
 import { CustomPlanModel } from "@/src/lib/models/cutomPLan.model";
+import { verifyTurnstileToken } from "@/src/lib/turnstile";
 
 export async function POST(req: Request) {
   try {
@@ -17,10 +18,21 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
+    const { turnstileToken, ...planFields } = body;
+
+    const ip =
+      req.headers.get("cf-connecting-ip") ||
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      null;
+
+    const turnstile = await verifyTurnstileToken(turnstileToken, ip);
+    if (!turnstile.ok) {
+      return NextResponse.json({ error: turnstile.message }, { status: 400 });
+    }
 
     const plan = await CustomPlanModel.create({
-      ...body,
-      user_id: user.id, // enforce ownership
+      ...planFields,
+      user_id: user.id,
     });
 
     return NextResponse.json(plan, { status: 201 });

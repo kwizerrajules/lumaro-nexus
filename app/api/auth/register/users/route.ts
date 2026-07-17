@@ -1,13 +1,28 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createUserSchema } from '../../../../../src/schemas/users.schema';
 import { UsersModel } from '../../../../../src/lib/models/users.model';
 import { createAccessToken, createRefreshToken } from '@/src/security/auth';
 import { UserPayload } from '@/src/types/jwt.payload';
+import { verifyTurnstileToken } from '@/src/lib/turnstile';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    const ip =
+      request.headers.get('cf-connecting-ip') ||
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      null;
+
+    const turnstile = await verifyTurnstileToken(body.turnstileToken, ip);
+    if (!turnstile.ok) {
+      return NextResponse.json(
+        { success: false, message: turnstile.message },
+        { status: 400 }
+      );
+    }
+
     const parsedData = createUserSchema.parse({
       names: body.names,
       email: body.email,

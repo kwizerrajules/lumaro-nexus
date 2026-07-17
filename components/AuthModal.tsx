@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import GoogleSignInButton from './GoogleSignInButton';
+import TurnstileWidget, { resetTurnstile } from './TurnstileWidget';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -23,6 +24,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRequired = Boolean(
+    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()
+  );
   const [formData, setFormData] = useState({
     email: '',
     names: '',
@@ -42,6 +47,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
       agreeToTerms: false,
     });
     setError('');
+    setTurnstileToken(null);
+    resetTurnstile();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -96,6 +103,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
         setError('Phone number cannot exceed 20 characters');
         return;
       }
+      if (turnstileRequired && !turnstileToken) {
+        setError('Please complete the human verification check.');
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -108,6 +119,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
             names: formData.names.trim(),
             phone: formData.phone.trim() || undefined,
             password: formData.password,
+            turnstileToken: turnstileToken || undefined,
           };
 
       const response = await fetch(endpoint, {
@@ -195,6 +207,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
               onClick={() => {
                 setIsLogin(true);
                 setError('');
+                setTurnstileToken(null);
               }}
               className={`flex-1 py-3 px-4 rounded-md font-semibold transition-all ${
                 isLogin
@@ -209,6 +222,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
               onClick={() => {
                 setIsLogin(false);
                 setError('');
+                setTurnstileToken(null);
+                resetTurnstile();
               }}
               className={`flex-1 py-3 px-4 rounded-md font-semibold transition-all ${
                 !isLogin
@@ -352,9 +367,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
               </div>
             )}
 
+            {!isLogin && (
+              <TurnstileWidget
+                theme="light"
+                onToken={setTurnstileToken}
+              />
+            )}
+
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={
+                isSubmitting ||
+                (!isLogin && turnstileRequired && !turnstileToken)
+              }
               className="w-full bg-yellow-900 text-white py-4 px-6 rounded-lg font-semibold hover:bg-yellow-700 transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting

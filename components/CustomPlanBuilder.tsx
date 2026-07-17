@@ -1,6 +1,7 @@
 'use client';
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
+import TurnstileWidget, { resetTurnstile } from '@/components/TurnstileWidget';
 
 interface Room {
   id: string;
@@ -29,6 +30,10 @@ const CustomPlanBuilder: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedStyle, setSelectedStyle] = useState('');
   const [optionsLoading, setOptionsLoading] = useState(true);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRequired = Boolean(
+    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()
+  );
 
   useEffect(() => {
     const stored = localStorage.getItem('userAccessToken');
@@ -168,15 +173,29 @@ const CustomPlanBuilder: React.FC = () => {
       return;
     }
 
+    if (turnstileRequired && !turnstileToken) {
+      setError('Please complete the human verification check.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      await axios.post('/api/custom-plan', payload, {
-        headers: {
-          Authorization: `Bearer ${currentToken}`,
-        },
-      });
+      await axios.post(
+        '/api/custom-plan',
+        { ...payload, turnstileToken: turnstileToken || undefined },
+        {
+          headers: {
+            Authorization: `Bearer ${currentToken}`,
+          },
+        }
+      );
       setSuccess(true);
+      setTurnstileToken(null);
+      resetTurnstile();
     } catch (err) {
       console.error('Submission failed:', err);
+      setTurnstileToken(null);
+      resetTurnstile();
       const status = axios.isAxiosError(err) ? err.response?.status : undefined;
       if (status === 401 || status === 403) {
         setError('Your session has expired. Please log in again.');
@@ -372,9 +391,14 @@ const CustomPlanBuilder: React.FC = () => {
       )}
 
       <div className="border-t border-gray-200 pt-6">
+        <TurnstileWidget
+          theme="light"
+          onToken={setTurnstileToken}
+          className="mb-4"
+        />
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || (turnstileRequired && !turnstileToken)}
           className="w-full btn-primary py-4 text-lg disabled:bg-gray-400 disabled:hover:bg-gray-400"
         >
           {isLoading ? 'Processing...' : 'SUBMIT CUSTOM PLAN'}

@@ -7,6 +7,7 @@ import {
   Clock,
 } from '@phosphor-icons/react';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import TurnstileWidget, { resetTurnstile } from '@/components/TurnstileWidget';
 
 const ContactUs: React.FC = () => {
   const { settings } = useSiteSettings();
@@ -17,6 +18,10 @@ const ContactUs: React.FC = () => {
     phone: '',
     message: '',
   });
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRequired = Boolean(
+    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim()
+  );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState('');
@@ -35,6 +40,12 @@ const ContactUs: React.FC = () => {
     setIsSubmitting(true);
     setFeedback('');
 
+    if (turnstileRequired && !turnstileToken) {
+      setFeedback('Please complete the human verification check.');
+      setIsSubmitting(false);
+      return;
+    }
+
     const messageBody = form.subject
       ? `Subject: ${form.subject}\n\n${form.message}`
       : form.message;
@@ -48,17 +59,28 @@ const ContactUs: React.FC = () => {
           email: form.email,
           phone: form.phone || undefined,
           message: messageBody,
+          turnstileToken: turnstileToken || undefined,
         }),
       });
+
+      const result = await response.json().catch(() => ({}));
 
       if (response.ok) {
         setFeedback('Your message has been sent successfully.');
         setForm({ names: '', email: '', subject: '', phone: '', message: '' });
+        setTurnstileToken(null);
+        resetTurnstile();
       } else {
-        setFeedback('Sending failed. Please try again.');
+        setFeedback(
+          result.error || 'Sending failed. Please try again.'
+        );
+        setTurnstileToken(null);
+        resetTurnstile();
       }
     } catch {
       setFeedback('An unexpected error occurred. Please try again.');
+      setTurnstileToken(null);
+      resetTurnstile();
     } finally {
       setIsSubmitting(false);
     }
@@ -199,9 +221,17 @@ const ContactUs: React.FC = () => {
                 />
               </div>
 
+              <TurnstileWidget
+                theme="dark"
+                onToken={setTurnstileToken}
+                className="rounded-lg overflow-hidden"
+              />
+
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={
+                  isSubmitting || (turnstileRequired && !turnstileToken)
+                }
                 className="w-full rounded-lg bg-amber-700 hover:bg-amber-600 text-white font-semibold py-3.5 px-6 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Sending...' : 'Send Message'}

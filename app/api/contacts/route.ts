@@ -1,17 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ContactUsModel } from "@/src/lib/models/contactUs.model";
 import { roleMiddleware } from "@/src/middleware/auth";
+import { verifyTurnstileToken } from "@/src/lib/turnstile";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { names, email, phone, message } = body;
+    const { names, email, phone, message, turnstileToken } = body;
 
     if (!names || !email || !message) {
       return NextResponse.json(
         { error: "Names, email, and message are required." },
         { status: 400 }
       );
+    }
+
+    const ip =
+      request.headers.get("cf-connecting-ip") ||
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      null;
+
+    const turnstile = await verifyTurnstileToken(turnstileToken, ip);
+    if (!turnstile.ok) {
+      return NextResponse.json({ error: turnstile.message }, { status: 400 });
     }
 
     await ContactUsModel.insertContactUs({ names, email, phone, message });
