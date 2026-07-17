@@ -16,7 +16,7 @@ function isWatermarkProxyUrl(url: string): boolean {
   );
 }
 
-const WATERMARK_PROXY_VERSION = '7';
+const WATERMARK_PROXY_VERSION = '8';
 
 /**
  * Absolute or site-relative URL for the server-side watermark proxy.

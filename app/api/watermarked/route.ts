@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import path from 'path';
+import fs from 'fs';
 import sharp from 'sharp';
 import type { WatermarkMode } from '@/utils/cloudinaryWatermark';
 
@@ -16,6 +18,30 @@ const ALLOWED_HOST_SUFFIXES = [
 
 const MAX_UPSTREAM_BYTES = 12 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 20_000;
+
+const FONT_PATH = path.join(process.cwd(), 'public/fonts/Geist-Bold.ttf');
+const STICKER_PATH = path.join(
+  process.cwd(),
+  'public/brand/lumaro-watermark-sticker.png'
+);
+
+let cachedFontDataUri: string | null = null;
+
+/**
+ * Embed Geist Bold as a data URI so SVG text works on Vercel
+ * (serverless images have no system fonts like Arial/DejaVu).
+ */
+function getFontDataUri(): string | null {
+  if (cachedFontDataUri) return cachedFontDataUri;
+  try {
+    if (!fs.existsSync(FONT_PATH)) return null;
+    const buf = fs.readFileSync(FONT_PATH);
+    cachedFontDataUri = `data:font/ttf;base64,${buf.toString('base64')}`;
+    return cachedFontDataUri;
+  } catch {
+    return null;
+  }
+}
 
 function isPrivateHostname(hostname: string): boolean {
   const h = hostname.toLowerCase();
@@ -37,7 +63,6 @@ function isPrivateHostname(hostname: string): boolean {
 function isAllowedHost(hostname: string, requestHost: string): boolean {
   const h = hostname.toLowerCase();
   const rh = requestHost.toLowerCase().split(':')[0];
-  // Same-origin (including localhost in dev) is always fine
   if (h === rh) return true;
   if (isPrivateHostname(h) && h !== rh) return false;
   return ALLOWED_HOST_SUFFIXES.some(
@@ -64,61 +89,143 @@ function parseMode(value: string | null): WatermarkMode {
   return value === 'light' ? 'light' : 'preview';
 }
 
+/** Count non-transparent pixels — used to detect font/tofu failures. */
+async function opaquePixelCount(png: Buffer): Promise<number> {
+  const { data } = await sharp(png)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  let n = 0;
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] > 20) n++;
+  }
+  return n;
+}
+
 /**
- * One full-frame overlay: diagonal "Lumaro Nexus" with dark underlay + white
- * fill so the mark stays readable on light brick and dark roofs.
+ * Diagonal "Lumaro Nexus" using an embedded TTF (works on Vercel).
+ * Falls back to tiling the pre-rendered PNG sticker if fonts fail.
  */
 async function buildTextOverlay(
   width: number,
   height: number,
   mode: WatermarkMode
 ): Promise<Buffer> {
-  const fontSize = Math.max(
-    26,
-    Math.round(Math.min(width, height) * (mode === 'light' ? 0.055 : 0.07))
-  );
+  const fontDataUri = getFontDataUri();
   const alphaScale = mode === 'light' ? 0.55 : 0.72;
-  const stepX = Math.round(fontSize * 9.5);
-  const stepY = Math.round(fontSize * 4.8);
-  const cols = Math.ceil((width * 1.5) / stepX) + 1;
-  const rows = Math.ceil((height * 1.5) / stepY) + 1;
 
-  const marks: string[] = [];
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const x = Math.round(col * stepX - width * 0.12);
-      const y = Math.round(row * stepY - height * 0.06);
-      // Dark shadow first (contrast), then white brand text
-      marks.push(
-        `<text x="${x + 2}" y="${y + 2}" fill="#0a0a0a">Lumaro Nexus</text>`
-      );
-      marks.push(
-        `<text x="${x}" y="${y}" fill="#FFFFFF">Lumaro Nexus</text>`
-      );
+  if (fontDataUri) {
+    const fontSize = Math.max(
+      26,
+      Math.round(Math.min(width, height) * (mode === 'light' ? 0.055 : 0.07))
+    );
+    const stepX = Math.round(fontSize * 9.5);
+    const stepY = Math.round(fontSize * 4.8);
+    const cols = Math.ceil((width * 1.5) / stepX) + 1;
+    const rows = Math.ceil((height * 1.5) / stepY) + 1;
+
+    const marks: string[] = [];
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const x = Math.round(col * stepX - width * 0.12);
+        const y = Math.round(row * stepY - height * 0.06);
+        marks.push(
+          `<text x="${x + 2}" y="${y + 2}" fill="#0a0a0a">Lumaro Nexus</text>`
+        );
+        marks.push(
+          `<text x="${x}" y="${y}" fill="#FFFFFF">Lumaro Nexus</text>`
+        );
+      }
     }
+
+    const svg = Buffer.from(
+      `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <style>
+            @font-face {
+              font-family: 'GeistWm';
+              src: url('${fontDataUri}') format('truetype');
+            }
+          </style>
+        </defs>
+        <g font-family="GeistWm, sans-serif" font-size="${fontSize}"
+           font-weight="700" text-anchor="middle"
+           transform="rotate(-28 ${width / 2} ${height / 2})">
+          ${marks.join('\n')}
+        </g>
+      </svg>`
+    );
+
+    const { data, info } = await sharp(svg)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    for (let i = 0; i < data.length; i += 4) {
+      data[i + 3] = Math.round(data[i + 3] * alphaScale);
+    }
+
+    const overlay = await sharp(data, {
+      raw: {
+        width: info.width,
+        height: info.height,
+        channels: 4,
+      },
+    })
+      .png()
+      .toBuffer();
+
+    // If text rendered (font worked), use it; otherwise fall through to PNG tiles
+    const pixels = await opaquePixelCount(overlay);
+    if (pixels > 500) return overlay;
+    console.warn(
+      '[watermarked] SVG font rendered too few pixels — using PNG sticker fallback'
+    );
   }
 
-  const svg = Buffer.from(
-    `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <g font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-size="${fontSize}"
-         font-weight="700" text-anchor="middle"
-         transform="rotate(-28 ${width / 2} ${height / 2})">
-        ${marks.join('\n')}
-      </g>
-    </svg>`
-  );
+  return buildPngStickerOverlay(width, height, mode);
+}
 
-  const { data, info } = await sharp(svg)
+/** Font-free fallback: tile the pre-rendered transparent sticker PNG. */
+async function buildPngStickerOverlay(
+  width: number,
+  height: number,
+  mode: WatermarkMode
+): Promise<Buffer> {
+  if (!fs.existsSync(STICKER_PATH)) {
+    console.error('[watermarked] Sticker missing:', STICKER_PATH);
+    return sharp({
+      create: {
+        width,
+        height,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      },
+    })
+      .png()
+      .toBuffer();
+  }
+
+  const targetW = Math.max(
+    140,
+    Math.round(width * (mode === 'light' ? 0.3 : 0.36))
+  );
+  const opacity = mode === 'light' ? 0.5 : 0.7;
+
+  let tile = await sharp(STICKER_PATH)
+    .resize({ width: targetW, withoutEnlargement: true })
+    .ensureAlpha()
+    .png()
+    .toBuffer();
+
+  const { data, info } = await sharp(tile)
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
-
-  // Fade the whole overlay uniformly (keeps RGB of both white + dark glyphs)
-  for (let i = 0; i < data.length; i += 4) {
-    data[i + 3] = Math.round(data[i + 3] * alphaScale);
+  for (let i = 3; i < data.length; i += 4) {
+    data[i] = Math.round(data[i] * opacity);
   }
-
-  return sharp(data, {
+  tile = await sharp(data, {
     raw: {
       width: info.width,
       height: info.height,
@@ -127,20 +234,65 @@ async function buildTextOverlay(
   })
     .png()
     .toBuffer();
+
+  const rotated = await sharp(tile)
+    .rotate(-28, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer();
+  const rm = await sharp(rotated).metadata();
+  const rw = rm.width || targetW;
+  const rh = rm.height || Math.round(targetW * 0.35);
+
+  const stepX = Math.round(rw * 1.05);
+  const stepY = Math.round(rh * 1.25);
+  const composites: Array<{ input: Buffer; left: number; top: number }> = [];
+
+  for (let y = -rh; y < height + rh; y += stepY) {
+    for (let x = -rw; x < width + rw; x += stepX) {
+      composites.push({
+        input: rotated,
+        left: Math.round(x),
+        top: Math.round(y),
+      });
+    }
+  }
+
+  return sharp({
+    create: {
+      width,
+      height,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite(composites)
+    .png()
+    .toBuffer();
 }
 
-function previewBadge(canvasWidth: number): Buffer {
+async function previewBadge(canvasWidth: number): Promise<Buffer> {
   const badgeW = Math.min(140, Math.max(90, Math.round(canvasWidth * 0.12)));
   const badgeH = Math.max(22, Math.round(badgeW * 0.28));
   const fontSize = Math.max(11, Math.round(badgeH * 0.55));
-  return Buffer.from(
-    `<svg width="${badgeW}" height="${badgeH}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100%" height="100%" rx="3" fill="rgba(23,23,23,0.78)"/>
-      <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle"
-        font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}"
-        font-weight="700" fill="#FBBF24" letter-spacing="1.5">PREVIEW</text>
-    </svg>`
-  );
+  const fontDataUri = getFontDataUri();
+  const fontFace = fontDataUri
+    ? `@font-face{font-family:'GeistWm';src:url('${fontDataUri}') format('truetype');}`
+    : '';
+  const fontFamily = fontDataUri ? 'GeistWm, sans-serif' : 'sans-serif';
+
+  return sharp(
+    Buffer.from(
+      `<svg width="${badgeW}" height="${badgeH}" xmlns="http://www.w3.org/2000/svg">
+        <defs><style>${fontFace}</style></defs>
+        <rect width="100%" height="100%" rx="3" fill="rgba(23,23,23,0.78)"/>
+        <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle"
+          font-family="${fontFamily}" font-size="${fontSize}"
+          font-weight="700" fill="#FBBF24" letter-spacing="1.5">PREVIEW</text>
+      </svg>`
+    )
+  )
+    .png()
+    .toBuffer();
 }
 
 async function buildWatermarkedBuffer(
@@ -167,7 +319,7 @@ async function buildWatermarkedBuffer(
   composites.push({ input: overlay, left: 0, top: 0 });
 
   if (mode === 'preview') {
-    const badge = previewBadge(width);
+    const badge = await previewBadge(width);
     const bm = await sharp(badge).metadata();
     const bw = bm.width || 100;
     const bh = bm.height || 28;
@@ -210,7 +362,6 @@ export async function GET(req: NextRequest) {
         Accept: 'image/*,*/*;q=0.8',
       },
       redirect: 'follow',
-      // Fresh enough for previews; browsers still cache our response
       next: { revalidate: 86400 },
     });
     clearTimeout(timer);
@@ -253,7 +404,7 @@ export async function GET(req: NextRequest) {
         'Content-Type': outType,
         'Cache-Control':
           'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-        'X-Watermark-Version': '7',
+        'X-Watermark-Version': '8',
         'X-Content-Type-Options': 'nosniff',
       },
     });
