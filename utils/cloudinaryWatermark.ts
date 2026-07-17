@@ -1,10 +1,9 @@
 /**
- * Bake a Lumaro Nexus watermark into Cloudinary delivery URLs.
+ * Bake a Lumaro Nexus watermark into public image URLs.
  *
- * Original product uploads stay clean in Cloudinary / the database.
- * Public pages request a transformed URL so "Save image" still shows the mark.
- *
- * Sticker asset: brand/lumaro-watermark (auto-uploaded via ensureWatermark).
+ * - Cloudinary: inject overlay transforms into the delivery URL.
+ * - Other hosts: route through /api/watermarked so the bytes themselves
+ *   include the mark (CSS overlays do not survive "Save image as").
  */
 
 import { CLOUDINARY_WATERMARK_PUBLIC_ID } from '@/src/lib/watermarkPublicId';
@@ -19,7 +18,6 @@ function logoGridTransform(mode: WatermarkMode): string {
   const opacity = mode === 'light' ? 22 : 34;
   const width = mode === 'light' ? 0.2 : 0.24;
 
-  // Six spots: top row + bottom row (covers the whole frame)
   const spots = [
     'g_north_west,x_16,y_16',
     'g_north,y_16',
@@ -54,7 +52,6 @@ function textTransforms(mode: WatermarkMode): string {
 
 /** True if this URL already includes our tiled watermark transforms. */
 function alreadyWatermarked(url: string): boolean {
-  // New marker: six-spot grid uses north_west + south_east together
   return (
     url.includes('g_north_west') &&
     url.includes('g_south_east') &&
@@ -62,9 +59,38 @@ function alreadyWatermarked(url: string): boolean {
   );
 }
 
+function isCloudinaryUploadUrl(url: string): boolean {
+  return (
+    url.includes('res.cloudinary.com') && url.includes('/image/upload/')
+  );
+}
+
+/** Already pointing at our bake-in proxy. */
+function isWatermarkProxyUrl(url: string): boolean {
+  return (
+    url.includes('/api/watermarked') ||
+    url.startsWith('/api/watermarked')
+  );
+}
+
 /**
- * Return a Cloudinary URL with watermark transforms injected.
- * Non-Cloudinary URLs are returned unchanged (use CSS sticker as fallback).
+ * Absolute or site-relative URL for the server-side watermark proxy.
+ * Keeps the original URL in a query param so Save-as downloads marked bytes.
+ */
+export function watermarkProxyUrl(
+  url: string,
+  mode: WatermarkMode = 'preview'
+): string {
+  const params = new URLSearchParams({
+    url,
+    mode,
+  });
+  return `/api/watermarked?${params.toString()}`;
+}
+
+/**
+ * Return a URL whose image bytes include the Lumaro watermark.
+ * Non-remote / empty inputs are returned unchanged.
  */
 export function watermarkImageUrl(
   url: string | null | undefined,
@@ -73,28 +99,43 @@ export function watermarkImageUrl(
   if (!url) return '';
 
   const trimmed = url.trim();
-  if (!trimmed.includes('res.cloudinary.com') || !trimmed.includes('/image/upload/')) {
-    return trimmed;
+  if (!trimmed) return '';
+
+  if (isWatermarkProxyUrl(trimmed)) return trimmed;
+
+  // Cloudinary delivery URL — bake overlays into the CDN URL
+  if (isCloudinaryUploadUrl(trimmed)) {
+    if (alreadyWatermarked(trimmed)) return trimmed;
+
+    const marker = '/image/upload/';
+    const idx = trimmed.indexOf(marker);
+    if (idx === -1) return trimmed;
+
+    const before = trimmed.slice(0, idx + marker.length);
+    let after = trimmed.slice(idx + marker.length).replace(/^\/+/, '');
+
+    // Drop older single-center watermark segments so we don't stack marks
+    after = after.replace(
+      /l_brand:lumaro-watermark[^/]*\/fl_layer_apply(?:,g_center)?\/?/g,
+      ''
+    );
+
+    const transforms = textTransforms(mode);
+    // Do NOT collapse all "//" — that breaks "https://"
+    return `${before}${transforms}/${after}`;
   }
 
-  if (alreadyWatermarked(trimmed)) return trimmed;
+  // Absolute http(s) image on another host → server-side bake-in proxy
+  if (/^https?:\/\//i.test(trimmed)) {
+    return watermarkProxyUrl(trimmed, mode);
+  }
 
-  const marker = '/image/upload/';
-  const idx = trimmed.indexOf(marker);
-  if (idx === -1) return trimmed;
+  // Site-relative public assets
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+    return watermarkProxyUrl(trimmed, mode);
+  }
 
-  const before = trimmed.slice(0, idx + marker.length);
-  let after = trimmed.slice(idx + marker.length);
-
-  // Drop older single-center watermark segments so we don't stack marks
-  after = after.replace(
-    /l_brand:lumaro-watermark[^/]*\/fl_layer_apply(?:,g_center)?\/?/g,
-    ''
-  );
-
-  const transforms = textTransforms(mode);
-
-  return `${before}${transforms}/${after}`.replace(/\/{2,}/g, '/');
+  return trimmed;
 }
 
 /** Map a list of image URLs through watermarking. */

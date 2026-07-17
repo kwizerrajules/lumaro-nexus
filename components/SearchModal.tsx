@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import WatermarkedImage from '@/components/WatermarkedImage';
 import {
   MagnifyingGlass,
   X,
@@ -197,14 +197,15 @@ const SearchModal: React.FC<SearchModalProps> = ({
                   >
                     <div className="relative w-20 h-16 shrink-0 overflow-hidden bg-stone-100">
                       {house.image ? (
-                        <Image
+                        <WatermarkedImage
                           src={house.image}
                           alt=""
                           fill
                           className="object-cover"
                           sizes="80px"
                           loading="lazy"
-                          unoptimized
+                          mode="light"
+                          hideSticker
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-stone-300">

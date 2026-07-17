@@ -20,11 +20,11 @@ const FIELDS: Array<{
   { key: 'helpEmail', label: 'Help / support email', type: 'email' },
   { key: 'websiteUrl', label: 'Website URL', hint: 'Full URL with https://' },
   { key: 'websiteDisplay', label: 'Website display text', hint: 'e.g. www.lumaronexus.com' },
-  { key: 'phoneDisplay', label: 'Phone display', hint: 'Shown on the site, e.g. +250 791 756 343' },
+  { key: 'phoneDisplay', label: 'Phone display', hint: 'Shown on the site, e.g. +250 787 369 630' },
   {
     key: 'whatsappNumber',
     label: 'WhatsApp number',
-    hint: 'Digits only with country code, e.g. 250791756343',
+    hint: 'Digits only with country code, e.g. 250787369630',
   },
   { key: 'address', label: 'Address / location' },
   { key: 'availability', label: 'Availability hours' },

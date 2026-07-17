@@ -232,8 +232,9 @@ export default function Home() {
               How we work with you
             </h2>
             <p className="text-neutral-600 text-sm md:text-base">
-              From picking a plan to sitting with your builder — and preparing files
-              you can take to a District One Stop Centre or BPMIS.
+              From picking your plan to Professional preparation of architectural files
+              that comply with District One Stop Centre and BPMIS accreditation
+              requirements.
             </p>
           </div>
           <div className="flex md:grid md:grid-cols-3 gap-4 md:gap-8 max-w-5xl mx-auto overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-3 md:pb-0 -mx-4 px-4 md:mx-auto md:px-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
@@ -244,14 +245,14 @@ export default function Home() {
                 text: 'Filter by bedrooms, plot size, and style — or open any plan for full specs and images.',
               },
               {
-                icon: FileText,
-                title: '2. Review documents',
-                text: 'You get clear construction drawings prepared with the Rwanda Building Code and local permitting in mind.',
+                icon: ChatCircleDots,
+                title: '2. Order on WhatsApp',
+                text: 'Message us to confirm the package, ask about changes for your plot, or start a custom brief.',
               },
               {
-                icon: ChatCircleDots,
-                title: '3. Order on WhatsApp',
-                text: 'Message us to confirm the package, ask about changes for your plot, or start a custom brief.',
+                icon: FileText,
+                title: '3. Review documents',
+                text: 'You get clear construction drawings prepared with the Rwanda Building Code and local permitting in mind.',
               },
             ].map((item) => {
               const Icon = item.icon;

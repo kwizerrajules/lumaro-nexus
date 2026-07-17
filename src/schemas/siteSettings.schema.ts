@@ -6,7 +6,7 @@ export const siteSettingsSchema = z.object({
   websiteUrl: z.string().url().max(500),
   websiteDisplay: z.string().min(1).max(200),
   phoneDisplay: z.string().min(1).max(50),
-  /** Digits only for wa.me links, e.g. 250791756343 */
+  /** Digits only for wa.me links, e.g. 250787369630 */
   whatsappNumber: z
     .string()
     .min(8)
@@ -28,8 +28,8 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsInput = {
   helpEmail: 'help@lumaronexus.com',
   websiteUrl: 'https://www.lumaronexus.com',
   websiteDisplay: 'www.lumaronexus.com',
-  phoneDisplay: '+250 791 756 343',
-  whatsappNumber: '250791756343',
+  phoneDisplay: '+250 787 369 630',
+  whatsappNumber: '250787369630',
   address: 'Kigali, Rwanda',
   availability: 'Mon–Fri, 9:00 AM – 4:00 PM GMT+3',
   footerTagline:

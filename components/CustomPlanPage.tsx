@@ -81,7 +81,7 @@ export default function CustomPlanPage() {
                 Contact us at <strong>info@lumaronexus.com</strong>
               </p>
               <p className="text-neutral-600 text-sm mb-1">
-                Phone: <strong>+250 791 756 343</strong>
+                Phone: <strong>+250 787 369 630</strong>
               </p>
               <p className="text-neutral-500 text-xs">
                 Monday to Friday 9:00 AM to 4:00 PM GMT +3
