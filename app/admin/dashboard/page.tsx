@@ -8,6 +8,7 @@ import UsersSection from '../components/UsersSection';
 import ContactUsSection from '../components/ContactUsSections';
 import {jwtDecode} from 'jwt-decode';
 import ProfileSection from '../components/ProfileSection';
+import SiteSettingsPanel from '../components/SiteSettingsPanel';
 
 export default function AdminDashboardPage() {
 
@@ -50,7 +51,8 @@ export default function AdminDashboardPage() {
     { key: 'customOrders', label: 'Custom Orders' },
     { key: 'users', label: 'Users' },
     { key: 'contact_us', label: 'Contacts' },
-    {key: 'profile', label: 'Profile'}
+    { key: 'settings', label: 'Site Settings' },
+    { key: 'profile', label: 'Profile' },
   ];
 
   return (
@@ -94,6 +96,7 @@ export default function AdminDashboardPage() {
   {activeSection === 'customOrders' && <CustomOrderSection />}
   {activeSection === 'users' && <UsersSection />}
   {activeSection === 'contact_us' && <ContactUsSection />}
+  {activeSection === 'settings' && <SiteSettingsPanel />}
   {activeSection === 'profile' && <ProfileSection />}
 
 </div>

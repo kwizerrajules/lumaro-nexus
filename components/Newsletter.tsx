@@ -6,8 +6,10 @@ import {
   MapPin,
   Clock,
 } from '@phosphor-icons/react';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const ContactUs: React.FC = () => {
+  const { settings } = useSiteSettings();
   const [form, setForm] = useState({
     names: '',
     email: '',
@@ -65,26 +67,26 @@ const ContactUs: React.FC = () => {
   const contactCards = [
     {
       label: 'Email',
-      value: 'info@lumaronexus.com',
-      href: 'mailto:info@lumaronexus.com',
+      value: settings.primaryEmail,
+      href: `mailto:${settings.primaryEmail}`,
       icon: EnvelopeSimple,
     },
     {
       label: 'Phone',
-      value: '+250 791 756 343',
-      href: 'https://wa.me/250791756343',
+      value: settings.phoneDisplay,
+      href: settings.whatsappUrl,
       icon: Phone,
     },
     {
       label: 'Location',
-      value: 'Kigali, Rwanda',
-      href: undefined,
+      value: settings.address,
+      href: undefined as string | undefined,
       icon: MapPin,
     },
     {
       label: 'Availability',
-      value: 'Mon–Fri, 9:00 AM – 4:00 PM GMT+3',
-      href: undefined,
+      value: settings.availability,
+      href: undefined as string | undefined,
       icon: Clock,
     },
   ];

@@ -20,9 +20,9 @@ import ImageCarousel from '@/components/ImageCarousel';
 import {
   formatPlanPrice,
   whatsappPlanUrl,
-  WHATSAPP_DISPLAY,
   planHref,
 } from '@/utils/brand';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 interface PlanDetailClientProps {
   slug: string;
@@ -31,6 +31,7 @@ interface PlanDetailClientProps {
 export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
   const router = useRouter();
   const footerRef = useRef<HTMLElement>(null);
+  const { settings } = useSiteSettings();
 
   const [project, setProject] = useState<any | null>(null);
   const [related, setRelated] = useState<any[]>([]);
@@ -301,7 +302,7 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
                     Order on WhatsApp
                   </a>
                   <p className="text-center text-xs text-neutral-500">
-                    {WHATSAPP_DISPLAY}
+                    {settings.phoneDisplay}
                   </p>
                   <button
                     type="button"

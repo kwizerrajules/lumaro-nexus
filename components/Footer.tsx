@@ -9,8 +9,11 @@ import {
   Phone,
   MapPin,
 } from '@phosphor-icons/react';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const Footer = forwardRef<HTMLElement>(function Footer(_, ref) {
+  const { settings } = useSiteSettings();
+
   return (
     <footer ref={ref} id="contact" className="bg-gray-900 text-white py-16">
       <div className="container mx-auto px-4">
@@ -32,11 +35,10 @@ const Footer = forwardRef<HTMLElement>(function Footer(_, ref) {
               </span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-4">
-              Based in Kigali since 2014. We draw house plans and construction
-              documents that fit local plots, budgets, and Rwanda housing standards.
+              {settings.footerTagline}
             </p>
             <a
-              href="https://wa.me/250791756343"
+              href={settings.whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex w-10 h-10 bg-gray-800 rounded-lg items-center justify-center hover:bg-amber-700 transition-colors"
@@ -116,31 +118,45 @@ const Footer = forwardRef<HTMLElement>(function Footer(_, ref) {
             <ul className="space-y-3 text-sm text-gray-400">
               <li className="flex items-center space-x-2">
                 <Envelope size={16} weight="regular" className="shrink-0" />
-                <a href="mailto:info@lumaronexus.com" className="hover:text-white transition-colors">
-                  info@lumaronexus.com
+                <a
+                  href={`mailto:${settings.primaryEmail}`}
+                  className="hover:text-white transition-colors"
+                >
+                  {settings.primaryEmail}
                 </a>
               </li>
               <li className="flex items-center space-x-2">
                 <Globe size={16} weight="regular" className="shrink-0" />
-                <a href="https://www.lumaronexus.com" className="hover:text-white transition-colors">
-                  www.lumaronexus.com
+                <a
+                  href={settings.websiteUrl}
+                  className="hover:text-white transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {settings.websiteDisplay}
                 </a>
               </li>
               <li className="flex items-center space-x-2">
                 <Lifebuoy size={16} weight="regular" className="shrink-0" />
-                <a href="mailto:help@lumaronexus.com" className="hover:text-white transition-colors">
-                  help@lumaronexus.com
+                <a
+                  href={`mailto:${settings.helpEmail}`}
+                  className="hover:text-white transition-colors"
+                >
+                  {settings.helpEmail}
                 </a>
               </li>
               <li className="flex items-center space-x-2">
                 <Phone size={16} weight="fill" className="shrink-0 text-amber-500" />
-                <a href="tel:+250791756343" className="hover:text-white transition-colors">
-                  +250 791 756 343
+                <a
+                  href={`tel:${settings.phoneTel}`}
+                  className="hover:text-white transition-colors"
+                >
+                  {settings.phoneDisplay}
                 </a>
               </li>
               <li className="flex items-center space-x-2">
                 <MapPin size={16} weight="regular" className="shrink-0" />
-                <span>Kigali, Rwanda</span>
+                <span>{settings.address}</span>
               </li>
             </ul>
           </div>

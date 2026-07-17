@@ -1,6 +1,9 @@
-/** Canonical brand contact — keep Footer, Newsletter, ModalForm, and plan pages in sync. */
-export const WHATSAPP_NUMBER = "250791756343";
-export const WHATSAPP_DISPLAY = "+250 791 756 343";
+import { DEFAULT_SITE_SETTINGS } from '@/src/schemas/siteSettings.schema';
+import { getCachedSiteSettings } from '@/utils/siteSettingsCache';
+
+/** Fallback defaults — live values come from Site Settings (MongoDB). */
+export const WHATSAPP_NUMBER = DEFAULT_SITE_SETTINGS.whatsappNumber;
+export const WHATSAPP_DISPLAY = DEFAULT_SITE_SETTINGS.phoneDisplay;
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
 
 export function whatsappPlanUrl(opts: {
@@ -12,6 +15,12 @@ export function whatsappPlanUrl(opts: {
   price?: number;
   quantity?: number;
 }): string {
+  const number =
+    typeof window !== 'undefined'
+      ? getCachedSiteSettings().whatsappNumber
+      : WHATSAPP_NUMBER;
+  const base = `https://wa.me/${number}`;
+
   const lines = [
     `Hello, I am interested in the house plan "${opts.title}" (ID: ${opts.id}).`,
     "",
@@ -26,7 +35,7 @@ export function whatsappPlanUrl(opts: {
       `  - Estimated Price: ${formatPlanPrice(opts.price * (opts.quantity ?? 1))}`
     );
   }
-  return `${WHATSAPP_URL}?text=${encodeURIComponent(lines.join("\n"))}`;
+  return `${base}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 /** Display only — no FX conversion. Stored price values shown as RWF. */
