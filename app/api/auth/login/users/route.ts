@@ -4,71 +4,104 @@ import { loginSchema } from '@/src/schemas/auth.schema';
 import { UsersModel } from '@/src/lib/models/users.model';
 import { UserPayload } from '@/src/types/jwt.payload';
 import { createAccessToken, createRefreshToken } from '@/src/security/auth';
-import { rateLimiter } from '@/src/security/rateLimiter'; // Your in-memory rate limiter
-import type { NextRequest } from 'next/server'; 
-
-
+import { rateLimiter } from '@/src/security/rateLimiter';
+import type { NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { verifyTurnstileToken } from '@/src/lib/turnstile';
 
 export async function POST(request: NextRequest) {
+  const ip =
+    request.headers.get('cf-connecting-ip') ||
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.ip ||
+    'anonymous';
 
-        const ip = request.headers.get('x-forwarded-for') || request.ip;
-        
-        const clientIp = ip || 'anonymous'; 
-    
-        if (!rateLimiter(clientIp)) {
-            return NextResponse.json(
-                { success: false, message: 'Too many requests. Please try again later.' },
-                { status: 429 }
-            );
-        }
+  if (!rateLimiter(ip)) {
+    return NextResponse.json(
+      { success: false, message: 'Too many requests. Please try again later.' },
+      { status: 429 }
+    );
+  }
 
-    try {
-        const body = await request.json();
-        const parsedData = loginSchema.parse(body);
-        
-        const { email, password } = parsedData;
-        const user = await UsersModel.getUserByEmail(email);
-        if (!user) {
-            return NextResponse.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
-        }
+  try {
+    const body = await request.json();
 
-        if (!user.password) {
-            // Account was created via Google sign-in and has no password set.
-            return NextResponse.json({ success: false, message: 'This account uses Google sign-in. Please continue with Google.' }, { status: 401 });
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return NextResponse.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
-        }
-        const { password: passwordHash, ...userData } = user;
-        
-        const payload: UserPayload = {
-            id: user.id ?? '',
-            email: user.email,
-            role: (user as any).role ?? 'USER',
-            names: user.names,
-            permissions: 'permissions' in user ? (user as any).permissions ?? [] : []
-        };
-        const accessToken = createAccessToken(payload);
-        const refreshToken = createRefreshToken(payload);
-        const userDefaulData = {
-            id: userData.id,
-            names: userData.names,
-            email: userData.email,
-            phone: userData.phone
-        }
-        return NextResponse.json({ success: true, data: {
-            accessToken,
-            refreshToken,
-            user: userDefaulData
-        } }, { status: 200 });
+    const turnstile = await verifyTurnstileToken(body.turnstileToken, ip);
+    if (turnstile.ok === false) {
+      return NextResponse.json(
+        { success: false, message: turnstile.message },
+        { status: 400 }
+      );
     }
-    catch (error: any) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json({ success: false, errors: error.issues }, { status: 400 });
-        }
-        return NextResponse.json({ success: false, message: error.message || 'Internal Server Error' }, { status: 500 });
+
+    const parsedData = loginSchema.parse(body);
+
+    const { email, password } = parsedData;
+    const user = await UsersModel.getUserByEmail(email);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid email or password' },
+        { status: 401 }
+      );
     }
-}   
+
+    if (!user.password) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'This account uses Google sign-in. Please continue with Google.',
+        },
+        { status: 401 }
+      );
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid email or password' },
+        { status: 401 }
+      );
+    }
+    const { password: _passwordHash, ...userData } = user;
+
+    const payload: UserPayload = {
+      id: user.id ?? '',
+      email: user.email,
+      role: (user as any).role ?? 'USER',
+      names: user.names,
+      permissions:
+        'permissions' in user ? (user as any).permissions ?? [] : [],
+    };
+    const accessToken = createAccessToken(payload);
+    const refreshToken = createRefreshToken(payload);
+    const userDefaulData = {
+      id: userData.id,
+      names: userData.names,
+      email: userData.email,
+      phone: userData.phone,
+    };
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          accessToken,
+          refreshToken,
+          user: userDefaulData,
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, errors: error.issues },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json(
+      { success: false, message: error.message || 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
+}

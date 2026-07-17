@@ -103,17 +103,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
         setError('Phone number cannot exceed 20 characters');
         return;
       }
-      if (turnstileRequired && !turnstileToken) {
-        setError('Please complete the human verification check.');
-        return;
-      }
+    }
+
+    if (turnstileRequired && !turnstileToken) {
+      setError('Please complete the human verification check.');
+      return;
     }
 
     setIsSubmitting(true);
     try {
       const endpoint = isLogin ? '/api/auth/login/users' : '/api/auth/register/users';
       const payload = isLogin
-        ? { email: formData.email.trim(), password: formData.password }
+        ? {
+            email: formData.email.trim(),
+            password: formData.password,
+            turnstileToken: turnstileToken || undefined,
+          }
         : {
             email: formData.email.trim(),
             names: formData.names.trim(),
@@ -134,6 +139,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
         setError(
           formatAuthError(result, isLogin ? 'Login failed' : 'Registration failed')
         );
+        setTurnstileToken(null);
+        resetTurnstile();
         return;
       }
 
@@ -142,6 +149,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
     } catch (err) {
       console.error('Auth error:', err);
       setError('An error occurred. Please try again.');
+      setTurnstileToken(null);
+      resetTurnstile();
     } finally {
       setIsSubmitting(false);
     }
@@ -367,19 +376,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
               </div>
             )}
 
-            {!isLogin && (
-              <TurnstileWidget
-                theme="light"
-                onToken={setTurnstileToken}
-              />
-            )}
+            <TurnstileWidget theme="light" onToken={setTurnstileToken} />
 
             <button
               type="submit"
-              disabled={
-                isSubmitting ||
-                (!isLogin && turnstileRequired && !turnstileToken)
-              }
+              disabled={isSubmitting || (turnstileRequired && !turnstileToken)}
               className="w-full bg-yellow-900 text-white py-4 px-6 rounded-lg font-semibold hover:bg-yellow-700 transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting

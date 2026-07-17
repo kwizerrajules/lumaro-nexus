@@ -1,5 +1,7 @@
 ﻿import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 import "./globals.css";
 
@@ -107,6 +109,9 @@ export default function RootLayout({
     <html lang="en" className={`${outfit.variable} ${cormorant.variable}`}>
       <body className={`${outfit.className} font-sans antialiased`}>
         {children}
+        <Suspense fallback={null}>
+          <GoogleAnalytics />
+        </Suspense>
       </body>
     </html>
   );
