@@ -1,8 +1,16 @@
 import type { MetadataRoute } from 'next';
 import { HouseProjectModel } from '@/src/lib/models/houseProject.model';
 
+/**
+ * Refresh sitemap at most every hour so new house plans appear in
+ * Google without a full redeploy.
+ */
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = 'https://lumaronexus.com';
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
+    'https://lumaronexus.com';
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -14,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: `${base}/catalog`,
       lastModified: new Date(),
-      changeFrequency: 'weekly',
+      changeFrequency: 'daily',
       priority: 0.9,
     },
     {
@@ -51,11 +59,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let planRoutes: MetadataRoute.Sitemap = [];
   try {
+    // Pull all catalog plans from MongoDB — new admin uploads show up after revalidate
     const { data } = await HouseProjectModel.getAll({ limit: 5000, offset: 0 });
+
     planRoutes = data
-      .filter((p) => p.slug || p.id)
+      .filter((p) => {
+        if (!p.slug && !p.id) return false;
+        // Skip obvious drafts / hidden if status is set that way
+        const status = (p.status || '').toLowerCase();
+        if (status && ['draft', 'hidden', 'archived', 'unpublished'].includes(status)) {
+          return false;
+        }
+        return true;
+      })
       .map((p) => ({
-        url: `${base}/plans/${p.slug || p.id}`,
+        url: `${base}/plans/${encodeURIComponent(String(p.slug || p.id))}`,
         lastModified: p.updatedAt ? new Date(p.updatedAt) : new Date(),
         changeFrequency: 'weekly' as const,
         priority: 0.85,

@@ -5,5 +5,5 @@ Allow: /
 # Host
 Host: https://lumaronexus.com
 
-# Sitemaps
+# Sitemaps (generated dynamically from MongoDB house plans)
 Sitemap: https://lumaronexus.com/sitemap.xml
