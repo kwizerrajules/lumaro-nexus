@@ -76,7 +76,10 @@ function resolveUpstreamUrl(raw: string, req: NextRequest): URL | null {
 }
 
 function parseMode(value: string | null): WatermarkMode {
-  return value === 'light' ? 'light' : 'preview';
+  if (value === 'light' || value === 'dense' || value === 'preview') {
+    return value;
+  }
+  return 'preview';
 }
 
 async function fadePng(input: Buffer, opacity: number): Promise<Buffer> {
@@ -99,25 +102,11 @@ async function fadePng(input: Buffer, opacity: number): Promise<Buffer> {
   return Buffer.from(out);
 }
 
-/**
- * Tile pre-rendered "Lumaro Nexus" PNG diagonally across the frame.
- * No fonts required at runtime — works on Vercel.
- */
-async function buildPngOverlay(
-  width: number,
-  height: number,
-  mode: WatermarkMode
-): Promise<Buffer> {
-  if (!fs.existsSync(STICKER_PATH)) {
-    throw new Error(`Watermark sticker missing: ${STICKER_PATH}`);
-  }
-
-  const targetW = Math.max(
-    150,
-    Math.round(width * (mode === 'light' ? 0.28 : 0.34))
-  );
-  const opacity = mode === 'light' ? 0.45 : 0.62;
-
+async function prepareSticker(
+  targetW: number,
+  opacity: number,
+  rotateDeg: number
+): Promise<{ buf: Buffer; w: number; h: number }> {
   const resized = Buffer.from(
     await sharp(STICKER_PATH)
       .resize({ width: targetW, withoutEnlargement: true })
@@ -125,19 +114,99 @@ async function buildPngOverlay(
       .png()
       .toBuffer()
   );
-
-  const tile = await fadePng(resized, opacity);
-
-  const rotated = Buffer.from(
-    await sharp(tile)
-      .rotate(-28, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  const faded = await fadePng(resized, opacity);
+  const buf = Buffer.from(
+    await sharp(faded)
+      .rotate(rotateDeg, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .png()
       .toBuffer()
   );
+  const meta = await sharp(buf).metadata();
+  return {
+    buf,
+    w: meta.width || targetW,
+    h: meta.height || Math.round(targetW * 0.2),
+  };
+}
 
-  const rm = await sharp(rotated).metadata();
-  const rw = rm.width || targetW;
-  const rh = rm.height || Math.round(targetW * 0.2);
+/**
+ * Corner + side placement — keeps the product photo looking clean on the site,
+ * while still baking marks into the file bytes.
+ */
+async function buildCornersOverlay(
+  width: number,
+  height: number,
+  mode: 'preview' | 'light'
+): Promise<Buffer> {
+  if (!fs.existsSync(STICKER_PATH)) {
+    throw new Error(`Watermark sticker missing: ${STICKER_PATH}`);
+  }
+
+  const targetW = Math.max(
+    110,
+    Math.round(width * (mode === 'light' ? 0.2 : 0.24))
+  );
+  const opacity = mode === 'light' ? 0.4 : 0.55;
+  const { buf, w: sw, h: sh } = await prepareSticker(targetW, opacity, -18);
+
+  const pad = Math.max(10, Math.round(Math.min(width, height) * 0.025));
+  const midY = Math.max(pad, Math.round((height - sh) / 2));
+  const midX = Math.max(pad, Math.round((width - sw) / 2));
+
+  // Corners always; preview also adds mid-left / mid-right / top & bottom centers
+  const spots: Array<{ left: number; top: number }> = [
+    { left: pad, top: pad },
+    { left: Math.max(pad, width - sw - pad), top: pad },
+    { left: pad, top: Math.max(pad, height - sh - pad) },
+    {
+      left: Math.max(pad, width - sw - pad),
+      top: Math.max(pad, height - sh - pad),
+    },
+  ];
+
+  if (mode === 'preview') {
+    spots.push(
+      { left: pad, top: midY },
+      { left: Math.max(pad, width - sw - pad), top: midY },
+      { left: midX, top: pad },
+      { left: midX, top: Math.max(pad, height - sh - pad) }
+    );
+  }
+
+  const composites = spots.map((pos) => ({
+    input: buf,
+    left: pos.left,
+    top: pos.top,
+  }));
+
+  const overlay = await sharp({
+    create: {
+      width,
+      height,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite(composites)
+    .png()
+    .toBuffer();
+
+  return Buffer.from(overlay);
+}
+
+/**
+ * Dense diagonal grid — used for Save / download so stolen files stay marked.
+ */
+async function buildDenseOverlay(
+  width: number,
+  height: number
+): Promise<Buffer> {
+  if (!fs.existsSync(STICKER_PATH)) {
+    throw new Error(`Watermark sticker missing: ${STICKER_PATH}`);
+  }
+
+  const targetW = Math.max(150, Math.round(width * 0.32));
+  const { buf, w: rw, h: rh } = await prepareSticker(targetW, 0.62, -28);
 
   const stepX = Math.round(rw * 1.12);
   const stepY = Math.round(rh * 1.55);
@@ -146,7 +215,7 @@ async function buildPngOverlay(
   for (let y = -Math.round(rh * 0.5); y < height + rh; y += stepY) {
     for (let x = -Math.round(rw * 0.3); x < width + rw; x += stepX) {
       composites.push({
-        input: rotated,
+        input: buf,
         left: Math.round(x),
         top: Math.round(y),
       });
@@ -166,6 +235,15 @@ async function buildPngOverlay(
     .toBuffer();
 
   return Buffer.from(overlay);
+}
+
+async function buildPngOverlay(
+  width: number,
+  height: number,
+  mode: WatermarkMode
+): Promise<Buffer> {
+  if (mode === 'dense') return buildDenseOverlay(width, height);
+  return buildCornersOverlay(width, height, mode);
 }
 
 async function buildPreviewBadge(canvasWidth: number): Promise<Buffer | null> {
@@ -231,7 +309,7 @@ async function buildWatermarkedBuffer(
   const overlay = await buildPngOverlay(width, height, mode);
   composites.push({ input: overlay, left: 0, top: 0 });
 
-  if (mode === 'preview') {
+  if (mode === 'preview' || mode === 'dense') {
     const badge = await buildPreviewBadge(width);
     if (badge) {
       const bm = await sharp(badge).metadata();
@@ -322,7 +400,7 @@ export async function GET(req: NextRequest) {
         // Shorter browser cache so watermark version bumps apply faster
         'Cache-Control':
           'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
-        'X-Watermark-Version': '9',
+        'X-Watermark-Version': '10',
         'X-Content-Type-Options': 'nosniff',
       },
     });
