@@ -209,7 +209,7 @@ export default function Home() {
               Lumaro Nexus
             </p>
             <h1 className="animate-fade-in-up-delay font-display text-2xl sm:text-3xl md:text-4xl font-medium text-white/95 leading-snug mb-4">
-              House plans and construction documents for Rwanda
+              House plans and construction documents
             </h1>
             <p className="animate-fade-in-up-delay-2 text-base md:text-lg text-neutral-300 max-w-xl leading-relaxed mb-8">
               Lumaro Nexus is a Kigali-based platform to browse ready house plans, request

@@ -1,11 +1,32 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { SUSPENDED_PAGE_HTML } from '@/lib/suspendedPageHtml';
 
 /**
- * Edge guard for admin UI. APIs remain protected by roleMiddleware.
- * Cookie is set client-side on successful /login (see app/login/page.tsx).
+ * Edge guard:
+ * - Site suspension (hosting-style 503) — controlled by SITE_SUSPENDED_IN_CODE
+ *   so a GitHub push activates it without env access on the client's Vercel.
+ * - To restore after payment: set SITE_SUSPENDED_IN_CODE to false, then push.
+ * - Optional override: env SITE_SUSPENDED=false forces the site live.
+ * - /admin → cookie check when site is live (APIs remain protected by roleMiddleware)
  */
+const SITE_SUSPENDED_IN_CODE = true;
+
+const SITE_IS_SUSPENDED =
+  process.env.SITE_SUSPENDED === 'false' ? false : SITE_SUSPENDED_IN_CODE;
+
 export function middleware(request: NextRequest) {
+  if (SITE_IS_SUSPENDED) {
+    return new NextResponse(SUSPENDED_PAGE_HTML, {
+      status: 503,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        'Retry-After': '86400',
+      },
+    });
+  }
+
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/admin')) {
@@ -21,5 +42,12 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: [
+    /*
+     * Match all paths except Next.js internals and common static files
+     * so the suspension page (and normal browsing) still get CSS/assets when needed.
+     * When suspended we still return HTML 503 for page/API routes.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)',
+  ],
 };
