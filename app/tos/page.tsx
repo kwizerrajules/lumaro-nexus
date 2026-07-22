@@ -280,7 +280,7 @@ export default function TermsOfServicePage() {
             </li>
             <li>
               Trick, defraud, or mislead us and other users, especially in any attempt to
-              learn sensitive account information such as user passwords.
+              learn sensitive account credentials.
             </li>
             <li>
               Circumvent, disable, or otherwise interfere with security-related features of

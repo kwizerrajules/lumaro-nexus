@@ -70,7 +70,6 @@ export default function Home() {
         const withImage = transformedProjects.find((p: any) => p.image);
         if (withImage) setHeroImage(withImage.image);
 
-        // Soft revalidate so admin-created plans appear without waiting for TTL
         void fetchHouseProjects({ limit: 100, force: true }).then((fresh) => {
           const next = fresh.map(transform);
           setProjects(next);

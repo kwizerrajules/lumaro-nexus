@@ -114,9 +114,9 @@ export default function PrivacyPolicyPage() {
           organizational and technical processes and procedures in place to protect your
           personal information. However, no electronic transmission over the internet or
           information storage technology can be guaranteed to be 100% secure, so we cannot
-          promise or guarantee that hackers, cybercriminals, or other unauthorized third
-          parties will not be able to defeat our security and improperly collect, access,
-          steal, or modify your information. Learn more about{' '}
+          promise or guarantee that unauthorized third parties will not be able to defeat
+          our security and improperly collect, access, steal, or modify your information.
+          Learn more about{' '}
           <a href="#infosafe" className={linkClass}>
             how we keep your information safe
           </a>
@@ -254,7 +254,7 @@ export default function PrivacyPolicyPage() {
             <li>names</li>
             <li>phone numbers</li>
             <li>email addresses</li>
-            <li>passwords</li>
+            <li>account credentials</li>
             <li>billing addresses</li>
           </ul>
           <p id="sensitiveinfo">
@@ -652,9 +652,9 @@ export default function PrivacyPolicyPage() {
             we process. However, despite our safeguards and efforts to secure your
             information, no electronic transmission over the Internet or information
             storage technology can be guaranteed to be 100% secure, so we cannot promise or
-            guarantee that hackers, cybercriminals, or other unauthorized third parties
-            will not be able to defeat our security and improperly collect, access, steal,
-            or modify your information. Although we will do our best to protect your
+            guarantee that unauthorized third parties will not be able to defeat our
+            security and improperly collect, access, steal, or modify your information.
+            Although we will do our best to protect your
             personal information, transmission of personal information to and from our
             Services is at your own risk. You should only access the Services within a
             secure environment.

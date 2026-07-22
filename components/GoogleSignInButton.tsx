@@ -30,6 +30,7 @@ function loadGisScript(): Promise<void> {
     script.src = GIS_SRC;
     script.async = true;
     script.defer = true;
+    script.crossOrigin = 'anonymous';
     script.onload = () => resolve();
     script.onerror = () => reject(new Error('Failed to load Google script'));
     document.head.appendChild(script);
@@ -55,7 +56,6 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   useEffect(() => {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) {
-      // Soft-fail: show helper text under the button, don't block email/password signup.
       setUnavailableMessage('not-configured');
       return;
     }
@@ -68,7 +68,6 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         if (cancelled || !buttonRef.current) return;
         const google = (window as any).google;
 
-        // Clear previous render when switching sign-in / sign-up text
         buttonRef.current.innerHTML = '';
 
         google.accounts.id.initialize({

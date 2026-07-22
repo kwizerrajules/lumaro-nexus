@@ -9,8 +9,9 @@ import { SUSPENDED_PAGE_HTML } from '@/lib/suspendedPageHtml';
  * - To restore after payment: set SITE_SUSPENDED_IN_CODE to false, then push.
  * - Optional override: env SITE_SUSPENDED=false forces the site live.
  * - /admin → cookie check when site is live (APIs remain protected by roleMiddleware)
+ * Security headers (CSP, frame deny, nosniff, etc.) are set in next.config.js.
  */
-const SITE_SUSPENDED_IN_CODE = true;
+const SITE_SUSPENDED_IN_CODE = false;
 
 const SITE_IS_SUSPENDED =
   process.env.SITE_SUSPENDED === 'false' ? false : SITE_SUSPENDED_IN_CODE;

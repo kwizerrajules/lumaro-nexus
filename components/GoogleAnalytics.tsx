@@ -39,6 +39,7 @@ export default function GoogleAnalytics() {
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
         strategy="afterInteractive"
+        crossOrigin="anonymous"
       />
       <Script id="ga4-init" strategy="afterInteractive">
         {`
