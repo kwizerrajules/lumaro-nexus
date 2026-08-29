@@ -102,13 +102,9 @@ export const metadata: Metadata = {
     follow: true,
   },
 
-  alternates: {
-    canonical: SITE_URL,
-    languages: {
-      "en-RW": SITE_URL,
-      "x-default": SITE_URL,
-    },
-  },
+  // NOTE: no `alternates` here on purpose. Each route sets its own
+  // self-referencing canonical via canonical() from lib/seo — a canonical on
+  // the root layout would point every page at the homepage.
 
   // Geo signals — Bing/Yandex read these; Google infers region from content,
   // hreflang and the RW address in the structured data above.

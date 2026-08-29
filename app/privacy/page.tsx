@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import LegalPageLayout, { LegalSection } from '@/components/LegalPageLayout';
+import { canonical } from '@/lib/seo';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description:
     'Privacy Notice for LUMARO NEXUS — how we collect, use, share, and protect your personal information.',
+  alternates: canonical('privacy'),
 };
 
 const linkClass = 'text-yellow-800 underline break-words';

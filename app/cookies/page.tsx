@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import LegalPageLayout, { LegalSection } from '@/components/LegalPageLayout';
+import { canonical } from '@/lib/seo';
 
 export const metadata: Metadata = {
   title: 'Cookie Policy',
   description:
     'How Lumaro Nexus uses cookies, local storage, and similar technologies on www.lumaronexus.com.',
+  alternates: canonical('cookies'),
 };
 
 export default function CookiePolicyPage() {

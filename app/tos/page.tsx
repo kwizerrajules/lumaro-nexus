@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import LegalPageLayout from '@/components/LegalPageLayout';
+import { canonical } from '@/lib/seo';
 
 export const metadata: Metadata = {
   title: 'Terms of Use',
   description:
     'Legal Terms (Terms of Use) for LUMARO NEXUS — rules for accessing and using www.lumaronexus.com and related services.',
+  alternates: canonical('tos'),
 };
 
 const linkClass = 'text-yellow-800 underline break-words';

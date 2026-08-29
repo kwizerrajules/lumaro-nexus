@@ -32,6 +32,22 @@ export const SITE_DESCRIPTION =
 export const abs = (path = '/') =>
   `${SITE_URL}/${String(path).replace(/^\/+/, '')}`;
 
+/**
+ * Self-referencing canonical + hreflang for one route. Every page needs its
+ * own — `alternates` set on the root layout would otherwise point every page
+ * at the homepage, telling Google they are all duplicates.
+ */
+export function canonical(path = '/') {
+  const url = path === '/' ? SITE_URL : abs(path);
+  return {
+    canonical: url,
+    languages: {
+      'en-RW': url,
+      'x-default': url,
+    },
+  };
+}
+
 /** Organisation node — emitted once, in the root layout. */
 export function organizationJsonLd() {
   return {

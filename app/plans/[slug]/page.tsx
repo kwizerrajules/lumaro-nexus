@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { HouseProjectModel } from "@/src/lib/models/houseProject.model";
 import {
   abs,
+  canonical,
   jsonLdScript,
   planBreadcrumbJsonLd,
   planProductJsonLd,
@@ -42,9 +43,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description:
       description ||
       `${project.title} — house plan from Lumaro Nexus. ${project.bedrooms ?? ""} bed · ${project.areaSqFt ?? ""} m².`,
-    alternates: {
-      canonical: url,
-    },
+    alternates: canonical(`plans/${canonicalSlug}`),
     openGraph: {
       title: `${project.title} | Lumaro Nexus`,
       description:

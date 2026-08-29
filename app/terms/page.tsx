@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import LegalPageLayout, { LegalSection } from '@/components/LegalPageLayout';
+import { canonical } from '@/lib/seo';
 
 export const metadata: Metadata = {
   title: 'Terms & Conditions',
   description:
     'Terms and conditions for purchasing and using Lumaro Nexus house plans, custom designs, and related documentation.',
+  alternates: canonical('terms'),
 };
 
 export default function TermsAndConditionsPage() {
