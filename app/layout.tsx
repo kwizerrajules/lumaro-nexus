@@ -2,6 +2,11 @@
 import { Suspense } from "react";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import {
+  jsonLdScript,
+  organizationJsonLd,
+  webSiteJsonLd,
+} from "@/lib/seo";
 
 import "./globals.css";
 
@@ -35,25 +40,23 @@ export const metadata: Metadata = {
   publisher: "Lumaro Nexus",
 
   keywords: [
-    "African house plans",
-    "African home design",
-    "modern African architecture",
-    "Kenya house plans",
-    "Ghana house plans",
     "Lumaro Nexus",
-    "Nigeria house designs",
-    "South Africa home plans",
-    "2 bedroom house plan",
-    "3 bedroom house plan",
+    "Rwanda house plans",
+    "house plans Kigali",
+    "house design Rwanda",
+    "construction drawings Rwanda",
+    "BPMIS house plans",
+    "One Stop Centre building permit plans",
+    "2 bedroom house plan Rwanda",
+    "3 bedroom house plan Rwanda",
+    "4 bedroom house plan Rwanda",
     "modern bungalow plan",
     "duplex house plan",
     "small plot home design",
-    "Rwanda house plans",
-    "house design Rwanda",
-    "modern house plans",
-    "architectural design",
-    "igishushanyo cy inzu",
-    "inzu Rwanda",
+    "custom house plan Rwanda",
+    "architectural design Kigali",
+    "igishushanyo cy'inzu",
+    "inyubako Rwanda",
   ],
 
   icons: {
@@ -98,6 +101,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://lumaronexus.com",
   },
+
+  // Set GOOGLE_SITE_VERIFICATION in Vercel to the token from
+  // Search Console → Settings → Ownership verification → HTML tag.
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 export default function RootLayout({
@@ -108,6 +117,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${outfit.variable} ${cormorant.variable}`}>
       <body className={`${outfit.className} font-sans antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={jsonLdScript(organizationJsonLd())}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={jsonLdScript(webSiteJsonLd())}
+        />
         {children}
         <Suspense fallback={null}>
           <GoogleAnalytics />

@@ -1,9 +1,0 @@
-# *
-User-agent: *
-Allow: /
-
-# Host
-Host: https://lumaronexus.com
-
-# Sitemaps (generated dynamically from MongoDB house plans)
-Sitemap: https://lumaronexus.com/sitemap.xml

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { HouseProjectModel } from '@/src/lib/models/houseProject.model';
+import { SITE_URL } from '@/lib/seo';
 
 /**
  * Refresh sitemap at most every hour so new house plans appear in
@@ -8,9 +9,7 @@ import { HouseProjectModel } from '@/src/lib/models/houseProject.model';
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
-    'https://lumaronexus.com';
+  const base = SITE_URL;
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
