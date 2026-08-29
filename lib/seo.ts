@@ -13,6 +13,11 @@ export const SITE_URL = (
 
 export const SITE_NAME = 'Lumaro Nexus';
 
+/** Primary market. Used for geo meta tags, hreflang and structured data. */
+export const SITE_COUNTRY = 'RW';
+export const SITE_LOCALE = 'en-RW';
+export const SITE_GEO = { lat: -1.9440727, lng: 30.0618851, city: 'Kigali' };
+
 export const SITE_DESCRIPTION =
   'Lumaro Nexus is a Kigali-based house-plan platform: browse ready designs, ' +
   'request custom plans, and order construction documents prepared for Rwanda ' +
@@ -33,9 +38,11 @@ export function organizationJsonLd() {
     description: SITE_DESCRIPTION,
     address: {
       '@type': 'PostalAddress',
-      addressLocality: 'Kigali',
-      addressCountry: 'RW',
+      addressLocality: SITE_GEO.city,
+      addressCountry: SITE_COUNTRY,
     },
+    areaServed: { '@type': 'Country', name: 'Rwanda' },
+    knowsLanguage: ['en', 'rw'],
   };
 }
 

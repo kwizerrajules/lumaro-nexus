@@ -9,12 +9,36 @@ import { SUSPENDED_PAGE_HTML } from '@/lib/suspendedPageHtml';
  * - To restore after payment: set SITE_SUSPENDED_IN_CODE to false, then push.
  * - Optional override: env SITE_SUSPENDED=false forces the site live.
  * - /admin → cookie check when site is live (APIs remain protected by roleMiddleware)
+ * - Visitor geo (Vercel edge) → `visitor_country` cookie + `x-visitor-country`
+ *   header so the UI can tailor for Rwanda vs. the rest of the world.
  * Security headers (CSP, frame deny, nosniff, etc.) are set in next.config.js.
  */
 const SITE_SUSPENDED_IN_CODE = false;
 
 const SITE_IS_SUSPENDED =
   process.env.SITE_SUSPENDED === 'false' ? false : SITE_SUSPENDED_IN_CODE;
+
+/** ISO country for this request from Vercel's edge geo (falls back to header). */
+function visitorCountry(request: NextRequest): string {
+  const c =
+    request.geo?.country ||
+    request.headers.get('x-vercel-ip-country') ||
+    '';
+  return c.toUpperCase();
+}
+
+/** Attach the geo cookie + header to any response leaving the middleware. */
+function withGeo(response: NextResponse, country: string): NextResponse {
+  if (country) {
+    response.cookies.set('visitor_country', country, {
+      path: '/',
+      maxAge: 60 * 60 * 24, // 1 day
+      sameSite: 'lax',
+    });
+    response.headers.set('x-visitor-country', country);
+  }
+  return response;
+}
 
 export function middleware(request: NextRequest) {
   if (SITE_IS_SUSPENDED) {
@@ -29,17 +53,18 @@ export function middleware(request: NextRequest) {
   }
 
   const { pathname } = request.nextUrl;
+  const country = visitorCountry(request);
 
   if (pathname.startsWith('/admin')) {
     const token = request.cookies.get('adminAccessToken')?.value;
     if (!token) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('next', pathname);
-      return NextResponse.redirect(loginUrl);
+      return withGeo(NextResponse.redirect(loginUrl), country);
     }
   }
 
-  return NextResponse.next();
+  return withGeo(NextResponse.next(), country);
 }
 
 export const config = {

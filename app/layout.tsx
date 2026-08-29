@@ -2,10 +2,12 @@
 import { Suspense } from "react";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import RegionNotice from "@/components/RegionNotice";
 import {
   jsonLdScript,
   organizationJsonLd,
   webSiteJsonLd,
+  SITE_GEO,
 } from "@/lib/seo";
 
 import "./globals.css";
@@ -74,7 +76,8 @@ export const metadata: Metadata = {
       "Lumaro Nexus helps you browse and order house plans for Rwanda — ready catalog designs, custom briefs, and construction documents prepared for One Stop Centre and BPMIS.",
     url: "https://lumaronexus.com",
     siteName: "Lumaro Nexus",
-    locale: "en_US",
+    locale: "en_RW",
+    countryName: "Rwanda",
     images: [
       {
         url: "/brand/og-image.jpg",
@@ -100,6 +103,19 @@ export const metadata: Metadata = {
 
   alternates: {
     canonical: "https://lumaronexus.com",
+    languages: {
+      "en-RW": "https://lumaronexus.com",
+      "x-default": "https://lumaronexus.com",
+    },
+  },
+
+  // Geo signals — Bing/Yandex read these; Google infers region from content,
+  // hreflang and the RW address in the structured data above.
+  other: {
+    "geo.region": "RW",
+    "geo.placename": SITE_GEO.city,
+    "geo.position": `${SITE_GEO.lat};${SITE_GEO.lng}`,
+    ICBM: `${SITE_GEO.lat}, ${SITE_GEO.lng}`,
   },
 
   // Set GOOGLE_SITE_VERIFICATION in Vercel to the token from
@@ -115,7 +131,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outfit.variable} ${cormorant.variable}`}>
+    <html lang="en-RW" className={`${outfit.variable} ${cormorant.variable}`}>
       <body className={`${outfit.className} font-sans antialiased`}>
         <script
           type="application/ld+json"
@@ -125,6 +141,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={jsonLdScript(webSiteJsonLd())}
         />
+        <RegionNotice />
         {children}
         <Suspense fallback={null}>
           <GoogleAnalytics />
