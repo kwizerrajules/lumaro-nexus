@@ -6,9 +6,14 @@
  */
 import type { HouseProject } from '@/src/schemas/house.projects.schema';
 
-/** Canonical origin, no trailing slash. Override per environment with NEXT_PUBLIC_SITE_URL. */
+/**
+ * Canonical origin, no trailing slash. This MUST be the host Vercel actually
+ * serves — the apex (lumaronexus.com) 301-redirects here, so pointing canonical
+ * / sitemap / hreflang at the apex would send crawlers through a redirect.
+ * Override per environment with NEXT_PUBLIC_SITE_URL.
+ */
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || 'https://lumaronexus.com'
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://www.lumaronexus.com'
 ).replace(/\/+$/, '');
 
 export const SITE_NAME = 'Lumaro Nexus';

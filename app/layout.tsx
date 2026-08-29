@@ -8,6 +8,7 @@ import {
   organizationJsonLd,
   webSiteJsonLd,
   SITE_GEO,
+  SITE_URL,
 } from "@/lib/seo";
 
 import "./globals.css";
@@ -26,7 +27,7 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://lumaronexus.com"),
+  metadataBase: new URL(SITE_URL),
 
   title: {
     default: "Lumaro Nexus | House Plans for Rwanda",
@@ -37,7 +38,7 @@ export const metadata: Metadata = {
     "Lumaro Nexus is a Kigali-based house-plan platform: browse ready designs, request custom plans, and order construction documents prepared for Rwanda District One Stop Centre and BPMIS requirements. Sign in to manage enquiries and orders.",
 
   applicationName: "Lumaro Nexus",
-  authors: [{ name: "Lumaro Nexus", url: "https://lumaronexus.com" }],
+  authors: [{ name: "Lumaro Nexus", url: SITE_URL }],
   creator: "Lumaro Nexus",
   publisher: "Lumaro Nexus",
 
@@ -74,7 +75,7 @@ export const metadata: Metadata = {
     title: "Lumaro Nexus | House Plans for Rwanda",
     description:
       "Lumaro Nexus helps you browse and order house plans for Rwanda — ready catalog designs, custom briefs, and construction documents prepared for One Stop Centre and BPMIS.",
-    url: "https://lumaronexus.com",
+    url: SITE_URL,
     siteName: "Lumaro Nexus",
     locale: "en_RW",
     countryName: "Rwanda",
@@ -102,10 +103,10 @@ export const metadata: Metadata = {
   },
 
   alternates: {
-    canonical: "https://lumaronexus.com",
+    canonical: SITE_URL,
     languages: {
-      "en-RW": "https://lumaronexus.com",
-      "x-default": "https://lumaronexus.com",
+      "en-RW": SITE_URL,
+      "x-default": SITE_URL,
     },
   },
 

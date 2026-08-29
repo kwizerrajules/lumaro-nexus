@@ -2,6 +2,7 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { HouseProjectModel } from "@/src/lib/models/houseProject.model";
 import {
+  abs,
   jsonLdScript,
   planBreadcrumbJsonLd,
   planProductJsonLd,
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     .slice(0, 160);
 
   const canonicalSlug = project.slug || project.id;
-  const url = `https://lumaronexus.com/plans/${canonicalSlug}`;
+  const url = abs(`plans/${canonicalSlug}`);
 
   return {
     title: project.title,
