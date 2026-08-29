@@ -23,19 +23,27 @@ import {
   planHref,
 } from '@/utils/brand';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import type { PlanCardData } from '@/lib/planCard';
 
 interface PlanDetailClientProps {
   slug: string;
+  /** Server-rendered so the page has real content before hydration. */
+  initialProject?: any | null;
+  initialRelated?: PlanCardData[];
 }
 
-export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
+export default function PlanDetailClient({
+  slug,
+  initialProject = null,
+  initialRelated = [],
+}: PlanDetailClientProps) {
   const router = useRouter();
   const footerRef = useRef<HTMLElement>(null);
   const { settings } = useSiteSettings();
 
-  const [project, setProject] = useState<any | null>(null);
-  const [related, setRelated] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [project, setProject] = useState<any | null>(initialProject);
+  const [related, setRelated] = useState<any[]>(initialRelated);
+  const [loading, setLoading] = useState(!initialProject);
   const [error, setError] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState('');
 
@@ -102,7 +110,7 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
         if (cachedList.length) {
           setRelated(mapRelated(cachedList, cached.id));
         }
-      } else {
+      } else if (!initialProject) {
         setLoading(true);
       }
 
@@ -133,7 +141,7 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
           else setRelated([]);
         }
       } catch {
-        if (!cancelled && !cached) {
+        if (!cancelled && !cached && !initialProject) {
           setProject(null);
           setError('This plan could not be found or is no longer available.');
         }
@@ -146,6 +154,7 @@ export default function PlanDetailClient({ slug }: PlanDetailClientProps) {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, router]);
 
   const galleryImages = useMemo(() => {

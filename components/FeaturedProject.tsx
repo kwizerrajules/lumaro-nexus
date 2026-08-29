@@ -11,39 +11,39 @@ import {
 } from '@phosphor-icons/react';
 import { formatPlanPrice, planHref } from '@/utils/brand';
 import WatermarkedImage from '@/components/WatermarkedImage';
+import { toVisiblePlanCards, type PlanCardData } from '@/lib/planCard';
 
-interface FeaturedProject {
-  id: string;
-  slug?: string;
-  title: string;
-  description: string;
-  thumbnail: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  areaSqFt: number;
-  category: string;
-  style?: string;
-}
-
-const FeaturedProject: React.FC = () => {
-  const [projects, setProjects] = useState<FeaturedProject[]>([]);
+const FeaturedProject: React.FC<{ initialProjects?: PlanCardData[] }> = ({
+  initialProjects = [],
+}) => {
+  const [projects, setProjects] = useState<PlanCardData[]>(
+    initialProjects.slice(0, 4),
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialProjects.length === 0);
 
+  // Fill in / refresh if the server render gave us nothing.
   useEffect(() => {
-    const fetchFeaturedProjects = async () => {
+    if (projects.length > 0) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
       try {
         const { fetchHouseProjects } = await import('@/utils/productCache');
         const data = await fetchHouseProjects({ limit: 20 });
-        setProjects((data || []).slice(0, 4) as FeaturedProject[]);
+        if (!cancelled) setProjects(toVisiblePlanCards(data).slice(0, 4));
       } catch (error) {
         console.error('Error fetching featured projects:', error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
+    })();
+    return () => {
+      cancelled = true;
     };
-    fetchFeaturedProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -104,10 +104,10 @@ const FeaturedProject: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:min-h-[380px] border border-white/10 overflow-hidden">
           <div className="relative lg:col-span-8 h-64 lg:h-auto min-h-[280px]">
-            {current.thumbnail ? (
+            {current.image ? (
               <WatermarkedImage
                 key={current.id}
-                src={current.thumbnail}
+                src={current.image}
                 alt={current.title}
                 fill
                 className="object-cover animate-hero-reveal"
@@ -126,7 +126,7 @@ const FeaturedProject: React.FC = () => {
                 <Shower size={14} /> {current.bathrooms} Bath
               </span>
               <span className="inline-flex items-center gap-1.5 bg-black/50 px-2.5 py-1 backdrop-blur-sm">
-                <Ruler size={14} /> {current.areaSqFt} m²
+                <Ruler size={14} /> {current.area} m²
               </span>
             </div>
           </div>

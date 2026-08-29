@@ -1,6 +1,7 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import { HouseProjectModel } from "@/src/lib/models/houseProject.model";
+import { toVisiblePlanCards, type PlanCardData } from "@/lib/planCard";
 import {
   abs,
   canonical,
@@ -17,6 +18,24 @@ type PageProps = {
 /** De-dupe the DB lookup between generateMetadata and the page render. */
 const loadPlan = cache((slug: string) =>
   HouseProjectModel.getBySlugOrId(slug).catch(() => null),
+);
+
+/** Up to 4 other plans, same category first, for the "Related plans" grid. */
+const loadRelated = cache(
+  async (currentId: string, category?: string): Promise<PlanCardData[]> => {
+    try {
+      const { data } = await HouseProjectModel.getAll({
+        limit: 8,
+        offset: 0,
+        category: category || undefined,
+      });
+      return toVisiblePlanCards(data)
+        .filter((p) => p.id !== currentId)
+        .slice(0, 4);
+    } catch {
+      return [];
+    }
+  },
 );
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -71,6 +90,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function PlanDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const project = await loadPlan(slug);
+  const related = project
+    ? await loadRelated(project.id, project.category)
+    : [];
 
   return (
     <>
@@ -86,7 +108,11 @@ export default async function PlanDetailPage({ params }: PageProps) {
           />
         </>
       ) : null}
-      <PlanDetailClient slug={slug} />
+      <PlanDetailClient
+        slug={slug}
+        initialProject={project}
+        initialRelated={related}
+      />
     </>
   );
 }

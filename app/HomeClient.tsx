@@ -300,7 +300,7 @@ export default function HomeClient({
         </div>
       </section>
 
-      <FeaturedProject />
+      <FeaturedProject initialProjects={projects} />
 
       <div
         ref={mainContentRef}
