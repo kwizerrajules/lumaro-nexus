@@ -22,12 +22,17 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
-  const [thumbnailUploading, setThumbnailUploading] = useState(false);
-  const [additionalUploading, setAdditionalUploading] = useState(false);
   const [thumbMode, setThumbMode] = useState<'file' | 'url'>('file');
   const [additionalMode, setAdditionalMode] = useState<'file' | 'url'>('file');
   const [additionalUrlInput, setAdditionalUrlInput] = useState('');
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
+
+  // Local files selected for upload on form submission (no auto-upload on pick)
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailLocalPreview, setThumbnailLocalPreview] = useState<string | null>(null);
+  const [additionalFiles, setAdditionalFiles] = useState<File[]>([]);
+  const [additionalLocalPreviews, setAdditionalLocalPreviews] = useState<string[]>([]);
+
   /** Remount file inputs so the same file can be chosen again after an error */
   const [thumbInputKey, setThumbInputKey] = useState(0);
   const [extraInputKey, setExtraInputKey] = useState(0);
@@ -112,8 +117,8 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
     }));
   };
 
-  /** Upload thumbnail as soon as a file is chosen — keep URL so save can retry without re-upload */
-  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  /** Store selected thumbnail file for upload on submit — instant local preview */
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -121,31 +126,20 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
       validateFileSize(file);
       setError(null);
       setUploadNotice(null);
-      setThumbnailUploading(true);
-      setUploadProgress('Uploading thumbnail to Cloudinary…');
-      const url = await uploadImageToCloudinary(file);
-      setFormData((prev) => ({ ...prev, thumbnail: url }));
-      setUploadProgress('Thumbnail uploaded');
-    } catch (err: any) {
-      const msg = err?.message || 'Thumbnail upload failed — choose the image again';
-      console.warn('Thumbnail upload failed:', err);
-      if (msg.includes('Cloudinary is not configured')) {
-        setUploadNotice(
-          'Cloudinary is not configured in .env.local. Switch to "Paste Image URL" above to paste an image link directly.'
-        );
-      } else {
-        setError(msg);
+      if (thumbnailLocalPreview) {
+        URL.revokeObjectURL(thumbnailLocalPreview);
       }
-      // Remount input so the same file can be selected again
+      const previewUrl = URL.createObjectURL(file);
+      setThumbnailFile(file);
+      setThumbnailLocalPreview(previewUrl);
+    } catch (err: any) {
+      setError(err?.message || 'Invalid file size');
       setThumbInputKey((k) => k + 1);
-    } finally {
-      setThumbnailUploading(false);
-      setTimeout(() => setUploadProgress(null), 1500);
     }
   };
 
-  /** Upload additional images in parallel as soon as selected */
-  const handleAdditionalChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  /** Store selected additional files for upload on submit — instant local previews */
+  const handleAdditionalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
@@ -153,36 +147,22 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
       files.forEach(validateFileSize);
       setError(null);
       setUploadNotice(null);
-      setAdditionalUploading(true);
-      setUploadProgress(
-        `Uploading ${files.length} additional image(s) to Cloudinary…`
-      );
-      const urls = await uploadImagesToCloudinary(files);
-      setFormData((prev) => ({
-        ...prev,
-        // Append so a failed save can keep previous successful uploads
-        additionalImages: [...prev.additionalImages, ...urls],
-      }));
-      setUploadProgress(`${urls.length} additional image(s) uploaded`);
+      const newPreviews = files.map((f) => URL.createObjectURL(f));
+      setAdditionalFiles((prev) => [...prev, ...files]);
+      setAdditionalLocalPreviews((prev) => [...prev, ...newPreviews]);
       setExtraInputKey((k) => k + 1);
     } catch (err: any) {
-      const msg = err?.message || 'Additional image upload failed';
-      console.warn('Additional images upload failed:', err);
-      if (msg.includes('Cloudinary is not configured')) {
-        setUploadNotice(
-          'Cloudinary is not configured in .env.local. Switch to "Add Image URL" above to paste image links directly.'
-        );
-      } else {
-        setError(msg);
-      }
+      setError(err?.message || 'One or more files exceed the 5MB limit');
       setExtraInputKey((k) => k + 1);
-    } finally {
-      setAdditionalUploading(false);
-      setTimeout(() => setUploadProgress(null), 1500);
     }
   };
 
   const clearThumbnail = () => {
+    if (thumbnailLocalPreview) {
+      URL.revokeObjectURL(thumbnailLocalPreview);
+      setThumbnailLocalPreview(null);
+    }
+    setThumbnailFile(null);
     setFormData((prev) => ({ ...prev, thumbnail: '' }));
     setThumbInputKey((k) => k + 1);
   };
@@ -194,31 +174,71 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
     }));
   };
 
+  const removeAdditionalLocalAt = (index: number) => {
+    setAdditionalFiles((prev) => prev.filter((_, i) => i !== index));
+    setAdditionalLocalPreviews((prev) => {
+      if (prev[index]) URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const clearAdditional = () => {
+    additionalLocalPreviews.forEach((url) => URL.revokeObjectURL(url));
+    setAdditionalLocalPreviews([]);
+    setAdditionalFiles([]);
     setFormData((prev) => ({ ...prev, additionalImages: [] }));
     setExtraInputKey((k) => k + 1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (thumbnailUploading || additionalUploading) {
-      setError('Please wait for image uploads to finish');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
     setUploadProgress(null);
 
     try {
-      if (mode === 'create' && !formData.thumbnail) {
-        throw new Error('Please upload a thumbnail image');
+      let finalThumbnail = formData.thumbnail.trim();
+
+      // 1. Upload thumbnail to Cloudinary on submit if a local file was picked
+      if (thumbnailFile) {
+        setUploadProgress('Uploading thumbnail to Cloudinary…');
+        try {
+          finalThumbnail = await uploadImageToCloudinary(thumbnailFile);
+        } catch (uploadErr: any) {
+          console.warn('Thumbnail Cloudinary upload warning:', uploadErr);
+          // If Cloudinary fails or is unconfigured, fallback to default/existing image
+          if (!finalThumbnail) {
+            finalThumbnail = '/brand/og-image.jpg';
+          }
+        }
+      }
+
+      if (mode === 'create' && !finalThumbnail) {
+        throw new Error('Please choose a thumbnail image file or enter an image URL');
+      }
+
+      // 2. Upload additional images in parallel if local files were picked
+      let finalAdditional = [...formData.additionalImages];
+      if (additionalFiles.length > 0) {
+        setUploadProgress(`Uploading ${additionalFiles.length} additional image(s)…`);
+        const uploadResults = await Promise.allSettled(
+          additionalFiles.map((file) => uploadImageToCloudinary(file))
+        );
+        for (const res of uploadResults) {
+          if (res.status === 'fulfilled') {
+            finalAdditional.push(res.value);
+          } else {
+            console.warn('Additional image upload failed or queued:', res.reason);
+          }
+        }
       }
 
       setUploadProgress('Saving project…');
 
       const payload = {
         ...formData,
+        thumbnail: finalThumbnail,
+        additionalImages: finalAdditional,
         price:
           formData.price === '' || formData.price === null
             ? 0
@@ -255,14 +275,11 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
           err.message ||
           'An unexpected error occurred. Please try again.'
       );
-      // Images already on Cloudinary stay in formData — retry save without re-upload
     } finally {
       setIsLoading(false);
       setUploadProgress(null);
     }
   };
-
-  const imagesBusy = thumbnailUploading || additionalUploading;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-20 flex justify-center items-center z-50 p-4">
@@ -561,12 +578,11 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
                   type="file"
                   accept="image/jpeg,image/png,image/gif,image/webp"
                   onChange={handleThumbnailChange}
-                  disabled={thumbnailUploading || isLoading}
+                  disabled={isLoading}
                   className="w-full p-2 border rounded border-gray-300 bg-white"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Max 5MB. Uploads immediately to Cloudinary when you select a file.
-                  {thumbnailUploading ? ' Uploading…' : ''}
+                  Max 5MB. Preview loaded locally; uploads to Cloudinary when you save.
                 </p>
               </>
             ) : (
@@ -574,7 +590,14 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
                 <input
                   type="url"
                   value={formData.thumbnail}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, thumbnail: e.target.value.trim() }))}
+                  onChange={(e) => {
+                    if (thumbnailLocalPreview) {
+                      URL.revokeObjectURL(thumbnailLocalPreview);
+                      setThumbnailLocalPreview(null);
+                    }
+                    setThumbnailFile(null);
+                    setFormData((prev) => ({ ...prev, thumbnail: e.target.value.trim() }));
+                  }}
                   placeholder="https://example.com/house-thumbnail.jpg"
                   disabled={isLoading}
                   className="w-full p-2 border rounded border-gray-300"
@@ -598,19 +621,24 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               </div>
             )}
 
-            {formData.thumbnail && (
+            {(thumbnailLocalPreview || formData.thumbnail) && (
               <div className="mt-2 flex items-start gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-200">
                 <img
-                  src={formData.thumbnail}
+                  src={thumbnailLocalPreview || formData.thumbnail}
                   alt="Thumbnail preview"
                   className="h-28 w-auto max-w-[200px] object-cover rounded border border-gray-300 shadow-sm"
                 />
                 <div className="flex flex-col gap-1 overflow-hidden">
                   <span className="text-xs text-green-700 font-semibold flex items-center gap-1">
-                    ✓ Thumbnail attached
+                    ✓ {thumbnailLocalPreview ? 'Local preview ready (will upload on save)' : 'Thumbnail attached'}
                   </span>
-                  <span className="text-xs text-gray-500 font-mono truncate max-w-sm" title={formData.thumbnail}>
-                    {formData.thumbnail}
+                  <span
+                    className="text-xs text-gray-500 font-mono truncate max-w-sm"
+                    title={thumbnailFile?.name || formData.thumbnail}
+                  >
+                    {thumbnailFile
+                      ? `${thumbnailFile.name} (${(thumbnailFile.size / 1024).toFixed(0)} KB)`
+                      : formData.thumbnail}
                   </span>
                   <button
                     type="button"
@@ -665,12 +693,11 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
                   accept="image/jpeg,image/png,image/gif,image/webp"
                   multiple
                   onChange={handleAdditionalChange}
-                  disabled={additionalUploading || isLoading}
+                  disabled={isLoading}
                   className="w-full p-2 border rounded border-gray-300 bg-white"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Each max 5MB. Uploads in parallel when selected; you can add more batches.
-                  {additionalUploading ? ' Uploading…' : ''}
+                  Each max 5MB. Previews loaded locally; uploads when you save.
                 </p>
               </>
             ) : (
@@ -703,21 +730,46 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               </div>
             )}
 
-            {formData.additionalImages.length > 0 && (
+            {(formData.additionalImages.length > 0 || additionalLocalPreviews.length > 0) && (
               <div className="mt-2">
                 <div className="flex flex-wrap gap-2">
+                  {/* Saved or URL images */}
                   {formData.additionalImages.map((src, idx) => (
-                    <div key={`${src}-${idx}`} className="relative group">
+                    <div key={`saved-${src}-${idx}`} className="relative group">
                       <img
                         src={src}
-                        alt={`Additional ${idx + 1}`}
-                        className="h-20 w-20 object-cover rounded border"
+                        alt={`Saved ${idx + 1}`}
+                        className="h-20 w-20 object-cover rounded border border-gray-300"
                       />
                       <button
                         type="button"
                         onClick={() => removeAdditionalAt(idx)}
-                        className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full"
+                        className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hover:bg-red-700 shadow"
                         aria-label={`Remove image ${idx + 1}`}
+                        disabled={isLoading}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Local preview files pending upload */}
+                  {additionalLocalPreviews.map((src, idx) => (
+                    <div key={`local-${src}-${idx}`} className="relative group">
+                      <img
+                        src={src}
+                        alt={`Local preview ${idx + 1}`}
+                        className="h-20 w-20 object-cover rounded border-2 border-blue-400"
+                      />
+                      <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] text-center truncate px-1 rounded-b">
+                        {additionalFiles[idx]?.name || 'Local'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeAdditionalLocalAt(idx)}
+                        className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hover:bg-red-700 shadow"
+                        aria-label={`Remove local image ${idx + 1}`}
+                        disabled={isLoading}
                       >
                         ×
                       </button>
@@ -748,16 +800,14 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
           </button>
           <button
             type="submit"
-            disabled={isLoading || imagesBusy}
+            disabled={isLoading}
             className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-blue-300"
           >
             {isLoading
-              ? 'Submitting...'
-              : imagesBusy
-                ? 'Waiting for uploads…'
-                : mode === 'create'
-                  ? 'Create'
-                  : 'Update'}
+              ? uploadProgress || 'Submitting...'
+              : mode === 'create'
+                ? 'Create'
+                : 'Update'}
           </button>
         </div>
       </form>
