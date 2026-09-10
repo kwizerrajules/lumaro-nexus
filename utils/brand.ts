@@ -54,6 +54,34 @@ export function planHref(project: { slug?: string | null; id?: string }): string
   return key ? `/plans/${key}` : "/catalog";
 }
 
+/** Format floor count into architectural G+ notation (e.g. 1 -> 'G', 2 -> 'G+1', 3 -> 'G+2') */
+export function formatFloor(floors?: number | string | null): string {
+  if (floors === null || floors === undefined || floors === '') return 'G';
+  if (typeof floors === 'string') {
+    const trimmed = floors.trim();
+    if (/^G(\+\d+)?$/i.test(trimmed)) return trimmed.toUpperCase();
+  }
+  const n = typeof floors === 'number' ? floors : parseInt(String(floors), 10);
+  if (isNaN(n) || n <= 1) return 'G';
+  return `G+${n - 1}`;
+}
+
+export const FLOOR_G_OPTIONS = [
+  { value: 1, label: 'G (Ground Floor)' },
+  { value: 2, label: 'G+1 (2 Levels)' },
+  { value: 3, label: 'G+2 (3 Levels)' },
+  { value: 4, label: 'G+3 (4 Levels)' },
+  { value: 5, label: 'G+4 (5 Levels)' },
+  { value: 6, label: 'G+5 (6 Levels)' },
+  { value: 7, label: 'G+6 (7 Levels)' },
+  { value: 8, label: 'G+7 (8 Levels)' },
+  { value: 9, label: 'G+8 (9 Levels)' },
+  { value: 10, label: 'G+9 (10 Levels)' },
+  { value: 11, label: 'G+10 (11 Levels)' },
+  { value: 12, label: 'G+11 (12 Levels)' },
+];
+
+
 /** Map API house project → search / card shape */
 export function mapProjectForSearch(item: any) {
   return {
@@ -123,7 +151,7 @@ export function matchesHouseSearch(
     String(house.id ?? ""),
     house.bedrooms != null ? String(house.bedrooms) : "",
     house.bathrooms != null ? String(house.bathrooms) : "",
-    house.floors != null ? String(house.floors) : "",
+    house.floors != null ? `${house.floors} ${formatFloor(house.floors)}` : "",
   ]
     .filter(Boolean)
     .join(" ")

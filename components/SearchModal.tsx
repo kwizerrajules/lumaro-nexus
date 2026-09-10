@@ -10,7 +10,7 @@ import {
   Buildings,
   Lightbulb,
 } from '@phosphor-icons/react';
-import { formatPlanPrice, matchesHouseSearch, planHref } from '@/utils/brand';
+import { formatPlanPrice, matchesHouseSearch, planHref, formatFloor } from '@/utils/brand';
 
 export interface SearchHouse {
   id: string;
@@ -230,7 +230,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                           <Shower size={13} /> {house.bathrooms} Bath
                         </span>
                         <span className="inline-flex items-center gap-1">
-                          <Buildings size={13} /> {house.floors} Fl
+                          <Buildings size={13} /> {formatFloor(house.floors)}
                         </span>
                         {house.area > 0 && (
                           <span>{house.area} m²</span>

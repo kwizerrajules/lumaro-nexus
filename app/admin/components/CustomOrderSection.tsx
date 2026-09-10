@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import API from '../../../utils/api';
+import { formatFloor } from '../../../utils/brand';
 
 type UserData = {
   names: string;
@@ -102,7 +103,7 @@ export default function CustomOrderSection() {
 
                 <td className="px-3 py-2 border-b">{plan.bedrooms}</td>
                 <td className="px-3 py-2 border-b">{plan.bathrooms}</td>
-                <td className="px-3 py-2 border-b">{plan.floors}</td>
+                <td className="px-3 py-2 border-b">{formatFloor(plan.floors)}</td>
                 <td className="px-3 py-2 border-b">{plan.total_area}</td>
                 <td className="px-3 py-2 border-b">{plan.category}</td>
                 <td className="px-3 py-2 border-b">
@@ -138,7 +139,7 @@ export default function CustomOrderSection() {
               <h4 className="font-semibold mt-3 mb-1">Plan Details</h4>
               <p>Category: {selectedPlan.category}</p>
               <p>Area: {selectedPlan.total_area}</p>
-              <p>Floors: {selectedPlan.floors}</p>
+              <p>Floors: {formatFloor(selectedPlan.floors)}</p>
               <p>Rooms: {selectedPlan.bedrooms} beds, {selectedPlan.bathrooms} baths</p>
             </div>
 

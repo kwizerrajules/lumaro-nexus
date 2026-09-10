@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { X, Heart, WhatsappLogo, ArrowSquareOut } from '@phosphor-icons/react';
 import ImageCarousel from './ImageCarousel';
 import axios from 'axios';
-import { formatPlanPrice, whatsappPlanUrl, planHref } from '@/utils/brand';
+import { formatPlanPrice, whatsappPlanUrl, planHref, formatFloor } from '@/utils/brand';
 
 interface Project {
   id: string;
@@ -121,8 +121,8 @@ const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
 
             <div className="grid grid-cols-2 gap-3 mb-6 p-4 bg-stone-50 border border-brand-line">
               <div className="text-center">
-                <div className="text-neutral-900 font-semibold">{project.floors}</div>
-                <div className="text-xs text-neutral-500 uppercase tracking-wide">Floors</div>
+                <div className="text-neutral-900 font-semibold">{formatFloor(project.floors)}</div>
+                <div className="text-xs text-neutral-500 uppercase tracking-wide">Floor</div>
               </div>
               <div className="text-center">
                 <div className="text-neutral-900 font-semibold">{project.bedrooms}</div>

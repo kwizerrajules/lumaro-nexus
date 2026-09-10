@@ -230,18 +230,19 @@ const CustomPlanBuilder: React.FC = () => {
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5">
-              Floors
+              Floors (G+)
             </label>
             <select
               value={floors}
               onChange={(e) => setFloors(Number(e.target.value))}
               className="input-brand text-sm py-2.5 px-3"
             >
-              {[1, 2, 3].map((num) => (
-                <option key={num} value={num}>
-                  {num}
-                </option>
-              ))}
+              <option value={1}>G (Ground Floor)</option>
+              <option value={2}>G+1 (2 Levels)</option>
+              <option value={3}>G+2 (3 Levels)</option>
+              <option value={4}>G+3 (4 Levels)</option>
+              <option value={5}>G+4 (5 Levels)</option>
+              <option value={6}>G+5 (6 Levels)</option>
             </select>
           </div>
 

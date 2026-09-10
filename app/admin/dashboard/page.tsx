@@ -43,6 +43,16 @@ export default function AdminDashboardPage() {
   }, [router]);
 
 
+  useEffect(() => {
+    const handleProfileUpdated = (e: any) => {
+      if (e.detail?.names) {
+        setAdminName(e.detail.names);
+      }
+    };
+    window.addEventListener('adminProfileUpdated', handleProfileUpdated);
+    return () => window.removeEventListener('adminProfileUpdated', handleProfileUpdated);
+  }, []);
+
   const [activeSection, setActiveSection] = useState('houseProjects');
 
   const sections = [
@@ -52,7 +62,7 @@ export default function AdminDashboardPage() {
     { key: 'users', label: 'Users' },
     { key: 'contact_us', label: 'Contacts' },
     { key: 'settings', label: 'Site Settings' },
-    { key: 'profile', label: 'Profile' },
+    { key: 'profile', label: 'Profile & Settings' },
   ];
 
   return (
@@ -97,7 +107,9 @@ export default function AdminDashboardPage() {
   {activeSection === 'users' && <UsersSection />}
   {activeSection === 'contact_us' && <ContactUsSection />}
   {activeSection === 'settings' && <SiteSettingsPanel />}
-  {activeSection === 'profile' && <ProfileSection />}
+  {activeSection === 'profile' && (
+    <ProfileSection onProfileUpdate={(newName) => setAdminName(newName)} />
+  )}
 
 </div>
       </main>

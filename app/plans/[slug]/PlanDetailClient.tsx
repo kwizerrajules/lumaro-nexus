@@ -21,6 +21,7 @@ import {
   formatPlanPrice,
   whatsappPlanUrl,
   planHref,
+  formatFloor,
 } from '@/utils/brand';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import type { PlanCardData } from '@/lib/planCard';
@@ -309,9 +310,9 @@ export default function PlanDetailClient({
                   <div className="text-center">
                     <Buildings size={18} className="mx-auto text-amber-700 mb-0.5" />
                     <div className="font-semibold text-sm text-neutral-900">
-                      {project.floors}
+                      {formatFloor(project.floors)}
                     </div>
-                    <div className="text-[10px] text-neutral-500">Floors</div>
+                    <div className="text-[10px] text-neutral-500">Floor</div>
                   </div>
                   <div className="text-center">
                     <Ruler size={18} className="mx-auto text-amber-700 mb-0.5" />

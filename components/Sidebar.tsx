@@ -239,6 +239,23 @@ const Sidebar: React.FC<SidebarProps> = ({
           ))}
         </FilterSection>
 
+        <FilterSection title="Floors" sectionKey="floors">
+          {[
+            { label: 'G (Ground Floor)', value: 1 },
+            { label: 'G+1 (2 Levels)', value: 2 },
+            { label: 'G+2 (3 Levels)', value: 3 },
+            { label: 'G+3 (4 Levels)', value: 4 },
+            { label: 'G+4 (5 Levels)', value: 5 },
+          ].map((floor) => (
+            <CheckRow
+              key={floor.value}
+              checked={filters.floors.includes(floor.value)}
+              onChange={() => toggleArrayFilter('floors', floor.value)}
+              label={floor.label}
+            />
+          ))}
+        </FilterSection>
+
         <FilterSection title="Area" sectionKey="area">
           {[
             { label: 'Small (0–50 m²)', value: '0-50' },

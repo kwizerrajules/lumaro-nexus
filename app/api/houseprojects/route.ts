@@ -85,7 +85,12 @@ export async function POST(req: NextRequest) {
         : {}),
       bedrooms: Number(body.bedrooms) || 0,
       bathrooms: Number(body.bathrooms) || 0,
-      floors: Number(body.floors) || 0,
+      floors:
+        typeof body.floors === 'string' && /^G(\+\d+)?$/i.test(body.floors.trim())
+          ? body.floors.trim().toUpperCase() === 'G'
+            ? 1
+            : parseInt(body.floors.trim().slice(2), 10) + 1
+          : Number(body.floors) || 0,
       ...(String(body.category || "").trim()
         ? { category: String(body.category).trim() }
         : {}),

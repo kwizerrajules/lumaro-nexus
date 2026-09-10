@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import Newsletter from '@/components/Newsletter';
 import AuthModal from '@/components/AuthModal';
 import axios from 'axios';
+import { formatFloor } from '@/utils/brand';
 
 interface CustomPlan {
   id: string;
@@ -195,7 +196,7 @@ export default function MyCustomPlans() {
                       </div>
                       <div>
                         <span className="text-gray-500">Floors</span>
-                        <p className="font-semibold">{plan.floors}</p>
+                        <p className="font-semibold">{formatFloor(plan.floors)}</p>
                       </div>
                       <div>
                         <span className="text-gray-500">Area</span>

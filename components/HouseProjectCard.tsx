@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Bed, Shower, Buildings, Ruler, ArrowRight } from '@phosphor-icons/react';
-import { formatPlanPrice, planHref } from '@/utils/brand';
+import { formatPlanPrice, planHref, formatFloor } from '@/utils/brand';
 import WatermarkedImage from '@/components/WatermarkedImage';
 
 interface HouseProject {
@@ -64,7 +64,7 @@ const HouseProjectCard: React.FC<HouseProjectCardProps> = ({ project }) => {
             </span>
             <span className="inline-flex items-center gap-1 sm:gap-1.5 truncate">
               <Buildings size={14} className="shrink-0 text-amber-700" />
-              {project.floors} Fl
+              {formatFloor(project.floors)}
             </span>
             <span className="inline-flex items-center gap-1 sm:gap-1.5 truncate">
               <Ruler size={14} className="shrink-0 text-amber-700" />

@@ -35,6 +35,12 @@ const optionalTypeString = z.preprocess(
 
 const optionalNonNegativeInt = z.preprocess((v) => {
   if (v === "" || v === null || v === undefined) return undefined;
+  if (typeof v === "string") {
+    const trimmed = v.trim().toUpperCase();
+    if (trimmed === "G") return 1;
+    const match = trimmed.match(/^G\+(\d+)$/);
+    if (match) return parseInt(match[1], 10) + 1;
+  }
   const n = typeof v === "number" ? v : Number(v);
   if (!Number.isFinite(n)) return undefined;
   return Math.trunc(n);

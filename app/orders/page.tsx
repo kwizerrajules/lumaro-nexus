@@ -7,6 +7,7 @@ import Newsletter from '@/components/Newsletter';
 import AuthModal from '@/components/AuthModal';
 import axios from 'axios';
 import Image from 'next/image';
+import { formatFloor } from '@/utils/brand';
 
 interface Enquiry {
   enquiry_id: string;
@@ -181,8 +182,7 @@ export default function UserEnquiriesPage() {
                         Price: ${item.project_price}
                       </p>
                       <p className="text-sm text-gray-600">
-                        {item.bedrooms} bed · {item.bathrooms} bath · {item.floors} floor
-                        {item.floors !== 1 ? 's' : ''} · {item.areaSqFt} sqft
+                        {item.bedrooms} bed · {item.bathrooms} bath · {formatFloor(item.floors)} · {item.areaSqFt} m²
                       </p>
                       <button
                         className="mt-4 w-full px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold"

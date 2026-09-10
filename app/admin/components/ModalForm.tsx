@@ -7,6 +7,7 @@ import {
   uploadImagesToCloudinary,
 } from '../../../utils/cloudinaryUpload';
 import { invalidateHouseProjectsCache } from '../../../utils/productCache';
+import { formatFloor, FLOOR_G_OPTIONS } from '../../../utils/brand';
 import CategoryCombobox from './CategoryCombobox';
 import StyleSelect from './StyleSelect';
 
@@ -414,20 +415,30 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Floors
+              Floors (G+)
             </label>
-            <input
-              type="number"
+            <select
               name="floors"
-              value={formData.floors}
+              value={formData.floors || 1}
               onChange={handleChange}
-              className="w-full p-2 border rounded border-gray-300"
-            />
+              className="w-full p-2 border rounded border-gray-300 bg-white"
+            >
+              {FLOOR_G_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+              {formData.floors > 12 && (
+                <option value={formData.floors}>
+                  {formatFloor(formData.floors)} ({formData.floors} Levels)
+                </option>
+              )}
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Height (ft){' '}
+              Height (m){' '}
               <span className="text-gray-400 font-normal">optional</span>
             </label>
             <input
@@ -444,7 +455,7 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Width (ft){' '}
+              Width (m){' '}
               <span className="text-gray-400 font-normal">optional</span>
             </label>
             <input
@@ -461,7 +472,7 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Area (sq ft){' '}
+              Area (m²){' '}
               <span className="text-gray-400 font-normal">optional</span>
             </label>
             <input
