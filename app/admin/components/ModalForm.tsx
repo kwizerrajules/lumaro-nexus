@@ -24,6 +24,10 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
   const [additionalUploading, setAdditionalUploading] = useState(false);
+  const [thumbMode, setThumbMode] = useState<'file' | 'url'>('file');
+  const [additionalMode, setAdditionalMode] = useState<'file' | 'url'>('file');
+  const [additionalUrlInput, setAdditionalUrlInput] = useState('');
+  const [uploadNotice, setUploadNotice] = useState<string | null>(null);
   /** Remount file inputs so the same file can be chosen again after an error */
   const [thumbInputKey, setThumbInputKey] = useState(0);
   const [extraInputKey, setExtraInputKey] = useState(0);
@@ -116,14 +120,22 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
     try {
       validateFileSize(file);
       setError(null);
+      setUploadNotice(null);
       setThumbnailUploading(true);
       setUploadProgress('Uploading thumbnail to Cloudinary…');
       const url = await uploadImageToCloudinary(file);
       setFormData((prev) => ({ ...prev, thumbnail: url }));
       setUploadProgress('Thumbnail uploaded');
     } catch (err: any) {
-      setError(err.message || 'Thumbnail upload failed — choose the image again');
-      setFormData((prev) => ({ ...prev, thumbnail: mode === 'edit' ? prev.thumbnail : '' }));
+      const msg = err?.message || 'Thumbnail upload failed — choose the image again';
+      console.warn('Thumbnail upload failed:', err);
+      if (msg.includes('Cloudinary is not configured')) {
+        setUploadNotice(
+          'Cloudinary is not configured in .env.local. Switch to "Paste Image URL" above to paste an image link directly.'
+        );
+      } else {
+        setError(msg);
+      }
       // Remount input so the same file can be selected again
       setThumbInputKey((k) => k + 1);
     } finally {
@@ -140,6 +152,7 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
     try {
       files.forEach(validateFileSize);
       setError(null);
+      setUploadNotice(null);
       setAdditionalUploading(true);
       setUploadProgress(
         `Uploading ${files.length} additional image(s) to Cloudinary…`
@@ -153,10 +166,15 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
       setUploadProgress(`${urls.length} additional image(s) uploaded`);
       setExtraInputKey((k) => k + 1);
     } catch (err: any) {
-      setError(
-        err.message ||
-          'Additional image upload failed — you can select files again and retry'
-      );
+      const msg = err?.message || 'Additional image upload failed';
+      console.warn('Additional images upload failed:', err);
+      if (msg.includes('Cloudinary is not configured')) {
+        setUploadNotice(
+          'Cloudinary is not configured in .env.local. Switch to "Add Image URL" above to paste image links directly.'
+        );
+      } else {
+        setError(msg);
+      }
       setExtraInputKey((k) => k + 1);
     } finally {
       setAdditionalUploading(false);
@@ -505,59 +523,186 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
           </div>
 
           <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Thumbnail image {mode === 'create' ? '*' : '(optional)'}
-            </label>
-            <input
-              key={thumbInputKey}
-              ref={thumbnailInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              onChange={handleThumbnailChange}
-              disabled={thumbnailUploading || isLoading}
-              className="w-full p-2 border rounded border-gray-300"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Max 5MB. Uploads immediately to Cloudinary when you select a file.
-              {thumbnailUploading ? ' Uploading…' : ''}
-            </p>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Thumbnail image {mode === 'create' ? '*' : '(optional)'}
+              </label>
+              <div className="inline-flex rounded-md shadow-sm border border-gray-200 overflow-hidden text-xs">
+                <button
+                  type="button"
+                  onClick={() => setThumbMode('file')}
+                  className={`px-3 py-1 font-medium transition ${
+                    thumbMode === 'file'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Upload File
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setThumbMode('url')}
+                  className={`px-3 py-1 font-medium transition ${
+                    thumbMode === 'url'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Paste Image URL
+                </button>
+              </div>
+            </div>
+
+            {thumbMode === 'file' ? (
+              <>
+                <input
+                  key={thumbInputKey}
+                  ref={thumbnailInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={handleThumbnailChange}
+                  disabled={thumbnailUploading || isLoading}
+                  className="w-full p-2 border rounded border-gray-300 bg-white"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Max 5MB. Uploads immediately to Cloudinary when you select a file.
+                  {thumbnailUploading ? ' Uploading…' : ''}
+                </p>
+              </>
+            ) : (
+              <div>
+                <input
+                  type="url"
+                  value={formData.thumbnail}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, thumbnail: e.target.value.trim() }))}
+                  placeholder="https://example.com/house-thumbnail.jpg"
+                  disabled={isLoading}
+                  className="w-full p-2 border rounded border-gray-300"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter a direct web link to an image (e.g., from Cloudinary, Unsplash, or any image host).
+                </p>
+              </div>
+            )}
+
+            {uploadNotice && (
+              <div className="mt-2 p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg flex items-center justify-between">
+                <span>{uploadNotice}</span>
+                <button
+                  type="button"
+                  onClick={() => setThumbMode('url')}
+                  className="ml-2 font-semibold underline hover:text-amber-900 shrink-0"
+                >
+                  Switch to URL
+                </button>
+              </div>
+            )}
+
             {formData.thumbnail && (
-              <div className="mt-2 flex items-start gap-3">
+              <div className="mt-2 flex items-start gap-3 p-2.5 bg-gray-50 rounded-lg border border-gray-200">
                 <img
                   src={formData.thumbnail}
                   alt="Thumbnail preview"
-                  className="h-32 w-auto object-cover rounded border"
+                  className="h-28 w-auto max-w-[200px] object-cover rounded border border-gray-300 shadow-sm"
                 />
-                <button
-                  type="button"
-                  onClick={clearThumbnail}
-                  className="text-sm text-red-600 hover:underline"
-                  disabled={isLoading}
-                >
-                  Remove / choose another
-                </button>
+                <div className="flex flex-col gap-1 overflow-hidden">
+                  <span className="text-xs text-green-700 font-semibold flex items-center gap-1">
+                    ✓ Thumbnail attached
+                  </span>
+                  <span className="text-xs text-gray-500 font-mono truncate max-w-sm" title={formData.thumbnail}>
+                    {formData.thumbnail}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={clearThumbnail}
+                    className="text-xs text-red-600 hover:underline mt-1 text-left"
+                    disabled={isLoading}
+                  >
+                    Remove thumbnail
+                  </button>
+                </div>
               </div>
             )}
           </div>
 
           <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Additional images (multi-select)
-            </label>
-            <input
-              key={extraInputKey}
-              ref={additionalInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              multiple
-              onChange={handleAdditionalChange}
-              disabled={additionalUploading || isLoading}
-              className="w-full p-2 border rounded border-gray-300"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Each max 5MB. Uploads in parallel when selected; you can add more
-              batches. {additionalUploading ? 'Uploading…' : ''}
-            </p>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Additional images (optional)
+              </label>
+              <div className="inline-flex rounded-md shadow-sm border border-gray-200 overflow-hidden text-xs">
+                <button
+                  type="button"
+                  onClick={() => setAdditionalMode('file')}
+                  className={`px-3 py-1 font-medium transition ${
+                    additionalMode === 'file'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Upload Files
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAdditionalMode('url')}
+                  className={`px-3 py-1 font-medium transition ${
+                    additionalMode === 'url'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Add Image URL
+                </button>
+              </div>
+            </div>
+
+            {additionalMode === 'file' ? (
+              <>
+                <input
+                  key={extraInputKey}
+                  ref={additionalInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  multiple
+                  onChange={handleAdditionalChange}
+                  disabled={additionalUploading || isLoading}
+                  className="w-full p-2 border rounded border-gray-300 bg-white"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Each max 5MB. Uploads in parallel when selected; you can add more batches.
+                  {additionalUploading ? ' Uploading…' : ''}
+                </p>
+              </>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={additionalUrlInput}
+                  onChange={(e) => setAdditionalUrlInput(e.target.value)}
+                  placeholder="https://example.com/floor-plan-1.jpg"
+                  disabled={isLoading}
+                  className="flex-1 p-2 border rounded border-gray-300 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const trimmed = additionalUrlInput.trim();
+                    if (trimmed) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        additionalImages: [...prev.additionalImages, trimmed],
+                      }));
+                      setAdditionalUrlInput('');
+                    }
+                  }}
+                  disabled={isLoading || !additionalUrlInput.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Add URL
+                </button>
+              </div>
+            )}
+
             {formData.additionalImages.length > 0 && (
               <div className="mt-2">
                 <div className="flex flex-wrap gap-2">

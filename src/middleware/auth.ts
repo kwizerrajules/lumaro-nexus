@@ -37,7 +37,9 @@ export async function roleMiddleware(req: NextRequest, requiredRoles: string[]) 
 
     const user = authResult;
     
-    if (!requiredRoles.includes(user.role)) {
+    const userRole = String(user.role || '').toUpperCase();
+    const allowedRoles = requiredRoles.map((r) => r.toUpperCase());
+    if (!allowedRoles.includes(userRole)) {
         return NextResponse.json({ error: "Forbidden: Insufficient role" }, { status: 403 });
     }
 
