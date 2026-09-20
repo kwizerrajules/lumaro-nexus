@@ -5,6 +5,7 @@ import { StaffModel } from '@/src/lib/models/staff.model';
 import { StaffPayload } from '@/src/types/jwt.payload';
 import { createAccessToken, createRefreshToken } from '@/src/security/auth';
 import { rateLimiter } from '@/src/security/rateLimiter';
+import { v4 as uuidv4 } from 'uuid';
 
 const allowedAudiences = Array.from(
     new Set(
@@ -55,13 +56,36 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, message: 'Google account email is not verified' }, { status: 401 });
         }
 
-        const staff = await StaffModel.getStaffByEmail(googlePayload.email);
+        let staff = await StaffModel.getStaffByEmail(googlePayload.email);
         if (!staff) {
-            // Admins are never auto-provisioned via Google sign-in.
-            return NextResponse.json(
-                { success: false, message: `The Google account (${googlePayload.email}) is not authorized to access the admin panel.` },
-                { status: 403 }
-            );
+            const normalizedEmail = (googlePayload.email || '').toLowerCase().trim();
+            const allowedAdminEmails = [
+                'kwizerrajules@gmail.com',
+                ...(process.env.ADMIN_EMAILS || '').split(',').map((e) => e.toLowerCase().trim()),
+                ...(process.env.INITIAL_ADMIN_EMAIL ? [process.env.INITIAL_ADMIN_EMAIL.toLowerCase().trim()] : []),
+            ].filter(Boolean);
+
+            if (allowedAdminEmails.includes(normalizedEmail)) {
+                // Auto-provision registered owner as SUPER_ADMIN
+                await StaffModel.createStaff({
+                    id: uuidv4(),
+                    names: googlePayload.name || 'Jules Kwizerra',
+                    email: normalizedEmail,
+                    password: `${uuidv4()}${uuidv4()}`,
+                    role: 'SUPER_ADMIN',
+                    permissions: ['ALL'],
+                    avatarUrl: googlePayload.picture,
+                    status: 'ACTIVE',
+                });
+                staff = await StaffModel.getStaffByEmail(normalizedEmail);
+            }
+
+            if (!staff) {
+                return NextResponse.json(
+                    { success: false, message: `The Google account (${googlePayload.email}) is not authorized to access the admin panel.` },
+                    { status: 403 }
+                );
+            }
         }
 
         const { passwordHash, ...staffData } = staff;
