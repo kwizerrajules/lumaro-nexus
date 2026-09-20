@@ -143,10 +143,10 @@ async function buildCornersOverlay(
   }
 
   const targetW = Math.max(
-    110,
-    Math.round(width * (mode === 'light' ? 0.2 : 0.24))
+    65,
+    Math.round(width * (mode === 'light' ? 0.1 : 0.11))
   );
-  const opacity = mode === 'light' ? 0.4 : 0.55;
+  const opacity = mode === 'light' ? 0.3 : 0.35;
   const { buf, w: sw, h: sh } = await prepareSticker(targetW, opacity, -18);
 
   const pad = Math.max(10, Math.round(Math.min(width, height) * 0.025));
@@ -249,19 +249,19 @@ async function buildPngOverlay(
 async function buildPreviewBadge(canvasWidth: number): Promise<Buffer | null> {
   if (!fs.existsSync(BADGE_PATH)) return null;
 
-  const badgeW = Math.min(130, Math.max(96, Math.round(canvasWidth * 0.12)));
+  const badgeW = Math.min(84, Math.max(60, Math.round(canvasWidth * 0.065)));
   const text = Buffer.from(
     await sharp(BADGE_PATH)
-      .resize({ width: Math.round(badgeW * 0.78), withoutEnlargement: true })
+      .resize({ width: Math.round(badgeW * 0.8), withoutEnlargement: true })
       .ensureAlpha()
       .png()
       .toBuffer()
   );
   const tm = await sharp(text).metadata();
-  const tw = tm.width || 80;
-  const th = tm.height || 18;
-  const padX = 12;
-  const padY = 7;
+  const tw = tm.width || 60;
+  const th = tm.height || 12;
+  const padX = 8;
+  const padY = 4;
   const boxW = tw + padX * 2;
   const boxH = th + padY * 2;
 
@@ -313,12 +313,12 @@ async function buildWatermarkedBuffer(
     const badge = await buildPreviewBadge(width);
     if (badge) {
       const bm = await sharp(badge).metadata();
-      const bw = bm.width || 100;
-      const bh = bm.height || 28;
+      const bw = bm.width || 76;
+      const bh = bm.height || 20;
       composites.push({
         input: badge,
-        left: Math.max(0, width - bw - 14),
-        top: Math.max(0, height - bh - 14),
+        left: Math.max(0, width - bw - 10),
+        top: Math.max(0, height - bh - 10),
       });
     }
   }
@@ -400,7 +400,7 @@ export async function GET(req: NextRequest) {
         // Shorter browser cache so watermark version bumps apply faster
         'Cache-Control':
           'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
-        'X-Watermark-Version': '10',
+        'X-Watermark-Version': '11',
         'X-Content-Type-Options': 'nosniff',
       },
     });

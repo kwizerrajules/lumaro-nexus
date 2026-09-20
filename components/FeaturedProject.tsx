@@ -113,6 +113,7 @@ const FeaturedProject: React.FC<{ initialProjects?: PlanCardData[] }> = ({
                 className="object-cover animate-hero-reveal"
                 sizes="(max-width: 1024px) 100vw, 66vw"
                 priority
+                mode="light"
               />
             ) : (
               <div className="absolute inset-0 bg-neutral-800" />

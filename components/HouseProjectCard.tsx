@@ -37,6 +37,7 @@ const HouseProjectCard: React.FC<HouseProjectCardProps> = ({ project }) => {
               className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
               loading="lazy"
+              mode="light"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-stone-300">
