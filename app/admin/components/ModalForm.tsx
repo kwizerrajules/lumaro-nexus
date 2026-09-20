@@ -21,11 +21,35 @@ type Props = {
 export default function ModalForm({ mode, project, onSuccess, onClose }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [thumbMode, setThumbMode] = useState<'file' | 'url'>('file');
   const [additionalMode, setAdditionalMode] = useState<'file' | 'url'>('file');
   const [additionalUrlInput, setAdditionalUrlInput] = useState('');
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
+
+  const getFieldBorderClass = (fieldName: string) => {
+    if (fieldErrors[fieldName]) {
+      return 'border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none';
+    }
+    return 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100';
+  };
+
+  const renderFieldError = (fieldName: string) => {
+    if (!fieldErrors[fieldName]) return null;
+    return (
+      <p className="text-xs text-red-600 mt-1 flex items-center gap-1 font-medium">
+        <svg className="w-3.5 h-3.5 inline shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+            clipRule="evenodd"
+          />
+        </svg>
+        {fieldErrors[fieldName]}
+      </p>
+    );
+  };
 
   // Local files selected for upload on form submission (no auto-upload on pick)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -97,6 +121,14 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
   ) => {
     const { name, value } = e.target;
 
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
+
     const numericFields = [
       'rooms',
       'height',
@@ -126,6 +158,13 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
       validateFileSize(file);
       setError(null);
       setUploadNotice(null);
+      if (fieldErrors.thumbnail) {
+        setFieldErrors((prev) => {
+          const next = { ...prev };
+          delete next.thumbnail;
+          return next;
+        });
+      }
       if (thumbnailLocalPreview) {
         URL.revokeObjectURL(thumbnailLocalPreview);
       }
@@ -192,21 +231,60 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 1. Client-side validation: highlight missing/invalid fields before uploading
+    const errors: Record<string, string> = {};
+
+    if (!formData.title || !formData.title.trim()) {
+      errors.title = 'Project title is required';
+    } else if (formData.title.trim().length > 255) {
+      errors.title = 'Title must be 255 characters or fewer';
+    }
+
+    if (!formData.description || !formData.description.trim()) {
+      errors.description = 'Project description is required';
+    }
+
+    if (mode === 'create') {
+      const hasThumb = Boolean(thumbnailFile || formData.thumbnail.trim());
+      if (!hasThumb) {
+        errors.thumbnail = 'Thumbnail image is required (upload an image file or paste an image URL)';
+      }
+    }
+
+    if (formData.type && formData.type.trim().length > 0 && formData.type.trim().length < 5) {
+      errors.type = 'Type must be at least 5 characters';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError('Please fill in the required fields highlighted in red below.');
+      const firstErrorKey = Object.keys(errors)[0];
+      const el =
+        document.getElementById(`field-${firstErrorKey}`) ||
+        document.querySelector(`[name="${firstErrorKey}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        (el as HTMLElement).focus?.();
+      }
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
+    setFieldErrors({});
     setUploadProgress(null);
 
     try {
       let finalThumbnail = formData.thumbnail.trim();
 
-      // 1. Upload thumbnail to Cloudinary on submit if a local file was picked
+      // Upload thumbnail to Cloudinary on submit if a local file was picked
       if (thumbnailFile) {
         setUploadProgress('Uploading thumbnail to Cloudinary…');
         try {
           finalThumbnail = await uploadImageToCloudinary(thumbnailFile);
         } catch (uploadErr: any) {
           console.warn('Thumbnail Cloudinary upload warning:', uploadErr);
-          // If Cloudinary fails or is unconfigured, fallback to default/existing image
           if (!finalThumbnail) {
             finalThumbnail = '/brand/og-image.jpg';
           }
@@ -214,10 +292,14 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
       }
 
       if (mode === 'create' && !finalThumbnail) {
-        throw new Error('Please choose a thumbnail image file or enter an image URL');
+        setFieldErrors((prev) => ({
+          ...prev,
+          thumbnail: 'Thumbnail image is required (upload an image file or paste an image URL)',
+        }));
+        throw new Error('Thumbnail image is required');
       }
 
-      // 2. Upload additional images in parallel if local files were picked
+      // Upload additional images in parallel if local files were picked
       let finalAdditional = [...formData.additionalImages];
       if (additionalFiles.length > 0) {
         setUploadProgress(`Uploading ${additionalFiles.length} additional image(s)…`);
@@ -255,6 +337,7 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
       };
 
       if (!payload.description) {
+        setFieldErrors((prev) => ({ ...prev, description: 'Description is required' }));
         throw new Error('Description is required');
       }
 
@@ -270,11 +353,34 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
       onClose();
     } catch (err: any) {
       console.error('Form submission error:', err);
-      setError(
-        err?.response?.data?.error ||
-          err.message ||
-          'An unexpected error occurred. Please try again.'
-      );
+      const serverErrors: Record<string, string> = {};
+      const issues = err?.response?.data?.issues;
+      if (Array.isArray(issues) && issues.length > 0) {
+        issues.forEach((issue: any) => {
+          const fieldPath = Array.isArray(issue.path) ? issue.path.join('.') : issue.path;
+          if (fieldPath && issue.message) {
+            serverErrors[fieldPath] = issue.message;
+          }
+        });
+      }
+
+      if (Object.keys(serverErrors).length > 0) {
+        setFieldErrors((prev) => ({ ...prev, ...serverErrors }));
+        setError('Please fix the highlighted fields in red below.');
+        const firstErrorKey = Object.keys(serverErrors)[0];
+        const el =
+          document.getElementById(`field-${firstErrorKey}`) ||
+          document.querySelector(`[name="${firstErrorKey}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } else {
+        setError(
+          err?.response?.data?.error ||
+            err.message ||
+            'An unexpected error occurred. Please try again.'
+        );
+      }
     } finally {
       setIsLoading(false);
       setUploadProgress(null);
@@ -285,6 +391,7 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
     <div className="fixed inset-0 bg-black bg-opacity-20 flex justify-center items-center z-50 p-4">
       <form
         onSubmit={handleSubmit}
+        noValidate
         className="bg-white p-6 rounded-lg w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-lg"
       >
         <h2 className="text-xl font-bold mb-6 text-gray-800">
@@ -292,13 +399,22 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
         </h2>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-            <strong className="font-bold">Error: </strong>
-            <span className="block sm:inline">{error}</span>
-            <p className="text-sm mt-2 text-red-600">
-              Uploaded images are kept — fix the fields above and save again, or
-              pick new images if an upload failed.
-            </p>
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg mb-4 text-sm text-red-700 flex items-start gap-3">
+            <svg
+              className="w-5 h-5 text-red-500 shrink-0 mt-0.5"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <div>
+              <span className="font-semibold text-red-800">Please note: </span>
+              <span>{error}</span>
+            </div>
           </div>
         )}
 
@@ -309,9 +425,9 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title *
+          <div className="md:col-span-2 lg:col-span-3" id="field-title">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.title ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
+              Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -319,14 +435,15 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               value={formData.title}
               onChange={handleChange}
               placeholder="Enter project title"
-              className="w-full p-2 border rounded border-gray-300"
+              className={`w-full p-2 border rounded ${getFieldBorderClass('title')}`}
               required
             />
+            {renderFieldError('title')}
           </div>
 
-          <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description *
+          <div className="md:col-span-2 lg:col-span-3" id="field-description">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.description ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
+              Description <span className="text-red-500">*</span>
             </label>
             <textarea
               name="description"
@@ -334,9 +451,10 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               onChange={handleChange}
               rows={3}
               placeholder="Enter project description"
-              className="w-full p-2 border rounded border-gray-300"
+              className={`w-full p-2 border rounded ${getFieldBorderClass('description')}`}
               required
             />
+            {renderFieldError('description')}
           </div>
 
           <div>
@@ -370,8 +488,8 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div id="field-status">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.status ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
               Status
             </label>
             <input
@@ -379,12 +497,14 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="w-full p-2 border rounded border-gray-300"
+              placeholder="e.g. planned"
+              className={`w-full p-2 border rounded ${getFieldBorderClass('status')}`}
             />
+            {renderFieldError('status')}
           </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="md:col-span-2" id="field-location">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.location ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
               Location
             </label>
             <input
@@ -392,25 +512,29 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               name="location"
               value={formData.location}
               onChange={handleChange}
-              className="w-full p-2 border rounded border-gray-300"
+              placeholder="e.g. Kigali, Rwanda"
+              className={`w-full p-2 border rounded ${getFieldBorderClass('location')}`}
             />
+            {renderFieldError('location')}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Price
+          <div id="field-price">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.price ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
+              Price (USD $)
             </label>
             <input
               type="text"
               name="price"
               value={formData.price}
               onChange={handleChange}
-              className="w-full p-2 border rounded border-gray-300"
+              placeholder="e.g. 250"
+              className={`w-full p-2 border rounded ${getFieldBorderClass('price')}`}
             />
+            {renderFieldError('price')}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div id="field-bedrooms">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.bedrooms ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
               Bedrooms
             </label>
             <input
@@ -418,12 +542,13 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               name="bedrooms"
               value={formData.bedrooms}
               onChange={handleChange}
-              className="w-full p-2 border rounded border-gray-300"
+              className={`w-full p-2 border rounded ${getFieldBorderClass('bedrooms')}`}
             />
+            {renderFieldError('bedrooms')}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div id="field-bathrooms">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.bathrooms ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
               Bathrooms
             </label>
             <input
@@ -431,12 +556,13 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               name="bathrooms"
               value={formData.bathrooms}
               onChange={handleChange}
-              className="w-full p-2 border rounded border-gray-300"
+              className={`w-full p-2 border rounded ${getFieldBorderClass('bathrooms')}`}
             />
+            {renderFieldError('bathrooms')}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div id="field-rooms">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.rooms ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
               Rooms
             </label>
             <input
@@ -444,19 +570,20 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               name="rooms"
               value={formData.rooms}
               onChange={handleChange}
-              className="w-full p-2 border rounded border-gray-300"
+              className={`w-full p-2 border rounded ${getFieldBorderClass('rooms')}`}
             />
+            {renderFieldError('rooms')}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div id="field-floors">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.floors ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
               Floors (G+)
             </label>
             <select
               name="floors"
               value={formData.floors || 1}
               onChange={handleChange}
-              className="w-full p-2 border rounded border-gray-300 bg-white"
+              className={`w-full p-2 border rounded bg-white ${getFieldBorderClass('floors')}`}
             >
               {FLOOR_G_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -469,10 +596,11 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
                 </option>
               )}
             </select>
+            {renderFieldError('floors')}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div id="field-height">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.height ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
               Height (m){' '}
               <span className="text-gray-400 font-normal">optional</span>
             </label>
@@ -484,12 +612,13 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               value={formData.height || ''}
               onChange={handleChange}
               placeholder="Leave blank if unknown"
-              className="w-full p-2 border rounded border-gray-300"
+              className={`w-full p-2 border rounded ${getFieldBorderClass('height')}`}
             />
+            {renderFieldError('height')}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div id="field-width">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.width ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
               Width (m){' '}
               <span className="text-gray-400 font-normal">optional</span>
             </label>
@@ -501,12 +630,13 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               value={formData.width || ''}
               onChange={handleChange}
               placeholder="Leave blank if unknown"
-              className="w-full p-2 border rounded border-gray-300"
+              className={`w-full p-2 border rounded ${getFieldBorderClass('width')}`}
             />
+            {renderFieldError('width')}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div id="field-areaSqFt">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.areaSqFt ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
               Area (m²){' '}
               <span className="text-gray-400 font-normal">optional</span>
             </label>
@@ -518,12 +648,13 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               value={formData.areaSqFt || ''}
               onChange={handleChange}
               placeholder="Leave blank if unknown"
-              className="w-full p-2 border rounded border-gray-300"
+              className={`w-full p-2 border rounded ${getFieldBorderClass('areaSqFt')}`}
             />
+            {renderFieldError('areaSqFt')}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div id="field-type">
+            <label className={`block text-sm font-medium mb-1 ${fieldErrors.type ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
               Type{' '}
               <span className="text-gray-400 font-normal">
                 optional · min 5 chars
@@ -535,14 +666,15 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               value={formData.type}
               onChange={handleChange}
               placeholder="e.g. RESIDENTIAL"
-              className="w-full p-2 border rounded border-gray-300"
+              className={`w-full p-2 border rounded ${getFieldBorderClass('type')}`}
             />
+            {renderFieldError('type')}
           </div>
 
-          <div className="md:col-span-2 lg:col-span-3">
+          <div className="md:col-span-2 lg:col-span-3" id="field-thumbnail">
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-medium text-gray-700">
-                Thumbnail image {mode === 'create' ? '*' : '(optional)'}
+              <label className={`block text-sm font-medium ${fieldErrors.thumbnail ? 'text-red-700 font-semibold' : 'text-gray-700'}`}>
+                Thumbnail image {mode === 'create' ? <span className="text-red-500">*</span> : <span className="text-gray-400 font-normal">(optional)</span>}
               </label>
               <div className="inline-flex rounded-md shadow-sm border border-gray-200 overflow-hidden text-xs">
                 <button
@@ -570,43 +702,58 @@ export default function ModalForm({ mode, project, onSuccess, onClose }: Props) 
               </div>
             </div>
 
-            {thumbMode === 'file' ? (
-              <>
-                <input
-                  key={thumbInputKey}
-                  ref={thumbnailInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  onChange={handleThumbnailChange}
-                  disabled={isLoading}
-                  className="w-full p-2 border rounded border-gray-300 bg-white"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Max 5MB. Preview loaded locally; uploads to Cloudinary when you save.
-                </p>
-              </>
-            ) : (
-              <div>
-                <input
-                  type="url"
-                  value={formData.thumbnail}
-                  onChange={(e) => {
-                    if (thumbnailLocalPreview) {
-                      URL.revokeObjectURL(thumbnailLocalPreview);
-                      setThumbnailLocalPreview(null);
-                    }
-                    setThumbnailFile(null);
-                    setFormData((prev) => ({ ...prev, thumbnail: e.target.value.trim() }));
-                  }}
-                  placeholder="https://example.com/house-thumbnail.jpg"
-                  disabled={isLoading}
-                  className="w-full p-2 border rounded border-gray-300"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Enter a direct web link to an image (e.g., from Cloudinary, Unsplash, or any image host).
-                </p>
-              </div>
-            )}
+            <div className={`transition-all rounded-lg ${fieldErrors.thumbnail ? 'p-2.5 border-2 border-red-500 bg-red-50/50 ring-2 ring-red-200' : ''}`}>
+              {thumbMode === 'file' ? (
+                <>
+                  <input
+                    key={thumbInputKey}
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleThumbnailChange}
+                    disabled={isLoading}
+                    className={`w-full p-2 border rounded bg-white ${
+                      fieldErrors.thumbnail ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Max 5MB. Preview loaded locally; uploads to Cloudinary when you save.
+                  </p>
+                </>
+              ) : (
+                <div>
+                  <input
+                    type="url"
+                    value={formData.thumbnail}
+                    onChange={(e) => {
+                      if (thumbnailLocalPreview) {
+                        URL.revokeObjectURL(thumbnailLocalPreview);
+                        setThumbnailLocalPreview(null);
+                      }
+                      setThumbnailFile(null);
+                      setFormData((prev) => ({ ...prev, thumbnail: e.target.value.trim() }));
+                      if (fieldErrors.thumbnail) {
+                        setFieldErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.thumbnail;
+                          return next;
+                        });
+                      }
+                    }}
+                    placeholder="https://example.com/house-thumbnail.jpg"
+                    disabled={isLoading}
+                    className={`w-full p-2 border rounded ${
+                      fieldErrors.thumbnail ? 'border-red-500 bg-red-50/50' : 'border-gray-300'
+                    }`}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter a direct web link to an image (e.g., from Cloudinary, Unsplash, or any image host).
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {renderFieldError('thumbnail')}
 
             {uploadNotice && (
               <div className="mt-2 p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg flex items-center justify-between">
