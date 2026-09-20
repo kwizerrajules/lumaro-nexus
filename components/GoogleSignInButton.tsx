@@ -22,6 +22,10 @@ function loadGisScript(): Promise<void> {
     }
     const existing = document.querySelector<HTMLScriptElement>(`script[src="${GIS_SRC}"]`);
     if (existing) {
+      if ((window as any).google?.accounts?.id) {
+        resolve();
+        return;
+      }
       existing.addEventListener('load', () => resolve());
       existing.addEventListener('error', () => reject(new Error('Failed to load Google script')));
       return;
@@ -30,7 +34,6 @@ function loadGisScript(): Promise<void> {
     script.src = GIS_SRC;
     script.async = true;
     script.defer = true;
-    script.crossOrigin = 'anonymous';
     script.onload = () => resolve();
     script.onerror = () => reject(new Error('Failed to load Google script'));
     document.head.appendChild(script);

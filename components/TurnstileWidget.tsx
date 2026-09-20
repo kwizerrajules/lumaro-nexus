@@ -50,7 +50,6 @@ function loadTurnstileScript(): Promise<void> {
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
     script.async = true;
     script.defer = true;
-    script.crossOrigin = 'anonymous';
     script.onload = () => resolve();
     script.onerror = () => reject(new Error('Turnstile script failed'));
     document.head.appendChild(script);
