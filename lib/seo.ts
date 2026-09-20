@@ -110,7 +110,7 @@ export function planProductJsonLd(plan: HouseProject) {
     product.offers = {
       '@type': 'Offer',
       price: plan.price,
-      priceCurrency: 'RWF',
+      priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
       url,
     };

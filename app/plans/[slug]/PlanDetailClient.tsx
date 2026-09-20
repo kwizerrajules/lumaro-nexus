@@ -23,6 +23,7 @@ import {
   planHref,
   formatFloor,
 } from '@/utils/brand';
+import CurrencyConverter from '@/components/CurrencyConverter';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import type { PlanCardData } from '@/lib/planCard';
 
@@ -47,6 +48,7 @@ export default function PlanDetailClient({
   const [loading, setLoading] = useState(!initialProject);
   const [error, setError] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState('');
+  const [convertedText, setConvertedText] = useState<string>('');
 
   const syncAccessToken = () => {
     const token =
@@ -208,6 +210,7 @@ export default function PlanDetailClient({
         bathrooms: project.bathrooms,
         area: project.areaSqFt,
         price: Number(project.price),
+        convertedPriceText: convertedText,
       })
     : '#';
 
@@ -288,9 +291,14 @@ export default function PlanDetailClient({
                   {project.title}
                 </h1>
 
-                <p className="text-2xl sm:text-3xl price-brand mb-4">
-                  From {formatPlanPrice(Number(project.price))}
-                </p>
+                <div className="mb-5">
+                  <CurrencyConverter
+                    usdPrice={Number(project.price)}
+                    onCurrencyChange={(_curr, _amt, text) => {
+                      setConvertedText(text);
+                    }}
+                  />
+                </div>
 
                 <div className="grid grid-cols-4 gap-2 mb-4 border border-brand-line bg-white p-3">
                   <div className="text-center">
@@ -420,6 +428,7 @@ export default function PlanDetailClient({
                 </p>
                 <p className="text-xs price-brand truncate">
                   From {formatPlanPrice(Number(project.price))}
+                  {convertedText ? ` · ${convertedText}` : ''}
                 </p>
               </div>
               <a

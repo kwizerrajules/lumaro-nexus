@@ -272,12 +272,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           ))}
         </FilterSection>
 
-        <FilterSection title="Price" sectionKey="price">
+        <FilterSection title="Price (USD)" sectionKey="price">
           {[
-            { label: '0 – 50,000', value: '0-50000' },
-            { label: '50,001 – 100,000', value: '50001-100000' },
-            { label: '100,001 – 500,000', value: '100001-500000' },
-            { label: '500,001+', value: '500001-null' },
+            { label: 'Under $500', value: '0-500' },
+            { label: '$500 – $1,000', value: '500-1000' },
+            { label: '$1,001 – $2,500', value: '1001-2500' },
+            { label: '$2,501+', value: '2501-null' },
           ].map((priceRange) => (
             <CheckRow
               key={priceRange.value}

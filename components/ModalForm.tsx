@@ -5,6 +5,14 @@ import { X, Heart, WhatsappLogo, ArrowSquareOut } from '@phosphor-icons/react';
 import ImageCarousel from './ImageCarousel';
 import axios from 'axios';
 import { formatPlanPrice, whatsappPlanUrl, planHref, formatFloor } from '@/utils/brand';
+import {
+  getSavedCurrency,
+  convertUsdTo,
+  formatCurrency,
+  fetchExchangeRates,
+  DEFAULT_EAC_RATES,
+  type EacCurrencyCode,
+} from '@/utils/currency';
 
 interface Project {
   id: string;
@@ -26,6 +34,15 @@ interface ModalFormProps {
 const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
   const [quantity, setQuantity] = useState(1);
   const [accessToken, setAccessToken] = useState('');
+  const [selectedCurrency, setSelectedCurrency] = useState<EacCurrencyCode>('USD');
+  const [rates, setRates] = useState<Record<string, number>>(DEFAULT_EAC_RATES);
+
+  useEffect(() => {
+    setSelectedCurrency(getSavedCurrency());
+    fetchExchangeRates().then((data) => {
+      if (data?.rates) setRates(data.rates);
+    });
+  }, []);
 
   useEffect(() => {
     const sync = () => {
@@ -156,9 +173,16 @@ const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
             </div>
 
             <div className="border-t border-brand-line pt-4">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-baseline mb-4">
                 <span className="text-lg font-semibold text-neutral-800">Total</span>
-                <span className="text-2xl price-brand">{formatPlanPrice(total)}</span>
+                <div className="text-right">
+                  <div className="text-2xl price-brand">{formatPlanPrice(total)}</div>
+                  {selectedCurrency !== 'USD' && (
+                    <div className="text-xs font-semibold text-amber-800 mt-0.5">
+                      ≈ {formatCurrency(convertUsdTo(total, selectedCurrency, rates), selectedCurrency)}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <a
@@ -170,6 +194,10 @@ const ModalForm: React.FC<ModalFormProps> = ({ project, onClose }) => {
                   area: project.area,
                   price: project.price,
                   quantity,
+                  convertedPriceText:
+                    selectedCurrency !== 'USD'
+                      ? `approx. ${formatCurrency(convertUsdTo(total, selectedCurrency, rates), selectedCurrency)}`
+                      : undefined,
                 })}
                 target="_blank"
                 rel="noopener noreferrer"

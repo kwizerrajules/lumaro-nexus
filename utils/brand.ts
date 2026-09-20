@@ -6,6 +6,8 @@ export const WHATSAPP_NUMBER = DEFAULT_SITE_SETTINGS.whatsappNumber;
 export const WHATSAPP_DISPLAY = DEFAULT_SITE_SETTINGS.phoneDisplay;
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
 
+import { formatCurrency, type EacCurrencyCode } from '@/utils/currency';
+
 export function whatsappPlanUrl(opts: {
   title: string;
   id: string;
@@ -14,6 +16,8 @@ export function whatsappPlanUrl(opts: {
   area?: number;
   price?: number;
   quantity?: number;
+  currency?: EacCurrencyCode | string;
+  convertedPriceText?: string;
 }): string {
   const number =
     typeof window !== 'undefined'
@@ -31,21 +35,25 @@ export function whatsappPlanUrl(opts: {
   if (opts.area != null) lines.push(`  - Area: ${opts.area} m²`);
   if (opts.quantity != null) lines.push(`  - Quantity: ${opts.quantity}`);
   if (opts.price != null) {
-    lines.push(
-      `  - Estimated Price: ${formatPlanPrice(opts.price * (opts.quantity ?? 1))}`
-    );
+    const totalUsd = opts.price * (opts.quantity ?? 1);
+    let priceLine = `  - Estimated Price: ${formatPlanPrice(totalUsd)}`;
+    if (opts.convertedPriceText) {
+      priceLine += ` (${opts.convertedPriceText})`;
+    }
+    lines.push(priceLine);
   }
   return `${base}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
-/** Display only — no FX conversion. Stored price values shown as RWF. */
-export function formatPlanPrice(price: number): string {
-  return new Intl.NumberFormat("en-RW", {
-    style: "currency",
-    currency: "RWF",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(Number(price) || 0);
+/**
+ * Format plan prices in USD ($) by default, or in a specified EAC currency.
+ * Database prices are stored in USD.
+ */
+export function formatPlanPrice(
+  price: number,
+  currencyCode: EacCurrencyCode | string = 'USD'
+): string {
+  return formatCurrency(price, currencyCode);
 }
 
 /** Public plan path — prefer SEO slug, fall back to id during transition */
