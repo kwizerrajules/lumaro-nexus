@@ -6,8 +6,18 @@ import { StaffPayload } from '@/src/types/jwt.payload';
 import { createAccessToken, createRefreshToken } from '@/src/security/auth';
 import { rateLimiter } from '@/src/security/rateLimiter';
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
-const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+const allowedAudiences = Array.from(
+    new Set(
+        [
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        ]
+            .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+            .map((id) => id.trim().replace(/^['"]|['"]$/g, ''))
+    )
+);
+
+const client = new OAuth2Client();
 
 export async function POST(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for') || request.ip;
@@ -20,22 +30,24 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    if (!GOOGLE_CLIENT_ID) {
+    if (allowedAudiences.length === 0) {
         return NextResponse.json(
-            { success: false, message: 'Google sign-in is not configured.' },
+            { success: false, message: 'Google sign-in is not configured on this server.' },
             { status: 500 }
         );
     }
 
+    let rawCredential = '';
     try {
         const { credential } = await request.json();
         if (!credential) {
             return NextResponse.json({ success: false, message: 'Missing Google credential' }, { status: 400 });
         }
+        rawCredential = credential;
 
         const ticket = await client.verifyIdToken({
             idToken: credential,
-            audience: GOOGLE_CLIENT_ID,
+            audience: allowedAudiences.length === 1 ? allowedAudiences[0] : allowedAudiences,
         });
         const googlePayload = ticket.getPayload();
 
@@ -47,7 +59,7 @@ export async function POST(request: NextRequest) {
         if (!staff) {
             // Admins are never auto-provisioned via Google sign-in.
             return NextResponse.json(
-                { success: false, message: 'This Google account is not authorized to access the admin panel.' },
+                { success: false, message: `The Google account (${googlePayload.email}) is not authorized to access the admin panel.` },
                 { status: 403 }
             );
         }
@@ -70,8 +82,30 @@ export async function POST(request: NextRequest) {
             data: { accessToken, refreshToken, staff: staffData },
         }, { status: 200 });
     } catch (error: any) {
+        console.error('Google Admin Sign-In Error:', error?.message || error);
+        let userMessage = error?.message || 'Google sign-in failed';
+
+        if (
+            error?.message?.includes('audience != requiredAudience') ||
+            error?.message?.includes('Wrong recipient')
+        ) {
+            try {
+                const parts = rawCredential.split('.');
+                if (parts.length === 3) {
+                    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+                    console.error('Google Audience Mismatch:', {
+                        tokenAudience: payload?.aud,
+                        allowedAudiences,
+                    });
+                }
+            } catch {}
+
+            userMessage =
+                'Google sign-in configuration mismatch. Please sign in with email and password, or check server GOOGLE_CLIENT_ID settings.';
+        }
+
         return NextResponse.json(
-            { success: false, message: error?.message || 'Google sign-in failed' },
+            { success: false, message: userMessage },
             { status: 401 }
         );
     }

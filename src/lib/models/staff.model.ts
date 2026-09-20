@@ -66,9 +66,16 @@ export const StaffModel = {
 
     async getStaffByEmail(email: string): Promise<StaffWithHash | null> {
         const collection = await getStaffCollection();
+        const trimmedEmail = (email || '').trim();
 
-        // MongoDB findOne operation
-        const staffDocument = await collection.findOne({ email: email });
+        // Exact match first, then case-insensitive regex fallback
+        let staffDocument = await collection.findOne({ email: trimmedEmail });
+        if (!staffDocument && trimmedEmail) {
+            const escaped = trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            staffDocument = await collection.findOne({
+                email: { $regex: new RegExp(`^${escaped}$`, 'i') },
+            });
+        }
 
         if (!staffDocument) {
             return null;
