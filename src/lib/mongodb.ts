@@ -1,26 +1,36 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, MongoClientOptions } from "mongodb";
 
-const options = {};
+/** One pool per serverless instance; keep low on Atlas M0. */
+const options: MongoClientOptions = {
+  maxPoolSize: 10,
+};
 
-let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
+let clientPromise: Promise<MongoClient> | undefined;
 
-function getClientPromise(): Promise<MongoClient> {
-  if (!process.env.MONGODB_URI) {
+function createClientPromise(): Promise<MongoClient> {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
     throw new Error("Please add your Mongo URI to .env");
   }
+  const client = new MongoClient(uri, options);
+  return client.connect();
+}
 
+function getClientPromise(): Promise<MongoClient> {
   if (process.env.NODE_ENV === "development") {
-    // Avoid multiple connections in dev
-    if (!(global as any)._mongoClientPromise) {
-      client = new MongoClient(process.env.MONGODB_URI, options);
-      (global as any)._mongoClientPromise = client.connect();
+    const globalWithMongo = globalThis as typeof globalThis & {
+      _mongoClientPromise?: Promise<MongoClient>;
+    };
+    if (!globalWithMongo._mongoClientPromise) {
+      globalWithMongo._mongoClientPromise = createClientPromise();
     }
-    return (global as any)._mongoClientPromise;
-  } else {
-    client = new MongoClient(process.env.MONGODB_URI, options);
-    return client.connect();
+    return globalWithMongo._mongoClientPromise;
   }
+
+  if (!clientPromise) {
+    clientPromise = createClientPromise();
+  }
+  return clientPromise;
 }
 
 export default getClientPromise;
