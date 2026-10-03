@@ -127,6 +127,12 @@ export async function updateSiteSettings(
   // Ensure seed exists first
   await getSiteSettings();
 
+  // MongoDB rejects overlapping paths in $set and $setOnInsert.
+  // Only seed defaults for fields that are not being updated.
+  const defaultsOnInsert = Object.fromEntries(
+    Object.entries(DEFAULT_SITE_SETTINGS).filter(([key]) => !(key in data))
+  );
+
   const result = await collection.findOneAndUpdate(
     { _id: SITE_SETTINGS_DOC_ID },
     {
@@ -136,7 +142,7 @@ export async function updateSiteSettings(
       },
       $setOnInsert: {
         createdAt: now,
-        ...DEFAULT_SITE_SETTINGS,
+        ...defaultsOnInsert,
       },
     },
     { upsert: true, returnDocument: 'after' }
