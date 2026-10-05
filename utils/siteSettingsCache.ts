@@ -10,13 +10,17 @@ export type PublicSiteSettings = SiteSettingsInput & {
   phoneTel: string;
 };
 
+export const SITE_SETTINGS_UPDATED_EVENT = 'site-settings-updated';
+
 export function withDerivedSettings(s: SiteSettingsInput): PublicSiteSettings {
-  const digits = s.whatsappNumber.replace(/\D/g, '');
+  const whatsappDigits = s.whatsappNumber.replace(/\D/g, '');
+  const phoneDigits = s.phoneDisplay.replace(/\D/g, '') || whatsappDigits;
   return {
     ...s,
-    whatsappNumber: digits,
-    whatsappUrl: `https://wa.me/${digits}`,
-    phoneTel: `+${digits}`,
+    whatsappNumber: whatsappDigits,
+    whatsappUrl: `https://wa.me/${whatsappDigits}`,
+    // Dial link must follow Phone display, not WhatsApp
+    phoneTel: `+${phoneDigits}`,
   };
 }
 
@@ -33,15 +37,26 @@ export function setCachedSiteSettings(settings: PublicSiteSettings) {
 
 export function invalidateSiteSettingsCache() {
   cached = null;
+  inFlight = null;
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(SITE_SETTINGS_UPDATED_EVENT));
+  }
 }
 
-export async function fetchSiteSettings(): Promise<PublicSiteSettings> {
-  if (cached) return cached;
-  if (inFlight) return inFlight;
+export async function fetchSiteSettings(
+  options: { force?: boolean } = {}
+): Promise<PublicSiteSettings> {
+  if (!options.force && cached) return cached;
+  if (!options.force && inFlight) return inFlight;
 
   inFlight = (async () => {
     try {
-      const res = await fetch('/api/site-settings');
+      const url = options.force
+        ? `/api/site-settings?t=${Date.now()}`
+        : '/api/site-settings';
+      const res = await fetch(url, {
+        cache: options.force ? 'no-store' : 'default',
+      });
       const json = await res.json();
       if (res.ok && json?.success && json.data) {
         cached = withDerivedSettings(json.data);

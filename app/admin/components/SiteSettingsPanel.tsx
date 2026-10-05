@@ -20,11 +20,15 @@ const FIELDS: Array<{
   { key: 'helpEmail', label: 'Help / support email', type: 'email' },
   { key: 'websiteUrl', label: 'Website URL', hint: 'Full URL with https://' },
   { key: 'websiteDisplay', label: 'Website display text', hint: 'e.g. www.lumaronexus.com' },
-  { key: 'phoneDisplay', label: 'Phone display', hint: 'Shown on the site, e.g. +250 787 369 630' },
+  {
+    key: 'phoneDisplay',
+    label: 'Phone display',
+    hint: 'Shown on the site and used for the Call link (tel:), e.g. +250 787 369 630',
+  },
   {
     key: 'whatsappNumber',
     label: 'WhatsApp number',
-    hint: 'Digits only with country code, e.g. 250787369630',
+    hint: 'Digits only with country code — used for WhatsApp buttons (wa.me), e.g. 250787369630',
   },
   { key: 'address', label: 'Address / location' },
   { key: 'availability', label: 'Availability hours' },
@@ -87,7 +91,9 @@ export default function SiteSettingsPanel() {
       };
       await API.put('/admin/site-settings', payload);
       invalidateSiteSettingsCache();
-      setMessage('Saved. Footer and contact section will use the new details.');
+      setMessage(
+        'Saved. Footer, contact section, and phone/WhatsApp links now use these details. Refresh the public site if a tab was already open.'
+      );
       setForm(payload);
     } catch (err: any) {
       const issues = err?.response?.data?.errors;

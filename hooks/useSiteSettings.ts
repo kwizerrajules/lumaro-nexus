@@ -7,6 +7,7 @@ import {
 import {
   fetchSiteSettings,
   getCachedSiteSettings,
+  SITE_SETTINGS_UPDATED_EVENT,
   withDerivedSettings,
   type PublicSiteSettings,
 } from '@/utils/siteSettingsCache';
@@ -27,14 +28,24 @@ export function useSiteSettings() {
 
   useEffect(() => {
     let cancelled = false;
-    fetchSiteSettings().then((s) => {
-      if (!cancelled) {
-        setSettings(s);
-        setLoading(false);
-      }
-    });
+
+    const load = (force = false) => {
+      fetchSiteSettings({ force }).then((s) => {
+        if (!cancelled) {
+          setSettings(s);
+          setLoading(false);
+        }
+      });
+    };
+
+    load(false);
+
+    const onUpdated = () => load(true);
+    window.addEventListener(SITE_SETTINGS_UPDATED_EVENT, onUpdated);
+
     return () => {
       cancelled = true;
+      window.removeEventListener(SITE_SETTINGS_UPDATED_EVENT, onUpdated);
     };
   }, []);
 

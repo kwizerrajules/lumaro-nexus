@@ -5,11 +5,12 @@ import { SiteSettingsModel } from '@/src/lib/models/siteSettings.model';
 export async function GET() {
   try {
     const settings = await SiteSettingsModel.get();
+    // Contact details change from admin — avoid CDN serving stale phone/email
     return NextResponse.json(
       { success: true, data: settings },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+          'Cache-Control': 'private, no-cache, no-store, must-revalidate',
         },
       }
     );

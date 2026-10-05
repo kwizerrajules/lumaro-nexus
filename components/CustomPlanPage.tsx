@@ -10,9 +10,11 @@ import Header from './Header';
 import Footer from './Footer';
 import Newsletter from './Newsletter';
 import CustomPlanBuilder from './CustomPlanBuilder';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 export default function CustomPlanPage() {
   const footerRef = useRef<HTMLElement>(null);
+  const { settings } = useSiteSettings();
 
   const handleContactClick = () => {
     footerRef.current?.scrollIntoView({
@@ -78,13 +80,16 @@ export default function CustomPlanPage() {
                 Customer Service
               </h3>
               <p className="text-neutral-600 text-sm mb-1">
-                Contact us at <strong>info@lumaronexus.com</strong>
+                Contact us at <strong>{settings.primaryEmail}</strong>
               </p>
               <p className="text-neutral-600 text-sm mb-1">
-                Phone: <strong>+250 787 369 630</strong>
+                Phone:{' '}
+                <a href={`tel:${settings.phoneTel}`} className="font-semibold text-neutral-800 hover:underline">
+                  {settings.phoneDisplay}
+                </a>
               </p>
               <p className="text-neutral-500 text-xs">
-                Monday to Friday 9:00 AM to 4:00 PM GMT +3
+                {settings.availability}
               </p>
             </div>
 

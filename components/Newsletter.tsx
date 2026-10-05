@@ -96,7 +96,7 @@ const ContactUs: React.FC = () => {
     {
       label: 'Phone',
       value: settings.phoneDisplay,
-      href: settings.whatsappUrl,
+      href: `tel:${settings.phoneTel}`,
       icon: Phone,
     },
     {
